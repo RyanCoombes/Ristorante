@@ -175,17 +175,39 @@
   }
 
   // ---------- team ----------
+  var MASCOTS = ["assets/img/mascot-welcome.png", "assets/img/mascot-peel-cream.png"];
+
   function renderTeam() {
     var host = $("[data-team]");
     if (!host) return;
-    host.innerHTML = (CONFIG.team || []).map(function (m) {
-      var cls = "member" + (m.featured ? " is-featured" : "") + (m.mirror ? " is-mirrored" : "");
-      var title = m.name ? "<h3>" + esc(m.name) + '</h3><span class="role">' + esc(pick(m.role)) + "</span>"
-                         : "<h3>" + esc(pick(m.role)) + "</h3>";
-      return '<article class="' + cls + '">' +
-        (m.image ? '<img src="' + esc(m.image) + '" alt="" loading="lazy" width="560" height="700">' : "") +
-        title + "<p>" + esc(pick(m.bio)) + "</p></article>";
+    host.innerHTML = (CONFIG.team || []).map(function (m, i) {
+      var pic = m.photo
+        ? '<div class="member-pic"><img src="' + esc(m.photo) + '" alt="' + esc(m.name || pick(m.role)) + '" loading="lazy" width="400" height="500"></div>'
+        : '<div class="member-pic is-mascot"><img src="' + MASCOTS[i % 2] + '" alt="" loading="lazy" width="560" height="700"></div>';
+      return '<article class="member">' + pic +
+        "<h3>" + esc(m.name || pick(m.role)) + "</h3>" +
+        (m.name ? '<span class="role">' + esc(pick(m.role)) + "</span>" : "") +
+        "<p>" + esc(pick(m.bio)) + "</p></article>";
     }).join("");
+  }
+
+  // ---------- can people order right now? ----------
+  function ordering() {
+    if (CONFIG.ordersOpen === false) return { ok: false, msg: t("orders.paused") };
+    var st = openStatus();
+    if (!st.open) {
+      return { ok: false, msg: t("orders.closed") + (st.time ? " " + capital(t("status.opens", { day: st.day, time: st.time })) + "." : "") };
+    }
+    return { ok: true };
+  }
+  function capital(s) { return s.charAt(0).toUpperCase() + s.slice(1); }
+
+  function renderOrdering() {
+    var o = ordering();
+    var banner = $("[data-orders-closed]");
+    if (banner) { banner.hidden = o.ok; banner.textContent = o.msg || ""; }
+    document.documentElement.classList.toggle("orders-off", !o.ok);
+    return o.ok;
   }
 
   // ---------- menu ----------
@@ -230,7 +252,7 @@
       '<span class="dish-price">' + money(item.price) + "</span>" +
       '<p class="dish-desc">' + esc(pick(item.desc)) + "</p>" +
       '<div class="dish-foot"><div class="tags">' + tags.join("") + "</div>" +
-      (soldOut ? "" : '<div data-ctrl="' + esc(item.id) + '">' + qtyControl(item, cart[item.id] || 0) + "</div>") +
+      (soldOut || !ordering().ok ? "" : '<div data-ctrl="' + esc(item.id) + '">' + qtyControl(item, cart[item.id] || 0) + "</div>") +
       "</div></article>";
   }
 
@@ -250,7 +272,7 @@
   })();
 
   function changeQty(id, delta) {
-    if (!ITEMS[id] || ITEMS[id].available === false) return;
+    if (!ITEMS[id] || ITEMS[id].available === false || !ordering().ok) return;
     var q = Math.max(0, Math.min(99, (cart[id] || 0) + delta));
     if (q) cart[id] = q; else delete cart[id];
     save(STORE_CART, cart);
@@ -278,7 +300,8 @@
     var count = cartCount();
     var sub = subtotal();
     var bar = $("[data-cart-open]");
-    bar.hidden = count === 0;
+    var open = ordering();
+    bar.hidden = count === 0 || !open.ok;
     $("[data-cart-count]").textContent = count === 1 ? t("cart.item") : t("cart.items", { n: count });
     $("[data-cart-total]").textContent = money(sub + fee());
 
@@ -309,12 +332,12 @@
     var min = deliveryOn() ? Number(CONFIG.delivery.minOrder || 0) : 0;
     var belowMin = mode() === "delivery" && min > 0 && sub < min;
     if (belowMin) warn.push(t("cart.minOrder", { amount: money(min) }));
-    if (!openStatus().open) warn.push(t("cart.closedWarn"));
+    if (!open.ok) warn.push(open.msg);
     var warnEl = $("[data-cart-warn]");
     warnEl.hidden = empty || warn.length === 0;
     warnEl.textContent = warn.join(" ");
 
-    $("[data-cart-send]").disabled = empty || belowMin;
+    $("[data-cart-send]").disabled = empty || belowMin || !open.ok;
   }
 
   function buildMessage(data) {
@@ -341,6 +364,7 @@
   }
 
   function sendOrder() {
+    if (!ordering().ok) { renderCart(); return; }
     var data = {
       name: form.elements.name.value.trim(),
       mode: mode(),
@@ -373,6 +397,7 @@
     renderHours();
     renderContact();
     renderTeam();
+    renderOrdering();
     renderMenu();
     renderCart();
   }
@@ -443,5 +468,11 @@
   }
 
   renderAll();
-  setInterval(function () { renderStatus(); }, 60 * 1000);
+  // re-check every minute so ordering closes/opens on time without a reload
+  var wasOpen = ordering().ok;
+  setInterval(function () {
+    renderStatus();
+    var isOpen = renderOrdering();
+    if (isOpen !== wasOpen) { wasOpen = isOpen; renderMenu(); renderCart(); }
+  }, 60 * 1000);
 })();

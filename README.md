@@ -47,6 +47,14 @@ In `data/config.js`, `whatsapp` va scritto **solo con le cifre**, con il prefiss
 
 Quando un cliente invia l'ordine, si apre WhatsApp con un messaggio già pronto (piatti, quantità, totale, nome, ritiro/consegna, indirizzo, orario, note). L'ordine **non** è automatico: arriva come normale messaggio in chat e va confermato rispondendo.
 
+### Chiudere gli ordini
+
+Fuori dagli orari scritti in `data/config.js` gli ordini online si chiudono da soli: il menu resta visibile ma senza pulsanti "Aggiungi". Per chiuderli subito (forno pieno, serata privata) metti `ordersOpen: false` e salva; rimetti `true` per riaprire.
+
+### La squadra
+
+In `data/config.js`, sezione `team`: per ogni persona nome, ruolo, una frase e la foto (`photo`). Le foto vanno nella cartella `assets/img/team/`, in verticale (4:5). Senza foto si vede la mascotte.
+
 ### Controllare le modifiche
 
 Dopo aver salvato, apri `index.html` nel browser (doppio clic) e ricarica la pagina. Se il menu sparisce, quasi sempre manca una virgola o una virgoletta nel file che hai modificato.
@@ -67,6 +75,8 @@ Everything you normally change lives in the `data/` folder. Open the file in any
 - **Sold out today:** set `available: false`.
 - **Prices:** use a dot for decimals (`7.50`).
 - **WhatsApp number:** digits only, with country code, no `+` or spaces.
+- **Stop orders now:** set `ordersOpen: false` in `data/config.js`. Outside opening hours orders close on their own.
+- **Team:** name, role, one line and an optional portrait photo (4:5) per person in `data/config.js` → `team`.
 
 Visitors can switch language with the IT / EN buttons; the choice is remembered. You can also link straight to English with `index.html?lang=en`.
 

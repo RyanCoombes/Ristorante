@@ -54,37 +54,41 @@ window.SITE_CONFIG = {
     minOrder: 15.0     // ordine minimo per la consegna / minimum order for delivery
   },
 
-  // Chi siamo: lasciate name vuoto ("") per mostrare solo il ruolo.
-  // About us: leave name empty ("") to show only the role.
+  // Interruttore ordini online: metti false per chiudere gli ordini subito
+  // (es. forno pieno, serata privata). Fuori orario si chiudono da soli.
+  // Online orders switch: set to false to stop orders right now
+  // (e.g. kitchen too busy). Outside opening hours they close automatically.
+  ordersOpen: true,
+
+  // La squadra. Ogni persona ha la stessa scheda: foto, nome, ruolo, una frase.
+  // photo: percorso della foto (es. "assets/img/team/marco.jpg"), formato verticale 4:5.
+  //        Lasciala vuota ("") per mostrare la mascotte.
+  // The crew. Everyone gets the same card: photo, name, role, one line.
+  // photo: path to a portrait (4:5) photo. Leave "" to show the mascot instead.
   team: [
     {
-      name: "",
+      name: "Nome Cognome",
       role: { it: "Gemello n°1", en: "Twin no. 1" },
-      bio: {
-        it: "Metà della coppia. Accoglie, consiglia e vi convince a prendere anche il fritto.",
-        en: "One half of the duo. Welcomes you, recommends, and talks you into the fried starters."
-      },
-      image: "assets/img/mascot-welcome.png"
+      bio: { it: "Una frase su di lui/lei.", en: "One line about them." },
+      photo: ""
     },
     {
-      name: "",
-      role: { it: "Il Pizzaiolo", en: "The Pizzaiolo" },
-      bio: {
-        it: "L'amico di sempre, il re del forno. Impasti a lunga lievitazione e nessuna fretta.",
-        en: "The lifelong friend and king of the oven. Long-proved dough and no shortcuts."
-      },
-      image: "assets/img/mascot-peel-cream.png",
-      featured: true
-    },
-    {
-      name: "",
+      name: "Nome Cognome",
       role: { it: "Gemello n°2", en: "Twin no. 2" },
-      bio: {
-        it: "L'altra metà. Stessa faccia, stesso vizio: la pizza fatta come si deve.",
-        en: "The other half. Same face, same vice: pizza done properly."
-      },
-      image: "assets/img/mascot-welcome.png",
-      mirror: true
+      bio: { it: "Una frase su di lui/lei.", en: "One line about them." },
+      photo: ""
+    },
+    {
+      name: "Nome Cognome",
+      role: { it: "Pizzaiolo", en: "Pizzaiolo" },
+      bio: { it: "Una frase su di lui/lei.", en: "One line about them." },
+      photo: ""
+    },
+    {
+      name: "Nome Cognome",
+      role: { it: "Ruolo", en: "Role" },
+      bio: { it: "Una frase su di lui/lei.", en: "One line about them." },
+      photo: ""
     }
   ]
 };
