@@ -13,7 +13,13 @@
                 description in Italian (it) and English (en)
      price:     prezzo in euro, con il punto per i decimali (es. 8.50)
                 price in euros, use a dot for decimals
-     tags:      opzionale / optional — "veg", "piccante", "novita", "top"
+     tags:      opzionale / optional — "veg", "vegan", "piccante", "novita", "top"
+     allergens: allergeni presenti / allergens contained. Usa questi codici / use these codes:
+                "glutine", "crostacei", "uova", "pesce", "arachidi", "soia",
+                "latte", "frutta_a_guscio", "sedano", "senape", "sesamo",
+                "solfiti", "lupini", "molluschi"
+     image:     opzionale: foto del piatto, quadrata (es. "assets/img/menu/gola.webp")
+                optional: square dish photo
      available: metti false se il piatto è finito oggi
                 set to false if the item has sold out today
 
@@ -22,8 +28,10 @@
    To add an item copy a { ... } block, paste it below and change the
    values. Remember the comma between blocks.
 
-   ⚠️ I piatti e i prezzi qui sotto sono ESEMPI: sostituiteli con i vostri.
-   ⚠️ The dishes and prices below are EXAMPLES: replace them with yours.
+   ⚠️ I piatti, i prezzi e gli ALLERGENI qui sotto sono ESEMPI: controllateli
+      e sostituiteli con i vostri. Gli allergeni sono un obbligo di legge.
+   ⚠️ The dishes, prices and ALLERGENS below are EXAMPLES: check and replace
+      them with yours. Allergen information is a legal requirement.
    ===================================================================== */
 
 window.MENU = [
@@ -44,6 +52,7 @@ window.MENU = [
         },
         price: 11.0,
         tags: ["top"],
+        allergens: ["glutine", "latte"],
         available: true
       },
       {
@@ -55,6 +64,7 @@ window.MENU = [
         },
         price: 10.5,
         tags: ["piccante"],
+        allergens: ["glutine", "latte"],
         available: true
       },
       {
@@ -66,6 +76,7 @@ window.MENU = [
         },
         price: 12.5,
         tags: ["top"],
+        allergens: ["glutine", "latte", "frutta_a_guscio"],
         available: true
       },
       {
@@ -77,6 +88,7 @@ window.MENU = [
         },
         price: 12.0,
         tags: ["veg"],
+        allergens: ["glutine", "latte"],
         available: true
       },
       {
@@ -88,6 +100,7 @@ window.MENU = [
         },
         price: 8.0,
         tags: [],
+        allergens: ["glutine", "pesce"],
         available: true
       },
       {
@@ -99,6 +112,7 @@ window.MENU = [
         },
         price: 11.5,
         tags: ["veg"],
+        allergens: ["glutine", "latte", "frutta_a_guscio"],
         available: true
       },
       {
@@ -110,6 +124,7 @@ window.MENU = [
         },
         price: 10.5,
         tags: [],
+        allergens: ["glutine", "latte"],
         available: true
       }
     ]
@@ -127,7 +142,8 @@ window.MENU = [
           en: "Tomato, garlic, oregano, extra-virgin olive oil."
         },
         price: 6.0,
-        tags: ["veg"],
+        tags: ["vegan"],
+        allergens: ["glutine"],
         available: true
       },
       {
@@ -139,6 +155,8 @@ window.MENU = [
         },
         price: 7.0,
         tags: ["veg"],
+        allergens: ["glutine", "latte"],
+        image: "assets/img/menu/margherita.webp",
         available: true
       },
       {
@@ -150,6 +168,8 @@ window.MENU = [
         },
         price: 8.5,
         tags: ["piccante"],
+        allergens: ["glutine", "latte"],
+        image: "assets/img/menu/diavola.webp",
         available: true
       },
       {
@@ -161,6 +181,7 @@ window.MENU = [
         },
         price: 9.5,
         tags: [],
+        allergens: ["glutine", "latte"],
         available: true
       },
       {
@@ -172,6 +193,7 @@ window.MENU = [
         },
         price: 9.0,
         tags: [],
+        allergens: ["glutine", "latte"],
         available: true
       }
     ]
@@ -190,6 +212,7 @@ window.MENU = [
         },
         price: 2.5,
         tags: [],
+        allergens: ["glutine", "latte", "uova"],
         available: true
       },
       {
@@ -201,6 +224,7 @@ window.MENU = [
         },
         price: 4.0,
         tags: ["veg"],
+        allergens: ["glutine", "latte", "uova"],
         available: true
       },
       {
@@ -212,6 +236,7 @@ window.MENU = [
         },
         price: 5.0,
         tags: [],
+        allergens: ["glutine", "latte", "pesce"],
         available: true
       }
     ]
@@ -230,6 +255,7 @@ window.MENU = [
         },
         price: 5.0,
         tags: ["veg"],
+        allergens: ["glutine", "latte", "uova"],
         available: true
       },
       {
@@ -241,6 +267,7 @@ window.MENU = [
         },
         price: 7.0,
         tags: ["veg", "top"],
+        allergens: ["glutine", "latte", "frutta_a_guscio", "soia"],
         available: true
       }
     ]
@@ -256,6 +283,7 @@ window.MENU = [
         desc: { it: "Naturale o frizzante.", en: "Still or sparkling." },
         price: 1.5,
         tags: [],
+        allergens: [],
         available: true
       },
       {
@@ -264,6 +292,7 @@ window.MENU = [
         desc: { it: "Coca-Cola, Fanta, Sprite.", en: "Coca-Cola, Fanta, Sprite." },
         price: 2.5,
         tags: [],
+        allergens: [],
         available: true
       },
       {
@@ -272,6 +301,7 @@ window.MENU = [
         desc: { it: "Chiedi quella del giorno.", en: "Ask for today's choice." },
         price: 5.0,
         tags: [],
+        allergens: ["glutine"],
         available: true
       }
     ]

@@ -191,23 +191,75 @@
     }).join("");
   }
 
-  // ---------- can people order right now? ----------
-  function ordering() {
-    if (CONFIG.ordersOpen === false) return { ok: false, msg: t("orders.paused") };
-    var st = openStatus();
-    if (!st.open) {
-      return { ok: false, msg: t("orders.closed") + (st.time ? " " + capital(t("status.opens", { day: st.day, time: st.time })) + "." : "") };
-    }
-    return { ok: true };
+  // ---------- ordering window, cut-offs and waiting times ----------
+  var ORD = CONFIG.ordering || {};
+  var num = function (v, d) { return isFinite(v) ? Number(v) : d; };
+  function fmtTime(min) {
+    var m = ((Math.round(min) % 1440) + 1440) % 1440;
+    return String(Math.floor(m / 60)).padStart(2, "0") + ":" + String(m % 60).padStart(2, "0");
   }
   function capital(s) { return s.charAt(0).toUpperCase() + s.slice(1); }
+  function dayLabel(offset, day) {
+    return offset === 0 ? t("status.today") : offset === 1 ? t("status.tomorrow") : t("day." + day).toLowerCase();
+  }
+
+  // services that matter right now, in minutes from today's midnight (yesterday's late shift is negative)
+  function periodsAround(day) {
+    var y = slotsFor((day + 6) % 7).map(function (p) { return { open: p.open - 1440, close: p.close - 1440 }; });
+    return y.concat(slotsFor(day));
+  }
+
+  function ordering() {
+    var now = nowInZone();
+    var early = num(ORD.startBeforeOpenMin, 0), stop = num(ORD.stopBeforeCloseMin, 0);
+    if (ORD.open === false || CONFIG.ordersOpen === false) return { ok: false, msg: t("orders.paused") };
+    var periods = periodsAround(now.day), i, p;
+    for (i = 0; i < periods.length; i++) {
+      p = periods[i];
+      if (now.min >= p.open - early && now.min < p.close - stop) return { ok: true, period: p, now: now.min };
+    }
+    var msg = t("orders.closed");
+    for (i = 0; i < periods.length; i++) {
+      p = periods[i];
+      if (now.min >= p.open && now.min < p.close) { msg = t("orders.cutoff"); break; }
+    }
+    // next time orders open
+    for (var d = 0; d < 8; d++) {
+      var slots = slotsFor((now.day + d) % 7);
+      for (i = 0; i < slots.length; i++) {
+        var start = slots[i].open - early + d * 1440;
+        if (start > now.min) {
+          var off = Math.floor(start / 1440);   // the start may fall on the evening before
+          return { ok: false, msg: msg + " " + t("orders.reopen", { day: dayLabel(off, (now.day + off) % 7), time: fmtTime(start) }) };
+        }
+      }
+    }
+    return { ok: false, msg: msg };
+  }
+
+  function baseWait() { return num(ORD.prepMinutes, 20) + num(ORD.busyExtraMinutes, 0); }
 
   function renderOrdering() {
     var o = ordering();
     var banner = $("[data-orders-closed]");
     if (banner) { banner.hidden = o.ok; banner.textContent = o.msg || ""; }
     document.documentElement.classList.toggle("orders-off", !o.ok);
+    if (o.ok) {
+      $$("[data-status].is-open").forEach(function (el) { el.textContent += " · " + t("status.wait", { n: baseWait() }); });
+    }
     return o.ok;
+  }
+
+  // collection / delivery times offered to the customer
+  function timeSlots() {
+    var o = ordering();
+    if (!o.ok) return [];
+    var step = Math.max(5, num(ORD.slotMinutes, 15));
+    var lead = baseWait() + (mode() === "delivery" ? zoneFor().extraMinutes || 0 : 0);
+    var first = Math.ceil((Math.max(o.now, o.period.open) + lead) / step) * step;
+    var out = [first];
+    for (var m = first + step; m <= o.period.close; m += step) out.push(m);
+    return out;
   }
 
   // ---------- menu ----------
@@ -241,18 +293,25 @@
     }).join("");
   }
 
+  var LEAF = '<svg class="ico" aria-hidden="true"><use href="#i-leaf"/></svg>';
+
   function dishHtml(item) {
     var soldOut = item.available === false;
+    var canOrder = ordering().ok;
     var tags = (item.tags || []).map(function (tg) {
-      return '<span class="tag tag--' + esc(tg) + '">' + esc(t("tag." + tg)) + "</span>";
+      var icon = tg === "veg" || tg === "vegan" ? LEAF : "";
+      return '<span class="tag tag--' + esc(tg) + '">' + icon + esc(t("tag." + tg)) + "</span>";
     });
     if (soldOut) tags.unshift('<span class="tag tag--soldout">' + esc(t("menu.soldOut")) + "</span>");
-    return '<article class="dish' + (soldOut ? " is-soldout" : "") + '" data-dish="' + esc(item.id) + '">' +
+    var allergens = (item.allergens || []).map(function (a) { return t("allergen." + a); });
+    return '<article class="dish' + (soldOut ? " is-soldout" : "") + (item.image ? " has-img" : "") + '" data-dish="' + esc(item.id) + '">' +
+      (item.image ? '<img class="dish-img" src="' + esc(item.image) + '" alt="' + esc(item.name) + '" loading="lazy" width="96" height="96">' : "") +
       '<h4 class="dish-name">' + esc(item.name) + "</h4>" +
       '<span class="dish-price">' + money(item.price) + "</span>" +
       '<p class="dish-desc">' + esc(pick(item.desc)) + "</p>" +
+      (allergens.length ? '<p class="dish-allergens"><strong>' + esc(t("menu.allergensLabel")) + ":</strong> " + esc(allergens.join(", ")) + "</p>" : "") +
       '<div class="dish-foot"><div class="tags">' + tags.join("") + "</div>" +
-      (soldOut || !ordering().ok ? "" : '<div data-ctrl="' + esc(item.id) + '">' + qtyControl(item, cart[item.id] || 0) + "</div>") +
+      (soldOut || !canOrder ? "" : '<div data-ctrl="' + esc(item.id) + '">' + qtyControl(item, cart[item.id] || 0) + "</div>") +
       "</div></article>";
   }
 
@@ -287,23 +346,159 @@
   }
   function cartCount() { return cartLines().reduce(function (n, l) { return n + l.qty; }, 0); }
   function subtotal() { return cartLines().reduce(function (n, l) { return n + l.total; }, 0); }
+  var round2 = function (n) { return Math.round(n * 100) / 100; };
 
   var form = $("[data-cart-form]");
   function mode() {
     var r = form && form.querySelector('input[name="mode"]:checked');
     return r ? r.value : "pickup";
   }
-  function deliveryOn() { return !!(CONFIG.delivery && CONFIG.delivery.enabled); }
-  function fee() { return deliveryOn() && mode() === "delivery" ? Number(CONFIG.delivery.fee || 0) : 0; }
+  function payment() {
+    var r = form && form.querySelector('input[name="payment"]:checked');
+    return r ? r.value : "card";
+  }
+
+  // ---------- delivery distance ----------
+  var DEL = CONFIG.delivery || {};
+  var ZONES = (DEL.zones || []).slice().sort(function (a, b) { return a.upToKm - b.upToKm; });
+  function deliveryOn() { return !!(DEL.enabled && ZONES.length); }
+  function maxKm() { return ZONES.length ? ZONES[ZONES.length - 1].upToKm : 0; }
+
+  // status: none | checking | ok | out | unknown
+  var geo = { status: "none" };
+
+  function kmBetween(lat1, lng1, lat2, lng2) {
+    var R = 6371, rad = Math.PI / 180;
+    var dLat = (lat2 - lat1) * rad, dLng = (lng2 - lng1) * rad;
+    var h = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+      Math.cos(lat1 * rad) * Math.cos(lat2 * rad) * Math.sin(dLng / 2) * Math.sin(dLng / 2);
+    return 2 * R * Math.asin(Math.sqrt(h));
+  }
+  function setGeoPoint(lat, lng, source, query) {
+    var shop = CONFIG.shopLocation || {};
+    var km = Math.round(kmBetween(shop.lat, shop.lng, lat, lng) * 10) / 10;
+    var zone = ZONES.filter(function (z) { return km <= z.upToKm; })[0];
+    geo = { status: zone ? "ok" : "out", km: km, zone: zone, lat: lat, lng: lng, source: source, query: query };
+  }
+  // the zone to use for fees/times: the verified one, or the nearest ring as a best guess
+  function zoneFor() { return geo.zone || ZONES[0] || {}; }
+
+  var NOMINATIM = "https://nominatim.openstreetmap.org/";
+
+  function checkAddress(then) {
+    var q = form.elements.address.value.trim();
+    if (!q) { markInvalid([form.elements.address]); return; }
+    if (geo.status === "checking") return;
+    geo = { status: "checking" };
+    renderCart();
+    var area = (CONFIG.address && CONFIG.address.searchArea) || "";
+    var shop = CONFIG.shopLocation || {};
+    var url = NOMINATIM + "search?format=jsonv2&limit=1&countrycodes=it&accept-language=it" +
+      "&viewbox=" + [shop.lng - 0.15, shop.lat + 0.15, shop.lng + 0.15, shop.lat - 0.15].join(",") +
+      "&q=" + encodeURIComponent(area && q.toLowerCase().indexOf(area.toLowerCase()) === -1 ? q + ", " + area : q);
+    fetch(url, { headers: { "Accept": "application/json" } })
+      .then(function (r) { if (!r.ok) throw new Error(r.status); return r.json(); })
+      .then(function (res) {
+        if (res && res[0]) setGeoPoint(parseFloat(res[0].lat), parseFloat(res[0].lon), "address", q);
+        else geo = { status: "unknown", query: q };
+      })
+      .catch(function () { geo = { status: "unknown", query: q }; })
+      .then(function () { renderCart(); if (then) then(); });
+  }
+
+  function useLocation() {
+    var res = $("[data-zone-result]");
+    if (!navigator.geolocation) { geo = { status: "denied" }; renderCart(); return; }
+    geo = { status: "checking" };
+    renderCart();
+    navigator.geolocation.getCurrentPosition(function (pos) {
+      var lat = pos.coords.latitude, lng = pos.coords.longitude;
+      setGeoPoint(lat, lng, "gps");
+      renderCart();
+      // fill in the street for the rider if the field is empty
+      if (!form.elements.address.value.trim()) {
+        fetch(NOMINATIM + "reverse?format=jsonv2&zoom=18&accept-language=it&lat=" + lat + "&lon=" + lng)
+          .then(function (r) { return r.json(); })
+          .then(function (j) {
+            var a = (j && j.address) || {};
+            var street = [a.road || a.pedestrian || "", a.house_number || ""].join(" ").trim();
+            if (street && !form.elements.address.value.trim()) form.elements.address.value = street;
+          })
+          .catch(function () { /* the coordinates alone are enough */ });
+      }
+    }, function () {
+      geo = { status: "denied" };
+      renderCart();
+      if (res) res.focus && res.focus();
+    }, { enableHighAccuracy: true, timeout: 10000, maximumAge: 60000 });
+  }
+
+  // ---------- promo codes ----------
+  var promoCode = null;
+  function todayISO() {
+    return new Intl.DateTimeFormat("en-CA", { timeZone: CONFIG.timeZone || "Europe/Rome" }).format(new Date());
+  }
+  function evalPromo(code, sub) {
+    if (!code) return null;
+    var p = (CONFIG.promoCodes || []).filter(function (c) { return String(c.code).toUpperCase() === code; })[0];
+    if (!p || (p.validUntil && todayISO() > p.validUntil)) return { ok: false, msg: t("cart.promoInvalid") };
+    if (p.minOrder && sub < p.minOrder) return { ok: false, keep: true, msg: t("cart.promoMin", { code: p.code, amount: money(p.minOrder) }) };
+    var discount = p.type === "percent" ? round2(sub * p.value / 100) : p.type === "fixed" ? Math.min(p.value, sub) : 0;
+    return { ok: true, code: p.code, discount: discount, freeDelivery: p.type === "freeDelivery", msg: t("cart.promoOk", { code: p.code }) };
+  }
+
+  // ---------- totals ----------
+  function totals() {
+    var sub = subtotal();
+    var promo = evalPromo(promoCode, sub);
+    var discount = promo && promo.ok ? promo.discount : 0;
+    var fee = 0, feeKnown = true;
+    if (deliveryOn() && mode() === "delivery") {
+      if (geo.status === "ok") fee = geo.zone.fee || 0;
+      else { fee = 0; feeKnown = false; }
+      if (promo && promo.ok && promo.freeDelivery) { fee = 0; feeKnown = true; }
+    }
+    return { sub: sub, promo: promo, discount: discount, fee: fee, feeKnown: feeKnown, total: round2(sub - discount + fee) };
+  }
+
+  function renderTimes() {
+    var sel = $("[data-time]");
+    var prev = sel.value;
+    var slots = timeSlots();
+    sel.innerHTML = slots.map(function (m, i) {
+      var label = i === 0 ? t("cart.asap", { time: fmtTime(m) }) : fmtTime(m);
+      return '<option value="' + (i === 0 ? "asap" : fmtTime(m)) + '" data-time="' + fmtTime(m) + '">' + esc(label) + "</option>";
+    }).join("");
+    if (prev && sel.querySelector('option[value="' + prev + '"]')) sel.value = prev;
+  }
+
+  function renderZone() {
+    var el = $("[data-zone-result]");
+    var msg = "", cls = "";
+    if (geo.status === "checking") msg = t("cart.checking");
+    else if (geo.status === "ok") {
+      cls = "is-ok";
+      msg = t("cart.zoneOk", { km: String(geo.km).replace(".", lang === "it" ? "," : "."), fee: money(geo.zone.fee || 0), min: money(geo.zone.minOrder || 0) });
+    } else if (geo.status === "out") {
+      cls = "is-bad";
+      msg = t("cart.zoneOut", { max: maxKm(), km: String(geo.km).replace(".", lang === "it" ? "," : ".") });
+    } else if (geo.status === "unknown") msg = t("cart.zoneUnknown");
+    else if (geo.status === "denied") { cls = "is-bad"; msg = t("cart.geoDenied"); }
+    el.hidden = !msg;
+    el.textContent = msg;
+    el.className = "zone-result " + cls;
+    $("[data-check-address]").disabled = geo.status === "checking";
+  }
 
   function renderCart() {
     var count = cartCount();
-    var sub = subtotal();
+    var tot = totals();
     var bar = $("[data-cart-open]");
     var open = ordering();
+    var delivery = deliveryOn() && mode() === "delivery";
     bar.hidden = count === 0 || !open.ok;
     $("[data-cart-count]").textContent = count === 1 ? t("cart.item") : t("cart.items", { n: count });
-    $("[data-cart-total]").textContent = money(sub + fee());
+    $("[data-cart-total]").textContent = money(tot.total);
 
     var empty = count === 0;
     $("[data-cart-empty]").hidden = !empty;
@@ -318,73 +513,94 @@
         "</li>";
     }).join("");
 
-    var f = fee();
-    $("[data-sum-sub]").textContent = money(sub);
-    $("[data-sum-fee-row]").hidden = !f;
-    $("[data-sum-fee]").textContent = money(f);
-    $("[data-sum-total]").textContent = money(sub + f);
+    $("[data-sum-sub]").textContent = money(tot.sub);
+    $("[data-sum-disc-row]").hidden = !tot.discount;
+    $("[data-sum-disc-label]").textContent = t("cart.discount") + (tot.promo && tot.promo.code ? " (" + tot.promo.code + ")" : "");
+    $("[data-sum-disc]").textContent = "−" + money(tot.discount);
+    $("[data-sum-fee-row]").hidden = !delivery;
+    $("[data-sum-fee-label]").textContent = geo.status === "ok" ? t("cart.deliveryFeeKm", { km: String(geo.km).replace(".", lang === "it" ? "," : ".") }) : t("cart.deliveryFee");
+    $("[data-sum-fee]").textContent = tot.feeKnown ? money(tot.fee) : t("cart.toConfirm");
+    $("[data-sum-total]").textContent = money(tot.total);
 
-    var delOpt = $("[data-delivery-opt]");
-    delOpt.hidden = !deliveryOn();
-    $("[data-address-field]").hidden = mode() !== "delivery";
+    $("[data-delivery-opt]").hidden = !deliveryOn();
+    $("[data-address-field]").hidden = !delivery;
+    renderZone();
+    renderTimes();
+
+    var promoEl = $("[data-promo-result]");
+    promoEl.hidden = !tot.promo;
+    if (tot.promo) {
+      promoEl.textContent = tot.promo.msg;
+      promoEl.className = "promo-result " + (tot.promo.ok ? "is-ok" : "is-bad");
+    }
 
     var warn = [];
-    var min = deliveryOn() ? Number(CONFIG.delivery.minOrder || 0) : 0;
-    var belowMin = mode() === "delivery" && min > 0 && sub < min;
+    var min = delivery ? Number(zoneFor().minOrder || 0) : 0;
+    var belowMin = delivery && min > 0 && tot.sub < min;
     if (belowMin) warn.push(t("cart.minOrder", { amount: money(min) }));
     if (!open.ok) warn.push(open.msg);
     var warnEl = $("[data-cart-warn]");
     warnEl.hidden = empty || warn.length === 0;
     warnEl.textContent = warn.join(" ");
 
-    $("[data-cart-send]").disabled = empty || belowMin || !open.ok;
+    $("[data-cart-send]").disabled = empty || belowMin || !open.ok ||
+      (delivery && (geo.status === "out" || geo.status === "checking"));
   }
 
   function buildMessage(data) {
+    var tot = totals();
+    var km = function (v) { return String(v).replace(".", lang === "it" ? "," : "."); };
     var lines = [t("wa.greeting"), ""];
     cartLines().forEach(function (l) {
       lines.push(l.qty + "× " + l.item.name + " — " + money(l.total));
     });
     lines.push("");
-    var f = fee();
-    if (f) {
-      lines.push(t("wa.subtotal") + ": " + money(subtotal()));
-      lines.push(t("wa.delivery") + ": " + money(f));
-    }
-    lines.push("*" + t("wa.total") + ": " + money(subtotal() + f) + "*");
+    if (tot.discount || data.mode === "delivery") lines.push(t("wa.subtotal") + ": " + money(tot.sub));
+    if (tot.discount) lines.push(t("wa.discount") + " (" + tot.promo.code + "): −" + money(tot.discount));
+    if (data.mode === "delivery") lines.push(t("wa.delivery") + ": " + (tot.feeKnown ? money(tot.fee) : t("cart.toConfirm")));
+    lines.push("*" + t("wa.total") + ": " + money(tot.total) + (tot.feeKnown ? "" : " + " + t("wa.delivery").toLowerCase()) + "*");
     lines.push("");
-    lines.push(t("wa.name") + ": " + data.name);
     lines.push(t("wa.mode") + ": " + (data.mode === "delivery" ? t("cart.delivery") : t("cart.pickup")));
-    if (data.mode === "delivery") lines.push(t("wa.address") + ": " + data.address);
-    if (data.time) lines.push(t("wa.time") + ": " + data.time);
+    if (data.mode === "delivery") {
+      lines.push(t("wa.address") + ": " + data.address);
+      lines.push(t("wa.distance") + ": " + (geo.status === "ok" ? km(geo.km) + " km" : t("wa.toCheck")));
+      if (geo.lat) lines.push(t("wa.map") + ": https://maps.google.com/?q=" + geo.lat.toFixed(5) + "," + geo.lng.toFixed(5));
+    }
+    lines.push(t("wa.time") + ": " + (data.time === "asap" ? t("wa.asap", { time: data.timeLabel }) : data.time));
+    lines.push(t("wa.payment") + ": " + t(data.payment === "cash" ? "cart.cash" : "cart.card"));
     if (data.notes) lines.push(t("wa.notes") + ": " + data.notes);
     lines.push("");
     lines.push(t("wa.thanks"));
     return lines.join("\n");
   }
 
+  function markInvalid(els) {
+    els.forEach(function (el) { el.classList.add("is-invalid"); el.setAttribute("aria-invalid", "true"); });
+    if (els[0]) els[0].focus();
+    var warnEl = $("[data-cart-warn]");
+    warnEl.hidden = false;
+    warnEl.textContent = t("cart.required");
+  }
+
   function sendOrder() {
     if (!ordering().ok) { renderCart(); return; }
+    var sel = $("[data-time]");
+    var opt = sel.options[sel.selectedIndex];
     var data = {
-      name: form.elements.name.value.trim(),
-      mode: mode(),
+      mode: deliveryOn() ? mode() : "pickup",
       address: form.elements.address.value.trim(),
-      time: form.elements.time.value.trim(),
+      time: sel.value,
+      timeLabel: opt ? opt.getAttribute("data-time") : "",
+      payment: payment(),
       notes: form.elements.notes.value.trim()
     };
-    var missing = [];
-    if (!data.name) missing.push(form.elements.name);
-    if (data.mode === "delivery" && !data.address) missing.push(form.elements.address);
     $$(".is-invalid", form).forEach(function (el) { el.classList.remove("is-invalid"); });
-    if (missing.length) {
-      missing.forEach(function (el) { el.classList.add("is-invalid"); el.setAttribute("aria-invalid", "true"); });
-      missing[0].focus();
-      var warnEl = $("[data-cart-warn]");
-      warnEl.hidden = false;
-      warnEl.textContent = t("cart.required");
-      return;
+    if (data.mode === "delivery") {
+      if (!data.address) { markInvalid([form.elements.address]); return; }
+      if (geo.status === "none") { checkAddress(sendOrder); return; }   // check first, then continue
+      if (geo.status === "out" || geo.status === "checking") return;
     }
-    save(STORE_CUSTOMER, { name: data.name, address: data.address });
+    save(STORE_CUSTOMER, { address: data.address, payment: data.payment });
     var url = waUrl(buildMessage(data));
     var win = window.open(url, "_blank");
     if (win) win.opener = null; else location.href = url;
@@ -440,17 +656,37 @@
     renderCart();
   });
   form.addEventListener("change", function (e) {
-    if (e.target.name === "mode") renderCart();
+    if (e.target.name === "mode" || e.target.name === "time" || e.target.name === "payment") renderCart();
   });
   form.addEventListener("input", function (e) {
     e.target.classList.remove("is-invalid");
     e.target.removeAttribute("aria-invalid");
+    // a typed address that changed since it was checked needs checking again
+    if (e.target.name === "address" && geo.source !== "gps" && geo.status !== "none" && geo.status !== "checking") {
+      geo = { status: "none" };
+      renderCart();
+    }
   });
+  form.addEventListener("keydown", function (e) {
+    if (e.key !== "Enter" || e.target.tagName === "TEXTAREA") return;
+    e.preventDefault();
+    if (e.target.name === "address") checkAddress();
+    if (e.target.name === "promo") applyPromo();
+  });
+  $("[data-check-address]").addEventListener("click", function () { checkAddress(); });
+  $("[data-use-location]").addEventListener("click", useLocation);
+  function applyPromo() {
+    var v = form.elements.promo.value.trim().toUpperCase();
+    form.elements.promo.value = v;
+    promoCode = v || null;
+    renderCart();
+  }
+  $("[data-promo-apply]").addEventListener("click", applyPromo);
 
   // remember returning customers
   var customer = load(STORE_CUSTOMER, {});
-  if (customer.name) form.elements.name.value = customer.name;
   if (customer.address) form.elements.address.value = customer.address;
+  if (customer.payment === "cash") form.elements.payment.value = "cash";
 
   // highlight the menu tab of the section in view
   if ("IntersectionObserver" in window) {
@@ -473,6 +709,7 @@
   setInterval(function () {
     renderStatus();
     var isOpen = renderOrdering();
-    if (isOpen !== wasOpen) { wasOpen = isOpen; renderMenu(); renderCart(); }
+    if (isOpen !== wasOpen) { wasOpen = isOpen; renderMenu(); }
+    renderCart();  // keeps the offered times current
   }, 60 * 1000);
 })();

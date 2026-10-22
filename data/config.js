@@ -26,7 +26,9 @@ window.SITE_CONFIG = {
     street: "Via del Vizio, 7",
     city: "00100 Roma (RM)",
     // Testo usato per la mappa e per "Indicazioni" / Text used for the map and directions
-    mapsQuery: "Via del Vizio 7, Roma"
+    mapsQuery: "Via del Vizio 7, Roma",
+    // Città aggiunta alla ricerca degli indirizzi di consegna / City added to delivery address lookups
+    searchArea: "Roma"
   },
 
   // Fuso orario usato per dire se siete aperti ora / Time zone for the "open now" badge
@@ -47,18 +49,61 @@ window.SITE_CONFIG = {
     0: [["12:00", "15:00"], ["18:30", "23:00"]]
   },
 
-  // Consegna a domicilio / Home delivery
-  delivery: {
-    enabled: true,
-    fee: 2.0,          // costo consegna in euro / delivery fee in euros (0 = gratis/free)
-    minOrder: 15.0     // ordine minimo per la consegna / minimum order for delivery
+  // Posizione del locale (serve per calcolare la distanza di consegna).
+  // Su Google Maps: tasto destro sul locale -> clic sulle coordinate per copiarle.
+  // Shop location (used to work out delivery distance).
+  // In Google Maps: right-click the shop -> click the coordinates to copy them.
+  shopLocation: { lat: 41.8986, lng: 12.4769 },
+
+  // ORDINI ONLINE / ONLINE ORDERS
+  ordering: {
+    // Interruttore: false = ordini chiusi subito (forno pieno, serata privata...).
+    // Switch: false = orders closed right now (kitchen full, private event...).
+    open: true,
+
+    // Minuti PRIMA dell'apertura in cui si accettano già ordini (0 = solo da aperti).
+    // Minutes BEFORE opening when orders are already accepted (0 = only once open).
+    startBeforeOpenMin: 30,
+
+    // Minuti PRIMA della chiusura in cui si smette di accettare ordini.
+    // Minutes BEFORE closing when orders stop being accepted.
+    stopBeforeCloseMin: 30,
+
+    // Tempo medio di preparazione in minuti / Average preparation time in minutes
+    prepMinutes: 20,
+
+    // Serata piena? Aggiungi minuti di attesa (es. 15 o 30). 0 = normale.
+    // Busy night? Add extra waiting minutes (e.g. 15 or 30). 0 = normal.
+    busyExtraMinutes: 0,
+
+    // Ogni quanti minuti proporre un orario (es. 20:00, 20:15, 20:30)
+    // Time slot step in minutes
+    slotMinutes: 15
   },
 
-  // Interruttore ordini online: metti false per chiudere gli ordini subito
-  // (es. forno pieno, serata privata). Fuori orario si chiudono da soli.
-  // Online orders switch: set to false to stop orders right now
-  // (e.g. kitchen too busy). Outside opening hours they close automatically.
-  ordersOpen: true,
+  // CONSEGNA A DOMICILIO / HOME DELIVERY
+  // Fasce di distanza dal locale (in linea d'aria). Oltre l'ultima non si consegna.
+  // Distance rings from the shop (straight line). Beyond the last one, no delivery.
+  delivery: {
+    enabled: true,
+    zones: [
+      { upToKm: 3, fee: 1.5, minOrder: 15, extraMinutes: 10 },
+      { upToKm: 5, fee: 2.5, minOrder: 20, extraMinutes: 20 }
+    ]
+  },
+
+  // CODICI SCONTO / PROMO CODES
+  // type: "percent" (percentuale), "fixed" (euro), "freeDelivery" (consegna gratis)
+  // validUntil: ultimo giorno valido "AAAA-MM-GG" ("" = senza scadenza)
+  // ⚠️ I codici sono leggibili da chi guarda il codice del sito: usateli per
+  //    promozioni pubbliche, e controllate lo sconto quando arriva l'ordine.
+  // ⚠️ Codes can be read by anyone viewing the site source: use them for public
+  //    promotions and double-check the discount when the order arrives.
+  promoCodes: [
+    { code: "BENVENUTO10", type: "percent", value: 10, minOrder: 20, validUntil: "" },
+    { code: "VIZIO2", type: "fixed", value: 2, minOrder: 15, validUntil: "2026-12-31" },
+    { code: "CONSEGNAGRATIS", type: "freeDelivery", value: 0, minOrder: 25, validUntil: "" }
+  ],
 
   // La squadra. Ogni persona ha la stessa scheda: foto, nome, ruolo, una frase.
   // photo: percorso della foto (es. "assets/img/team/marco.jpg"), formato verticale 4:5.

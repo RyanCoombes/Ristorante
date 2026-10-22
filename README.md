@@ -47,9 +47,25 @@ In `data/config.js`, `whatsapp` va scritto **solo con le cifre**, con il prefiss
 
 Quando un cliente invia l'ordine, si apre WhatsApp con un messaggio già pronto (piatti, quantità, totale, nome, ritiro/consegna, indirizzo, orario, note). L'ordine **non** è automatico: arriva come normale messaggio in chat e va confermato rispondendo.
 
-### Chiudere gli ordini
+### Ordini: orari, chiusura, attesa (`data/config.js` → `ordering`)
 
-Fuori dagli orari scritti in `data/config.js` gli ordini online si chiudono da soli: il menu resta visibile ma senza pulsanti "Aggiungi". Per chiuderli subito (forno pieno, serata privata) metti `ordersOpen: false` e salva; rimetti `true` per riaprire.
+- `open: false` chiude gli ordini online subito (forno pieno, serata privata). `true` per riaprire.
+- Fuori orario gli ordini si chiudono da soli. `startBeforeOpenMin` = quanti minuti prima dell'apertura si accettano già ordini; `stopBeforeCloseMin` = quanti minuti prima della chiusura si smette.
+- `prepMinutes` = tempo medio di preparazione. `busyExtraMinutes` = minuti in più nelle serate piene (es. 15). Il cliente vede "attesa ~20 min" e sceglie un orario tra quelli possibili.
+
+### Consegna (`delivery`)
+
+Fasce di distanza dal locale, in linea d'aria: per ognuna `upToKm`, costo (`fee`), ordine minimo (`minOrder`) e minuti in più (`extraMinutes`). Oltre l'ultima fascia non si consegna. Inserite le coordinate vere del locale in `shopLocation`.
+
+Il cliente preme "Verifica indirizzo" (ricerca gratuita OpenStreetMap) oppure "Usa la mia posizione" (GPS del telefono). Se l'indirizzo non si trova, l'ordine arriva con "Distanza: da verificare". Nel messaggio c'è anche il link Google Maps per il fattorino.
+
+### Codici sconto (`promoCodes`)
+
+`type`: `"percent"` (percentuale), `"fixed"` (euro), `"freeDelivery"` (consegna gratis). `minOrder` = spesa minima, `validUntil` = ultimo giorno ("" = senza scadenza). I codici sono visibili a chi legge il codice del sito: usateli per promozioni pubbliche e controllate lo sconto sull'ordine.
+
+### Allergeni, icone e foto (`data/menu.js`)
+
+Per ogni piatto: `allergens` (i 14 allergeni UE: `"glutine"`, `"latte"`, `"uova"`…), `tags` con `"veg"` o `"vegan"` per le icone, `image` per la foto (quadrata, in `assets/img/menu/`). ⚠️ Gli allergeni inseriti ora sono esempi: vanno controllati piatto per piatto.
 
 ### La squadra
 
@@ -75,7 +91,11 @@ Everything you normally change lives in the `data/` folder. Open the file in any
 - **Sold out today:** set `available: false`.
 - **Prices:** use a dot for decimals (`7.50`).
 - **WhatsApp number:** digits only, with country code, no `+` or spaces.
-- **Stop orders now:** set `ordersOpen: false` in `data/config.js`. Outside opening hours orders close on their own.
+- **Stop orders now:** `ordering.open: false` in `data/config.js`. Outside opening hours orders close on their own; `startBeforeOpenMin` / `stopBeforeCloseMin` set the cut-offs.
+- **Waiting times:** `prepMinutes`, plus `busyExtraMinutes` on busy nights. Customers pick from the times that are actually possible.
+- **Delivery area:** distance rings from `shopLocation` (straight-line km), each with fee, minimum order and extra minutes. Address check uses OpenStreetMap (free) or the phone's location.
+- **Promo codes:** `promoCodes` — percent, fixed amount or free delivery, with minimum spend and expiry. Codes are readable in the site source, so use them for public promotions.
+- **Allergens, veg/vegan icons, photos:** `allergens`, `tags`, `image` on each dish in `data/menu.js`. The allergens filled in now are examples and must be checked.
 - **Team:** name, role, one line and an optional portrait photo (4:5) per person in `data/config.js` → `team`.
 
 Visitors can switch language with the IT / EN buttons; the choice is remembered. You can also link straight to English with `index.html?lang=en`.
