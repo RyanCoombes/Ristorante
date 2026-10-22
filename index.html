@@ -271,9 +271,19 @@
           </div>
 
           <div class="delivery-box" data-address-field hidden>
+            <div class="addr-row">
+              <label>
+                <span><span data-i18n="cart.street">Via e numero civico</span> *</span>
+                <input name="address" autocomplete="address-line1" data-i18n-ph="cart.addressPh">
+              </label>
+              <label class="addr-cap">
+                <span><span data-i18n="cart.cap">CAP</span> *</span>
+                <input name="cap" inputmode="numeric" pattern="[0-9]{5}" maxlength="5" autocomplete="postal-code" placeholder="00100">
+              </label>
+            </div>
             <label>
-              <span><span data-i18n="cart.address">Indirizzo di consegna</span> *</span>
-              <input name="address" autocomplete="street-address" data-i18n-ph="cart.addressPh">
+              <span data-i18n="cart.buzzer">Citofono / interno</span>
+              <input name="buzzer" autocomplete="address-line2" data-i18n-ph="cart.buzzerPh">
             </label>
             <div class="delivery-actions">
               <button type="button" class="btn btn--outline btn--sm" data-check-address data-i18n="cart.checkAddress">Verifica indirizzo</button>

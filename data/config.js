@@ -105,6 +105,14 @@ window.SITE_CONFIG = {
     { code: "CONSEGNAGRATIS", type: "freeDelivery", value: 0, minOrder: 25, validUntil: "" }
   ],
 
+  // PAGINA DI GESTIONE / ADMIN PAGE (admin.html)
+  // pinHash: impronta del PIN (si cambia dalla pagina di gestione). PIN iniziale: 000000
+  // pinHash: fingerprint of the PIN (change it from the admin page). Starting PIN: 000000
+  admin: {
+    pinHash: "91b4d142823f7d20c5f08df69122de43f35f057a988d9619f6d3138485c9a203",
+    uploadUrl: "https://github.com/RyanCoombes/Ristorante/upload/claude/busy-einstein-cfn7dv/data"
+  },
+
   // La squadra. Ogni persona ha la stessa scheda: foto, nome, ruolo, una frase.
   // photo: percorso della foto (es. "assets/img/team/marco.jpg"), formato verticale 4:5.
   //        Lasciala vuota ("") per mostrare la mascotte.

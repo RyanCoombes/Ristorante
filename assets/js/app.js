@@ -6,6 +6,19 @@
 (function () {
   "use strict";
 
+  // preview of unpublished changes from the admin page (only on that device)
+  var PREVIEWING = false;
+  try {
+    if (localStorage.getItem("vc-preview") === "1") {
+      var draft = JSON.parse(localStorage.getItem("vc-admin-draft") || "null");
+      if (draft && draft.config && draft.menu) {
+        window.SITE_CONFIG = draft.config;
+        window.MENU = draft.menu;
+        PREVIEWING = true;
+      }
+    }
+  } catch (e) { /* no storage: show the published site */ }
+
   var CONFIG = window.SITE_CONFIG || {};
   var MENU = window.MENU || [];
   var I18N = window.I18N || {};
@@ -374,11 +387,21 @@
       Math.cos(lat1 * rad) * Math.cos(lat2 * rad) * Math.sin(dLng / 2) * Math.sin(dLng / 2);
     return 2 * R * Math.asin(Math.sqrt(h));
   }
-  function setGeoPoint(lat, lng, source, query) {
+  function setGeoPoint(lat, lng, source, query, label) {
     var shop = CONFIG.shopLocation || {};
     var km = Math.round(kmBetween(shop.lat, shop.lng, lat, lng) * 10) / 10;
     var zone = ZONES.filter(function (z) { return km <= z.upToKm; })[0];
-    geo = { status: zone ? "ok" : "out", km: km, zone: zone, lat: lat, lng: lng, source: source, query: query };
+    geo = { status: zone ? "ok" : "out", km: km, zone: zone, lat: lat, lng: lng, source: source, query: query, label: label };
+  }
+  // "Via del Corso 12, 00186 Roma" from a Nominatim result
+  function placeLabel(a) {
+    a = a || {};
+    var street = [a.road || a.pedestrian || a.square || "", a.house_number || ""].join(" ").trim();
+    var town = a.city || a.town || a.village || a.municipality || "";
+    return [street, [a.postcode || "", town].join(" ").trim()].filter(Boolean).join(", ");
+  }
+  function addressQuery() {
+    return form.elements.address.value.trim() + "|" + form.elements.cap.value.trim();
   }
   // the zone to use for fees/times: the verified one, or the nearest ring as a best guess
   function zoneFor() { return geo.zone || ZONES[0] || {}; }
@@ -386,23 +409,44 @@
   var NOMINATIM = "https://nominatim.openstreetmap.org/";
 
   function checkAddress(then) {
-    var q = form.elements.address.value.trim();
-    if (!q) { markInvalid([form.elements.address]); return; }
+    var street = form.elements.address.value.trim();
+    var cap = form.elements.cap.value.trim();
+    var bad = [];
+    if (!street) bad.push(form.elements.address);
+    if (!/^\d{5}$/.test(cap)) bad.push(form.elements.cap);
+    if (bad.length) {
+      markInvalid(bad);
+      if (street && bad.length === 1) $("[data-cart-warn]").textContent = t("cart.capInvalid");
+      return;
+    }
     if (geo.status === "checking") return;
+    var query = addressQuery();
     geo = { status: "checking" };
     renderCart();
     var area = (CONFIG.address && CONFIG.address.searchArea) || "";
     var shop = CONFIG.shopLocation || {};
-    var url = NOMINATIM + "search?format=jsonv2&limit=1&countrycodes=it&accept-language=it" +
-      "&viewbox=" + [shop.lng - 0.15, shop.lat + 0.15, shop.lng + 0.15, shop.lat - 0.15].join(",") +
-      "&q=" + encodeURIComponent(area && q.toLowerCase().indexOf(area.toLowerCase()) === -1 ? q + ", " + area : q);
-    fetch(url, { headers: { "Accept": "application/json" } })
-      .then(function (r) { if (!r.ok) throw new Error(r.status); return r.json(); })
+    var base = NOMINATIM + "search?format=jsonv2&limit=1&addressdetails=1&countrycodes=it&accept-language=it" +
+      "&viewbox=" + [shop.lng - 0.15, shop.lat + 0.15, shop.lng + 0.15, shop.lat - 0.15].join(",");
+    // 1) structured search: street + CAP;  2) fall back to free text if that finds nothing
+    var structured = base + "&street=" + encodeURIComponent(street) + "&postalcode=" + cap + (area ? "&city=" + encodeURIComponent(area) : "");
+    var freeText = base + "&q=" + encodeURIComponent(street + ", " + cap + (area ? " " + area : ""));
+    var get = function (url) {
+      return fetch(url, { headers: { "Accept": "application/json" } })
+        .then(function (r) { if (!r.ok) throw new Error(r.status); return r.json(); });
+    };
+    get(structured)
+      .then(function (res) { return res && res[0] ? res : get(freeText); })
       .then(function (res) {
-        if (res && res[0]) setGeoPoint(parseFloat(res[0].lat), parseFloat(res[0].lon), "address", q);
-        else geo = { status: "unknown", query: q };
+        var hit = res && res[0];
+        if (!hit) { geo = { status: "unknown", query: query }; return; }
+        var found = ((hit.address && hit.address.postcode) || "").replace(/\s/g, "");
+        if (found && found.slice(0, 5) !== cap) {
+          geo = { status: "mismatch", query: query, found: found.slice(0, 5), cap: cap };
+          return;
+        }
+        setGeoPoint(parseFloat(hit.lat), parseFloat(hit.lon), "address", query, placeLabel(hit.address));
       })
-      .catch(function () { geo = { status: "unknown", query: q }; })
+      .catch(function () { geo = { status: "unknown", query: query }; })
       .then(function () { renderCart(); if (then) then(); });
   }
 
@@ -416,13 +460,17 @@
       setGeoPoint(lat, lng, "gps");
       renderCart();
       // fill in the street for the rider if the field is empty
-      if (!form.elements.address.value.trim()) {
+      if (!form.elements.address.value.trim() || !form.elements.cap.value.trim()) {
         fetch(NOMINATIM + "reverse?format=jsonv2&zoom=18&accept-language=it&lat=" + lat + "&lon=" + lng)
           .then(function (r) { return r.json(); })
           .then(function (j) {
             var a = (j && j.address) || {};
             var street = [a.road || a.pedestrian || "", a.house_number || ""].join(" ").trim();
             if (street && !form.elements.address.value.trim()) form.elements.address.value = street;
+            if (a.postcode && !form.elements.cap.value.trim()) form.elements.cap.value = a.postcode.slice(0, 5);
+            geo.label = placeLabel(a);
+            geo.query = addressQuery();
+            renderCart();
           })
           .catch(function () { /* the coordinates alone are enough */ });
       }
@@ -478,11 +526,12 @@
     if (geo.status === "checking") msg = t("cart.checking");
     else if (geo.status === "ok") {
       cls = "is-ok";
-      msg = t("cart.zoneOk", { km: String(geo.km).replace(".", lang === "it" ? "," : "."), fee: money(geo.zone.fee || 0), min: money(geo.zone.minOrder || 0) });
+      msg = t("cart.zoneOk", { addr: geo.label || "", km: String(geo.km).replace(".", lang === "it" ? "," : "."), fee: money(geo.zone.fee || 0), min: money(geo.zone.minOrder || 0) }).replace("✓  · ", "✓ ");
     } else if (geo.status === "out") {
       cls = "is-bad";
       msg = t("cart.zoneOut", { max: maxKm(), km: String(geo.km).replace(".", lang === "it" ? "," : ".") });
     } else if (geo.status === "unknown") msg = t("cart.zoneUnknown");
+    else if (geo.status === "mismatch") { cls = "is-bad"; msg = t("cart.capMismatch", { found: geo.found, cap: geo.cap }); }
     else if (geo.status === "denied") { cls = "is-bad"; msg = t("cart.geoDenied"); }
     el.hidden = !msg;
     el.textContent = msg;
@@ -506,7 +555,8 @@
     $("[data-cart-fields]").hidden = empty;
 
     $("[data-cart-lines]").innerHTML = cartLines().map(function (l) {
-      return "<li>" +
+      return '<li class="' + (l.item.image ? "has-img" : "") + '">' +
+        (l.item.image ? '<img class="line-img" src="' + esc(l.item.image) + '" alt="" width="56" height="56">' : "") +
         '<span class="line-name">' + esc(l.item.name) + "</span>" +
         '<span class="line-price">' + money(l.total) + "</span>" +
         qtyControl(l.item, l.qty) +
@@ -544,7 +594,7 @@
     warnEl.textContent = warn.join(" ");
 
     $("[data-cart-send]").disabled = empty || belowMin || !open.ok ||
-      (delivery && (geo.status === "out" || geo.status === "checking"));
+      (delivery && (geo.status === "out" || geo.status === "checking" || geo.status === "mismatch"));
   }
 
   function buildMessage(data) {
@@ -562,7 +612,9 @@
     lines.push("");
     lines.push(t("wa.mode") + ": " + (data.mode === "delivery" ? t("cart.delivery") : t("cart.pickup")));
     if (data.mode === "delivery") {
-      lines.push(t("wa.address") + ": " + data.address);
+      var area = (CONFIG.address && CONFIG.address.searchArea) || "";
+      lines.push(t("wa.address") + ": " + data.address + ", " + data.cap + (area ? " " + area : ""));
+      if (data.buzzer) lines.push(t("wa.buzzer") + ": " + data.buzzer);
       lines.push(t("wa.distance") + ": " + (geo.status === "ok" ? km(geo.km) + " km" : t("wa.toCheck")));
       if (geo.lat) lines.push(t("wa.map") + ": https://maps.google.com/?q=" + geo.lat.toFixed(5) + "," + geo.lng.toFixed(5));
     }
@@ -589,6 +641,8 @@
     var data = {
       mode: deliveryOn() ? mode() : "pickup",
       address: form.elements.address.value.trim(),
+      cap: form.elements.cap.value.trim(),
+      buzzer: form.elements.buzzer.value.trim(),
       time: sel.value,
       timeLabel: opt ? opt.getAttribute("data-time") : "",
       payment: payment(),
@@ -596,11 +650,11 @@
     };
     $$(".is-invalid", form).forEach(function (el) { el.classList.remove("is-invalid"); });
     if (data.mode === "delivery") {
-      if (!data.address) { markInvalid([form.elements.address]); return; }
+      if (!data.address || !/^\d{5}$/.test(data.cap)) { checkAddress(); return; }   // flags the missing field
       if (geo.status === "none") { checkAddress(sendOrder); return; }   // check first, then continue
-      if (geo.status === "out" || geo.status === "checking") return;
+      if (geo.status === "out" || geo.status === "checking" || geo.status === "mismatch") return;
     }
-    save(STORE_CUSTOMER, { address: data.address, payment: data.payment });
+    save(STORE_CUSTOMER, { address: data.address, cap: data.cap, buzzer: data.buzzer, payment: data.payment });
     var url = waUrl(buildMessage(data));
     var win = window.open(url, "_blank");
     if (win) win.opener = null; else location.href = url;
@@ -662,7 +716,8 @@
     e.target.classList.remove("is-invalid");
     e.target.removeAttribute("aria-invalid");
     // a typed address that changed since it was checked needs checking again
-    if (e.target.name === "address" && geo.source !== "gps" && geo.status !== "none" && geo.status !== "checking") {
+    if ((e.target.name === "address" || e.target.name === "cap") && geo.source !== "gps" &&
+        geo.status !== "none" && geo.status !== "checking" && geo.query !== addressQuery()) {
       geo = { status: "none" };
       renderCart();
     }
@@ -670,7 +725,7 @@
   form.addEventListener("keydown", function (e) {
     if (e.key !== "Enter" || e.target.tagName === "TEXTAREA") return;
     e.preventDefault();
-    if (e.target.name === "address") checkAddress();
+    if (e.target.name === "address" || e.target.name === "cap") checkAddress();
     if (e.target.name === "promo") applyPromo();
   });
   $("[data-check-address]").addEventListener("click", function () { checkAddress(); });
@@ -686,6 +741,8 @@
   // remember returning customers
   var customer = load(STORE_CUSTOMER, {});
   if (customer.address) form.elements.address.value = customer.address;
+  if (customer.cap) form.elements.cap.value = customer.cap;
+  if (customer.buzzer) form.elements.buzzer.value = customer.buzzer;
   if (customer.payment === "cash") form.elements.payment.value = "cash";
 
   // highlight the menu tab of the section in view
@@ -701,6 +758,17 @@
     var observeCats = function () { $$(".menu-cat").forEach(function (s) { io.observe(s); }); };
     var origRenderMenu = renderMenu;
     renderMenu = function () { io.disconnect(); origRenderMenu(); observeCats(); };
+  }
+
+  if (PREVIEWING) {
+    var pv = document.createElement("div");
+    pv.className = "preview-bar";
+    pv.innerHTML = "<span>" + esc(t("preview.on")) + '</span><button type="button">' + esc(t("preview.exit")) + "</button>";
+    pv.querySelector("button").addEventListener("click", function () {
+      try { localStorage.removeItem("vc-preview"); } catch (e) { /* ignore */ }
+      location.reload();
+    });
+    document.body.appendChild(pv);
   }
 
   renderAll();

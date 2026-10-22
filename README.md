@@ -10,6 +10,18 @@ It is a static site: no database, no server, nothing to install.
 
 ## 🇮🇹 Come aggiornare il sito
 
+### La pagina di gestione: `admin.html` (consigliato)
+
+Aprite `tuosito/admin.html` dal telefono e inserite il PIN (iniziale: **000000**, cambiatelo subito da "Pubblica"). Lì si cambia tutto senza toccare file: ordini aperti/chiusi, serata piena, orari, menu (prezzi, descrizioni, foto, allergeni, esaurito), consegna, codici sconto, contatti e squadra.
+
+Le modifiche restano salvate sul telefono finché non le pubblicate:
+1. **Anteprima:** "Vedi anteprima sul sito" mostra il sito con le modifiche, solo su quel telefono.
+2. **Pubblica:** "Scarica config.js e menu.js", poi caricateli su GitHub nella cartella `data` (pulsante "Apri la pagina di caricamento su GitHub" → trascinate i due file → "Commit changes"). Dopo 1–2 minuti il sito è aggiornato.
+
+⚠️ Per ora il PIN è controllato nel browser: protegge la pagina ma non è una vera sicurezza. Non è un rischio perché il sito cambia solo con il caricamento su GitHub. Quando aggiungeremo un server, il PIN sarà verificato lì e le modifiche andranno online subito, senza caricare file.
+
+### Modificare i file a mano
+
 Tutto quello che cambia di solito si trova nella cartella `data/`. Si apre il file con un editor di testo qualsiasi (anche direttamente su GitHub, con l'icona della matita ✏️) e si salva.
 
 | Cosa vuoi cambiare | File |
@@ -78,6 +90,10 @@ Dopo aver salvato, apri `index.html` nel browser (doppio clic) e ricarica la pag
 ---
 
 ## 🇬🇧 How to update the site
+
+**Easiest: `admin.html`.** Open it on a phone and enter the PIN (starting PIN **000000** — change it under "Publish"). Edit orders, busy-night delays, hours, menu (prices, photos, allergens, sold out), delivery, promo codes, contacts and team. Changes are a draft on that device: preview them on the site, then "Download config.js and menu.js" and upload both into the `data` folder on GitHub. The PIN is checked in the browser for now (a screen lock, not real security); once a backend is added it will be checked on the server and changes will go live instantly.
+
+**By hand:**
 
 Everything you normally change lives in the `data/` folder. Open the file in any text editor (or straight on GitHub with the pencil ✏️ icon) and save.
 

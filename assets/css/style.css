@@ -396,12 +396,17 @@ h1, h2, h3, h4, p { margin: 0; }
 .cart-empty { padding: 30px 0; font-size: 17px; }
 .cart-lines { list-style: none; margin: 0; padding: 0; }
 .cart-lines li { display: grid; grid-template-columns: 1fr auto; gap: 6px 12px; align-items: center; padding: 12px 0; border-bottom: 1px dashed var(--cream-2); }
+.cart-lines li.has-img { grid-template-columns: 56px 1fr auto; }
+.cart-lines .line-img { grid-row: span 2; width: 56px; height: 56px; object-fit: contain; border-radius: 10px; background: #fff8ec; }
+.addr-row { display: grid; grid-template-columns: 1fr 110px; gap: 10px; }
+.addr-row label, .delivery-box > label { display: grid; gap: 6px; font-size: 14px; font-weight: 700; }
 .cart-lines .line-name { font-weight: 800; text-transform: uppercase; color: var(--red); }
 .cart-lines .line-price { font-weight: 800; text-align: right; }
 .cart-lines .qty { justify-self: start; }
 .cart-lines .qty button { width: 36px; height: 34px; font-size: 18px; }
 .cart-sums { margin: 16px 0 20px; }
 .cart-sums div { display: flex; justify-content: space-between; padding: 4px 0; }
+.cart-sums div[hidden] { display: none; }
 .cart-sums dd { margin: 0; font-weight: 700; }
 .cart-sums .cart-total { font-weight: 900; font-size: 20px; color: var(--red); border-top: 3px solid var(--red); margin-top: 6px; padding-top: 10px; }
 .cart-fields { border: 0; padding: 0; margin: 0; display: grid; gap: 14px; }
@@ -442,3 +447,11 @@ h1, h2, h3, h4, p { margin: 0; }
 .cart-foot { padding: 16px 20px 20px; border-top: 2px solid var(--cream-2); background: var(--cream); }
 .cart-foot-row { display: flex; justify-content: space-between; gap: 12px; align-items: flex-start; margin-top: 10px; }
 .cart-foot .btn[disabled] { opacity: .5; cursor: not-allowed; transform: none; }
+
+/* ---------- admin preview bar (only shown on the admin's device) ---------- */
+.preview-bar {
+  position: fixed; top: 0; left: 0; right: 0; z-index: 90;
+  display: flex; align-items: center; justify-content: center; gap: 12px; flex-wrap: wrap;
+  padding: 8px 16px; background: #f5c400; color: var(--black); font-size: 14px; font-weight: 800;
+}
+.preview-bar button { border: 0; border-radius: 999px; padding: 6px 14px; background: var(--black); color: #fff; font-weight: 800; cursor: pointer; }

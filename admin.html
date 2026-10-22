@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="it">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex, nofollow">
+  <title>Gestione · Vizi Capitali</title>
+  <meta name="theme-color" content="#EE1A37">
+  <link rel="icon" type="image/png" href="assets/img/favicon.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,400..900&family=Yellowtail&display=swap">
+  <link rel="stylesheet" href="assets/css/style.css">
+  <link rel="stylesheet" href="assets/css/admin.css">
+</head>
+<body class="admin">
+  <!-- PIN screen -->
+  <main class="pin-screen" data-pin-screen>
+    <form class="pin-card" data-pin-form autocomplete="off">
+      <img src="assets/img/logo.png" alt="Vizi Capitali" width="1000" height="438">
+      <h1 data-t="pin.title">Area gestione</h1>
+      <label for="pin" data-t="pin.label">Inserisci il PIN</label>
+      <input id="pin" name="pin" type="password" inputmode="numeric" pattern="[0-9]*" maxlength="6" autocomplete="current-password" required>
+      <p class="pin-error" data-pin-error hidden></p>
+      <button class="btn btn--red btn--block" type="submit" data-t="pin.enter">Entra</button>
+      <div class="lang lang--center" role="group" aria-label="Lingua / Language">
+        <button type="button" data-admin-lang="it" aria-pressed="true">IT</button>
+        <button type="button" data-admin-lang="en" aria-pressed="false">EN</button>
+      </div>
+    </form>
+  </main>
+
+  <!-- Admin app -->
+  <div class="admin-app" data-app hidden>
+    <header class="admin-head">
+      <img src="assets/img/logo-cream.png" alt="Vizi Capitali" width="1000" height="438">
+      <span class="admin-dirty" data-dirty hidden></span>
+      <div class="admin-head-actions">
+        <div class="lang lang--cream" role="group" aria-label="Lingua / Language">
+          <button type="button" data-admin-lang="it" aria-pressed="true">IT</button>
+          <button type="button" data-admin-lang="en" aria-pressed="false">EN</button>
+        </div>
+        <button type="button" class="admin-logout" data-logout data-t="app.logout">Esci</button>
+      </div>
+    </header>
+
+    <nav class="admin-tabs" data-tabs aria-label="Sezioni"></nav>
+
+    <main class="admin-main" data-panel></main>
+  </div>
+
+  <div class="toast" data-toast role="status" aria-live="polite" hidden></div>
+
+  <script src="data/config.js"></script>
+  <script src="data/menu.js"></script>
+  <script src="assets/js/admin.js"></script>
+</body>
+</html>
