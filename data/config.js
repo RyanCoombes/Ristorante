@@ -20,7 +20,7 @@ window.SITE_CONFIG = {
   email: "ciao@vizicapitali.it",
 
   // Solo il nome utente, senza @ / Username only, without @
-  instagram: "vizicapitali",
+  instagram: "vizi_capitali_",
 
   address: {
     street: "Via del Vizio, 7",
