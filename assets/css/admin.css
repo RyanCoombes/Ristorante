@@ -29,7 +29,7 @@ body.admin { background: var(--cream); color: var(--black); font-size: 16px; }
 .admin-head {
   position: sticky; top: 0; z-index: 20;
   display: flex; align-items: center; gap: 12px; padding: 10px 16px;
-  background: var(--red); color: var(--cream);
+  background: var(--red-ui); color: var(--cream);
 }
 .admin-head img { height: 34px; width: auto; }
 .admin-dirty { font-size: 12px; font-weight: 800; background: #f5c400; color: var(--black); padding: 4px 10px; border-radius: 999px; }
@@ -162,3 +162,14 @@ body.admin { background: var(--cream); color: var(--black); font-size: 16px; }
   background: var(--black); color: #fff; padding: 12px 18px; border-radius: 999px; font-weight: 700; max-width: calc(100% - 32px);
 }
 .toast[hidden] { display: none; }
+
+.visually-hidden { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+.lang--cream button { min-height: 36px; }
+.mini--danger { color: var(--red-ui); }
+
+/* contrast: small red text/buttons use the deeper UI red */
+.lang--cream button[aria-pressed="true"] { color: var(--red-ui); }
+.admin-tabs button, .seg button, .item-price, .box--cat > summary strong, .pin-error { color: var(--red-ui); }
+.admin-tabs button, .seg button { border-color: var(--red-ui); }
+.admin-tabs button[aria-current="true"], .seg button[aria-pressed="true"] { background: var(--red-ui); color: var(--cream); }
+.pin-screen { background: var(--red-ui); }
