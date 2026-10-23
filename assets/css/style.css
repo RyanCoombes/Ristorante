@@ -292,7 +292,7 @@ h1, h2, h3, h4, p { margin: 0; }
   .dish { padding: 16px 14px 14px; gap: 6px 12px; }
   .dish.has-img { grid-template-columns: 60px minmax(0, 1fr) auto; }
   .dish-img { width: 60px; height: 60px; }
-  .dish-name, .dish-price { font-size: 17px; }
+  .dish-name, .dish-price { font-size: 17px; color: var(--red-ui); }   /* below "large text" size: needs the deeper red */
   .dish-name { font-stretch: 105%; }
 }
 
