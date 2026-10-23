@@ -264,11 +264,11 @@
   }
 
   // collection / delivery times offered to the customer
-  function timeSlots() {
+  function timeSlots(forMode) {
     var o = ordering();
     if (!o.ok) return [];
     var step = Math.max(5, num(ORD.slotMinutes, 15));
-    var lead = baseWait() + (mode() === "delivery" ? zoneFor().extraMinutes || 0 : 0);
+    var lead = baseWait() + ((forMode || mode()) === "delivery" ? zoneFor().extraMinutes || 0 : 0);
     var first = Math.ceil((Math.max(o.now, o.period.open) + lead) / step) * step;
     var out = [first];
     for (var m = first + step; m <= o.period.close; m += step) out.push(m);
@@ -509,15 +509,30 @@
     return { sub: sub, promo: promo, discount: discount, fee: fee, feeKnown: feeKnown, total: round2(sub - discount + fee) };
   }
 
+  var MAX_SLOTS = 8;
+  function selectedTime() {
+    var r = form.querySelector('input[name="time"]:checked');
+    return r ? { value: r.value, label: r.getAttribute("data-time") } : { value: "asap", label: "" };
+  }
   function renderTimes() {
-    var sel = $("[data-time]");
-    var prev = sel.value;
-    var slots = timeSlots();
-    sel.innerHTML = slots.map(function (m, i) {
+    var host = $("[data-time]");
+    var prev = selectedTime().value;
+    var slots = timeSlots().slice(0, MAX_SLOTS);
+    host.innerHTML = slots.map(function (m, i) {
+      var value = i === 0 ? "asap" : fmtTime(m);
       var label = i === 0 ? t("cart.asap", { time: fmtTime(m) }) : fmtTime(m);
-      return '<option value="' + (i === 0 ? "asap" : fmtTime(m)) + '" data-time="' + fmtTime(m) + '">' + esc(label) + "</option>";
+      return '<label class="slot' + (i === 0 ? " slot--asap" : "") + '"><input type="radio" name="time" value="' + value + '" data-time="' + fmtTime(m) + '"' +
+        ((value === prev || (i === 0 && !prev)) ? " checked" : "") + "><span>" + esc(label) + "</span></label>";
     }).join("");
-    if (prev && sel.querySelector('option[value="' + prev + '"]')) sel.value = prev;
+    if (!form.querySelector('input[name="time"]:checked') && host.querySelector("input")) host.querySelector("input").checked = true;
+  }
+  function renderModeInfo() {
+    var p = timeSlots("pickup")[0], d = timeSlots("delivery")[0];
+    var z = zoneFor();
+    $('[data-mode-info="pickup"]').textContent = p != null ? t("cart.pickupInfo", { time: fmtTime(p) }) : "";
+    $('[data-mode-info="delivery"]').textContent = d != null
+      ? t("cart.deliveryInfo", { time: fmtTime(d), fee: money(geo.status === "ok" ? geo.zone.fee || 0 : (ZONES[0] || {}).fee || 0), min: money(z.minOrder || 0) })
+      : "";
   }
 
   function renderZone() {
@@ -576,6 +591,8 @@
     $("[data-address-field]").hidden = !delivery;
     renderZone();
     renderTimes();
+    renderModeInfo();
+    $("[data-continue-total]").textContent = money(tot.total) + (tot.feeKnown ? "" : " +");
 
     var promoEl = $("[data-promo-result]");
     promoEl.hidden = !tot.promo;
@@ -590,11 +607,89 @@
     if (belowMin) warn.push(t("cart.minOrder", { amount: money(min) }));
     if (!open.ok) warn.push(open.msg);
     var warnEl = $("[data-cart-warn]");
-    warnEl.hidden = empty || warn.length === 0;
+    warnEl.hidden = empty || warn.length === 0 || step === "sent";
     warnEl.textContent = warn.join(" ");
 
-    $("[data-cart-send]").disabled = empty || belowMin || !open.ok ||
+    var blocked = empty || belowMin || !open.ok ||
       (delivery && (geo.status === "out" || geo.status === "checking" || geo.status === "mismatch"));
+    $("[data-cart-continue]").disabled = blocked;
+    $("[data-cart-send]").disabled = blocked;
+    if (step === "review" && empty) step = "order";
+    renderStep();
+  }
+
+  // ---------- checkout steps: order -> review -> sent ----------
+  var step = "order";
+  var lastWaUrl = "";
+  var STEP_TITLE = { order: "cart.titleOrder", review: "cart.titleReview", sent: "cart.titleSent" };
+
+  function renderStep() {
+    dialog.setAttribute("data-step", step);
+    $$("[data-panel]").forEach(function (el) { el.hidden = el.getAttribute("data-panel") !== step; });
+    $$("[data-foot]").forEach(function (el) { el.hidden = el.getAttribute("data-foot") !== step; });
+    $("[data-step-back]").hidden = step !== "review";
+    $("[data-step-label]").textContent = step === "order" ? t("cart.step1") : step === "review" ? t("cart.step2") : "";
+    $("[data-cart-title]").textContent = t(STEP_TITLE[step]);
+    if (step === "review") renderReview();
+  }
+
+  function goStep(next) {
+    step = next;
+    renderCart();
+    $("[data-cart-body]").scrollTop = 0;
+    $("[data-cart-title]").focus({ preventScroll: true });
+  }
+
+  function collectData() {
+    var tm = selectedTime();
+    return {
+      mode: deliveryOn() ? mode() : "pickup",
+      address: form.elements.address.value.trim(),
+      cap: form.elements.cap.value.trim(),
+      buzzer: form.elements.buzzer.value.trim(),
+      time: tm.value,
+      timeLabel: tm.label,
+      payment: payment(),
+      notes: form.elements.notes.value.trim()
+    };
+  }
+
+  // checks that step 1 is complete; runs `then` when it is (possibly after an address lookup)
+  function validateOrder(then) {
+    if (!ordering().ok) { renderCart(); return; }
+    var data = collectData();
+    $$(".is-invalid", form).forEach(function (el) { el.classList.remove("is-invalid"); });
+    if (data.mode === "delivery") {
+      if (!data.address || !/^\d{5}$/.test(data.cap)) { checkAddress(); return; }   // flags the missing field
+      if (geo.status === "none") { checkAddress(function () { validateOrder(then); }); return; }
+      if (geo.status === "out" || geo.status === "checking" || geo.status === "mismatch") return;
+    }
+    then(data);
+  }
+
+  function renderReview() {
+    var data = collectData();
+    var tot = totals();
+    $("[data-review-lines]").innerHTML = cartLines().map(function (l) {
+      return "<li>" + (l.item.image ? '<img src="' + esc(l.item.image) + '" alt="" width="40" height="40">' : "<span></span>") +
+        '<span class="rl-name">' + l.qty + " × " + esc(l.item.name) + '</span><span class="rl-price">' + money(l.total) + "</span></li>";
+    }).join("");
+    var area = (CONFIG.address && CONFIG.address.searchArea) || "";
+    var rows = [[t("cart.detailMode"), data.mode === "delivery" ? t("cart.delivery") : t("cart.pickup")]];
+    if (data.mode === "delivery") rows.push([t("cart.detailAddress"), data.address + ", " + data.cap + (area ? " " + area : "") + (data.buzzer ? " · " + data.buzzer : "")]);
+    rows.push([t("cart.detailTime"), data.time === "asap" ? t("cart.asap", { time: data.timeLabel }) : data.time]);
+    rows.push([t("cart.detailPayment"), t(data.payment === "cash" ? "cart.cash" : "cart.card")]);
+    if (data.notes) rows.push([t("cart.detailNotes"), data.notes]);
+    $("[data-review-details]").innerHTML = rows.map(function (r) {
+      return "<div><dt>" + esc(r[0]) + "</dt><dd>" + esc(r[1]) + "</dd></div>";
+    }).join("");
+    $("[data-wa-preview]").textContent = buildMessage(data);
+    var sums = [[t("cart.subtotal"), money(tot.sub)]];
+    if (tot.discount) sums.push([t("cart.discount") + " (" + tot.promo.code + ")", "−" + money(tot.discount)]);
+    if (data.mode === "delivery") sums.push([geo.status === "ok" ? t("cart.deliveryFeeKm", { km: String(geo.km).replace(".", lang === "it" ? "," : ".") }) : t("cart.deliveryFee"), tot.feeKnown ? money(tot.fee) : t("cart.toConfirm")]);
+    $("[data-review-sums]").innerHTML = sums.map(function (r) { return "<div><dt>" + esc(r[0]) + "</dt><dd>" + esc(r[1]) + "</dd></div>"; }).join("") +
+      '<div class="cart-total"><dt>' + esc(t("cart.total")) + "</dt><dd>" + esc(money(tot.total)) + "</dd></div>";
+    $("[data-sent-summary]").textContent = cartLines().map(function (l) { return l.qty + "× " + l.item.name; }).join(", ") + " · " + money(tot.total);
   }
 
   function buildMessage(data) {
@@ -634,30 +729,27 @@
     warnEl.textContent = t("cart.required");
   }
 
-  function sendOrder() {
-    if (!ordering().ok) { renderCart(); return; }
-    var sel = $("[data-time]");
-    var opt = sel.options[sel.selectedIndex];
-    var data = {
-      mode: deliveryOn() ? mode() : "pickup",
-      address: form.elements.address.value.trim(),
-      cap: form.elements.cap.value.trim(),
-      buzzer: form.elements.buzzer.value.trim(),
-      time: sel.value,
-      timeLabel: opt ? opt.getAttribute("data-time") : "",
-      payment: payment(),
-      notes: form.elements.notes.value.trim()
-    };
-    $$(".is-invalid", form).forEach(function (el) { el.classList.remove("is-invalid"); });
-    if (data.mode === "delivery") {
-      if (!data.address || !/^\d{5}$/.test(data.cap)) { checkAddress(); return; }   // flags the missing field
-      if (geo.status === "none") { checkAddress(sendOrder); return; }   // check first, then continue
-      if (geo.status === "out" || geo.status === "checking" || geo.status === "mismatch") return;
-    }
-    save(STORE_CUSTOMER, { address: data.address, cap: data.cap, buzzer: data.buzzer, payment: data.payment });
-    var url = waUrl(buildMessage(data));
+  function openWhatsApp(url) {
     var win = window.open(url, "_blank");
     if (win) win.opener = null; else location.href = url;
+  }
+
+  function sendOrder() {
+    validateOrder(function (data) {
+      save(STORE_CUSTOMER, { address: data.address, cap: data.cap, buzzer: data.buzzer, payment: data.payment, mode: data.mode });
+      lastWaUrl = waUrl(buildMessage(data));
+      openWhatsApp(lastWaUrl);
+      goStep("sent");
+    });
+  }
+
+  var toastTimer;
+  function toast(msg) {
+    var el = $("[data-toast]");
+    el.textContent = msg;
+    el.hidden = false;
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(function () { el.hidden = true; }, 5000);
   }
 
   // ---------- render everything for the current language ----------
@@ -698,8 +790,30 @@
   // cart dialog
   var dialog = $("[data-cart]");
   $("[data-cart-open]").addEventListener("click", function () {
+    if (step !== "sent") step = "order";
     renderCart();
     if (dialog.showModal) dialog.showModal(); else dialog.setAttribute("open", "");
+  });
+  $("[data-cart-continue]").addEventListener("click", function () {
+    validateOrder(function () { goStep("review"); });
+  });
+  $("[data-step-back]").addEventListener("click", function () { goStep("order"); });
+  dialog.addEventListener("click", function (e) {
+    var g = e.target.closest("[data-goto]");
+    if (g) goStep(g.getAttribute("data-goto"));
+  });
+  $("[data-sent-again]").addEventListener("click", function () { if (lastWaUrl) openWhatsApp(lastWaUrl); });
+  $("[data-sent-yes]").addEventListener("click", function () {
+    Object.keys(cart).forEach(function (id) { delete cart[id]; });
+    save(STORE_CART, cart);
+    promoCode = null;
+    form.elements.promo.value = "";
+    form.elements.notes.value = "";
+    step = "order";
+    dialog.close();
+    renderMenu();
+    renderCart();
+    toast(t("sent.thanks"));
   });
   dialog.addEventListener("click", function (e) { if (e.target === dialog) dialog.close(); });
   $("[data-cart-send]").addEventListener("click", sendOrder);
@@ -710,7 +824,7 @@
     renderCart();
   });
   form.addEventListener("change", function (e) {
-    if (e.target.name === "mode" || e.target.name === "time" || e.target.name === "payment") renderCart();
+    if (e.target.name === "mode" || e.target.name === "payment") renderCart();
   });
   form.addEventListener("input", function (e) {
     e.target.classList.remove("is-invalid");
@@ -721,7 +835,15 @@
       geo = { status: "none" };
       renderCart();
     }
+    // check the address by itself once street and a full CAP are typed
+    if ((e.target.name === "address" || e.target.name === "cap") && geo.status === "none") {
+      clearTimeout(autoCheck);
+      autoCheck = setTimeout(function () {
+        if (form.elements.address.value.trim() && /^\d{5}$/.test(form.elements.cap.value.trim()) && geo.status === "none") checkAddress();
+      }, 900);
+    }
   });
+  var autoCheck;
   form.addEventListener("keydown", function (e) {
     if (e.key !== "Enter" || e.target.tagName === "TEXTAREA") return;
     e.preventDefault();
@@ -744,6 +866,7 @@
   if (customer.cap) form.elements.cap.value = customer.cap;
   if (customer.buzzer) form.elements.buzzer.value = customer.buzzer;
   if (customer.payment === "cash") form.elements.payment.value = "cash";
+  if (customer.mode === "delivery" && deliveryOn()) form.elements.mode.value = "delivery";
 
   // highlight the menu tab of the section in view
   if ("IntersectionObserver" in window) {

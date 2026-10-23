@@ -243,109 +243,169 @@
     <strong class="cart-bar-total" data-cart-total></strong>
   </button>
 
-  <dialog class="cart" data-cart aria-labelledby="cart-title">
+  <dialog class="cart" data-cart data-step="order" aria-labelledby="cart-title">
     <form method="dialog" class="cart-inner" data-cart-form novalidate>
       <header class="cart-head">
-        <h2 id="cart-title" data-i18n="cart.title">Il tuo ordine</h2>
+        <button type="button" class="cart-back" data-step-back data-i18n-aria="cart.back" aria-label="Indietro" hidden>
+          <svg class="ico" aria-hidden="true"><use href="#i-back"/></svg>
+        </button>
+        <div class="cart-head-titles">
+          <span class="cart-step" data-step-label></span>
+          <h2 id="cart-title" data-cart-title tabindex="-1">Il tuo ordine</h2>
+        </div>
         <button type="submit" value="close" class="cart-close" formnovalidate data-i18n-aria="cart.close" aria-label="Chiudi">×</button>
       </header>
 
-      <div class="cart-body">
-        <p class="cart-empty" data-cart-empty data-i18n="cart.empty">Il carrello è vuoto.</p>
-        <ul class="cart-lines" data-cart-lines></ul>
+      <div class="cart-body" data-cart-body>
+        <!-- ===== STEP 1: order, how and when ===== -->
+        <div data-panel="order">
+          <p class="cart-empty" data-cart-empty data-i18n="cart.empty">Il carrello è vuoto.</p>
+          <ul class="cart-lines" data-cart-lines></ul>
 
-        <dl class="cart-sums" data-cart-sums>
-          <div><dt data-i18n="cart.subtotal">Subtotale</dt><dd data-sum-sub></dd></div>
-          <div data-sum-disc-row hidden><dt data-sum-disc-label></dt><dd data-sum-disc></dd></div>
-          <div data-sum-fee-row hidden><dt data-sum-fee-label></dt><dd data-sum-fee></dd></div>
-          <div class="cart-total"><dt data-i18n="cart.total">Totale</dt><dd data-sum-total></dd></div>
-        </dl>
+          <dl class="cart-sums" data-cart-sums>
+            <div><dt data-i18n="cart.subtotal">Subtotale</dt><dd data-sum-sub></dd></div>
+            <div data-sum-disc-row hidden><dt data-sum-disc-label></dt><dd data-sum-disc></dd></div>
+            <div data-sum-fee-row hidden><dt data-sum-fee-label></dt><dd data-sum-fee></dd></div>
+            <div class="cart-total"><dt data-i18n="cart.total">Totale</dt><dd data-sum-total></dd></div>
+          </dl>
 
-        <fieldset class="cart-fields" data-cart-fields>
-          <div class="choice" data-mode-group>
-            <span class="label" data-i18n="cart.mode">Ritiro o consegna?</span>
-            <div class="choice-opts">
-              <label><input type="radio" name="mode" value="pickup" checked><span data-i18n="cart.pickup">Ritiro al locale</span></label>
-              <label data-delivery-opt><input type="radio" name="mode" value="delivery"><span data-i18n="cart.delivery">Consegna a domicilio</span></label>
+          <fieldset class="cart-fields" data-cart-fields>
+            <div class="choice" data-mode-group>
+              <span class="label" data-i18n="cart.mode">Ritiro o consegna?</span>
+              <div class="choice-opts mode-cards">
+                <label><input type="radio" name="mode" value="pickup" checked><span class="mode-title" data-i18n="cart.pickup">Ritiro al locale</span><small class="mode-info" data-mode-info="pickup"></small></label>
+                <label data-delivery-opt><input type="radio" name="mode" value="delivery"><span class="mode-title" data-i18n="cart.delivery">Consegna a domicilio</span><small class="mode-info" data-mode-info="delivery"></small></label>
+              </div>
             </div>
-          </div>
 
-          <div class="delivery-box" data-address-field hidden>
-            <div class="addr-row">
+            <div class="delivery-box" data-address-field hidden>
+              <div class="addr-row">
+                <label>
+                  <span><span data-i18n="cart.street">Via e numero civico</span> *</span>
+                  <input name="address" autocomplete="address-line1" data-i18n-ph="cart.addressPh">
+                </label>
+                <label class="addr-cap">
+                  <span><span data-i18n="cart.cap">CAP</span> *</span>
+                  <input name="cap" inputmode="numeric" pattern="[0-9]{5}" maxlength="5" autocomplete="postal-code" placeholder="00100">
+                </label>
+              </div>
+              <p class="zone-result" data-zone-result aria-live="polite" hidden></p>
               <label>
-                <span><span data-i18n="cart.street">Via e numero civico</span> *</span>
-                <input name="address" autocomplete="address-line1" data-i18n-ph="cart.addressPh">
+                <span data-i18n="cart.buzzer">Citofono / interno</span>
+                <input name="buzzer" autocomplete="address-line2" data-i18n-ph="cart.buzzerPh">
               </label>
-              <label class="addr-cap">
-                <span><span data-i18n="cart.cap">CAP</span> *</span>
-                <input name="cap" inputmode="numeric" pattern="[0-9]{5}" maxlength="5" autocomplete="postal-code" placeholder="00100">
+              <div class="delivery-actions">
+                <button type="button" class="btn btn--outline btn--sm" data-check-address data-i18n="cart.checkAddress">Verifica indirizzo</button>
+                <button type="button" class="link" data-use-location>
+                  <svg class="ico" aria-hidden="true"><use href="#i-pin"/></svg><span data-i18n="cart.useLocation">Usa la mia posizione</span>
+                </button>
+              </div>
+              <p class="osm small" data-i18n="cart.osm">Ricerca indirizzi © OpenStreetMap</p>
+            </div>
+
+            <div class="choice">
+              <span class="label" id="time-label" data-i18n="cart.when">Quando?</span>
+              <div class="slots" role="radiogroup" aria-labelledby="time-label" data-time></div>
+            </div>
+
+            <div class="choice">
+              <span class="label" data-i18n="cart.payment">Pagamento alla consegna o al ritiro</span>
+              <div class="choice-opts">
+                <label><input type="radio" name="payment" value="card" checked><span data-i18n="cart.card">Carta</span></label>
+                <label><input type="radio" name="payment" value="cash"><span data-i18n="cart.cash">Contanti</span></label>
+              </div>
+            </div>
+
+            <details class="more" data-promo-box>
+              <summary data-i18n="cart.promoToggle">Hai un codice sconto?</summary>
+              <div class="promo">
+                <label>
+                  <span data-i18n="cart.promo">Codice sconto</span>
+                  <span class="promo-row">
+                    <input name="promo" autocomplete="off" autocapitalize="characters" data-i18n-ph="cart.promoPh">
+                    <button type="button" class="btn btn--red btn--sm" data-promo-apply data-i18n="cart.apply">Applica</button>
+                  </span>
+                </label>
+                <p class="promo-result" data-promo-result aria-live="polite" hidden></p>
+              </div>
+            </details>
+
+            <details class="more" data-notes-box>
+              <summary data-i18n="cart.notesToggle">Aggiungi una nota per la cucina</summary>
+              <label>
+                <span data-i18n="cart.notes">Note</span>
+                <textarea name="notes" rows="2" data-i18n-ph="cart.notesPh"></textarea>
               </label>
-            </div>
-            <label>
-              <span data-i18n="cart.buzzer">Citofono / interno</span>
-              <input name="buzzer" autocomplete="address-line2" data-i18n-ph="cart.buzzerPh">
-            </label>
-            <div class="delivery-actions">
-              <button type="button" class="btn btn--outline btn--sm" data-check-address data-i18n="cart.checkAddress">Verifica indirizzo</button>
-              <button type="button" class="link" data-use-location>
-                <svg class="ico" aria-hidden="true"><use href="#i-pin"/></svg><span data-i18n="cart.useLocation">Usa la mia posizione</span>
-              </button>
-            </div>
-            <p class="zone-result" data-zone-result aria-live="polite" hidden></p>
-            <p class="osm small" data-i18n="cart.osm">Ricerca indirizzi © OpenStreetMap</p>
-          </div>
+            </details>
+          </fieldset>
+        </div>
 
-          <label>
-            <span data-i18n="cart.when">Quando?</span>
-            <select name="time" data-time></select>
-          </label>
+        <!-- ===== STEP 2: check and send ===== -->
+        <div data-panel="review" hidden>
+          <section class="review-card">
+            <div class="review-head"><h3 data-i18n="cart.reviewItems">Il tuo ordine</h3><button type="button" class="link" data-goto="order" data-i18n="cart.edit">Modifica</button></div>
+            <ul class="review-lines" data-review-lines></ul>
+          </section>
+          <section class="review-card">
+            <div class="review-head"><h3 data-i18n="cart.reviewDetails">Dettagli</h3><button type="button" class="link" data-goto="order" data-i18n="cart.edit">Modifica</button></div>
+            <dl class="review-details" data-review-details></dl>
+          </section>
+          <section class="wa-preview" aria-labelledby="wa-preview-title">
+            <p class="wa-preview-title" id="wa-preview-title" data-i18n="cart.preview">Il messaggio che invierai su WhatsApp</p>
+            <p class="wa-bubble" data-wa-preview></p>
+          </section>
+          <dl class="cart-sums" data-review-sums></dl>
+        </div>
 
-          <div class="choice">
-            <span class="label" data-i18n="cart.payment">Pagamento alla consegna o al ritiro</span>
-            <div class="choice-opts">
-              <label><input type="radio" name="payment" value="card" checked><span data-i18n="cart.card">Carta</span></label>
-              <label><input type="radio" name="payment" value="cash"><span data-i18n="cart.cash">Contanti</span></label>
-            </div>
-          </div>
-
-          <div class="promo">
-            <label>
-              <span data-i18n="cart.promo">Codice sconto</span>
-              <span class="promo-row">
-                <input name="promo" autocomplete="off" autocapitalize="characters" data-i18n-ph="cart.promoPh">
-                <button type="button" class="btn btn--red btn--sm" data-promo-apply data-i18n="cart.apply">Applica</button>
-              </span>
-            </label>
-            <p class="promo-result" data-promo-result aria-live="polite" hidden></p>
-          </div>
-
-          <label>
-            <span data-i18n="cart.notes">Note</span>
-            <textarea name="notes" rows="2" data-i18n-ph="cart.notesPh"></textarea>
-          </label>
-        </fieldset>
-
+        <!-- ===== STEP 3: did you press send? ===== -->
+        <div data-panel="sent" class="sent" hidden>
+          <img src="assets/img/mascot-peel.png" alt="" width="560" height="640">
+          <p class="script sent-kicker" data-i18n="sent.kicker">Quasi fatto!</p>
+          <h3 data-i18n="sent.title">Hai premuto Invia su WhatsApp?</h3>
+          <p data-i18n="sent.body">L'ordine ci arriva solo quando premi Invia nella chat. Ti rispondiamo per confermare l'orario.</p>
+          <p class="sent-summary" data-sent-summary></p>
+        </div>
       </div>
 
       <footer class="cart-foot">
         <p class="cart-warn" data-cart-warn hidden></p>
-        <button type="button" class="btn btn--wa btn--block" data-cart-send>
-          <svg class="ico" aria-hidden="true"><use href="#i-wa"/></svg>
-          <span data-i18n="cart.send">Invia ordine su WhatsApp</span>
-        </button>
-        <div class="cart-foot-row">
-          <p class="small" data-i18n="cart.disclaimer">Si aprirà WhatsApp con il messaggio pronto.</p>
-          <button type="button" class="link" data-cart-clear data-i18n="cart.clear">Svuota</button>
+        <div data-foot="order">
+          <button type="button" class="btn btn--red btn--block btn--split" data-cart-continue>
+            <span data-i18n="cart.continue">Continua</span><span data-continue-total></span>
+          </button>
+          <div class="cart-foot-row">
+            <p class="small" data-i18n="cart.payLater">Paghi alla consegna o al ritiro.</p>
+            <button type="button" class="link" data-cart-clear data-i18n="cart.clear">Svuota</button>
+          </div>
+        </div>
+        <div data-foot="review" hidden>
+          <button type="button" class="btn btn--wa btn--block" data-cart-send>
+            <svg class="ico" aria-hidden="true"><use href="#i-wa"/></svg>
+            <span data-i18n="cart.send">Invia ordine su WhatsApp</span>
+          </button>
+          <p class="small cart-foot-note" data-i18n="cart.sendHint">Si apre WhatsApp con il messaggio pronto: premi Invia nella chat.</p>
+        </div>
+        <div data-foot="sent" hidden>
+          <button type="button" class="btn btn--red btn--block" data-sent-yes data-i18n="sent.yes">Sì, l'ho inviato</button>
+          <div class="sent-actions">
+            <button type="button" class="btn btn--outline btn--sm" data-sent-again>
+              <svg class="ico" aria-hidden="true"><use href="#i-wa"/></svg><span data-i18n="sent.again">Riapri WhatsApp</span>
+            </button>
+            <button type="button" class="link" data-goto="review" data-i18n="sent.back">Torna all'ordine</button>
+          </div>
         </div>
       </footer>
     </form>
   </dialog>
+
+  <p class="site-toast" data-toast role="status" aria-live="polite" hidden></p>
 
   <!-- ============ ICONS ============ -->
   <svg width="0" height="0" style="position:absolute" aria-hidden="true">
     <symbol id="i-wa" viewBox="0 0 24 24"><path fill="currentColor" d="M12.04 2C6.58 2 2.13 6.45 2.13 11.91c0 1.75.46 3.45 1.32 4.95L2.05 22l5.25-1.38a9.9 9.9 0 0 0 4.74 1.21c5.46 0 9.91-4.45 9.91-9.91C21.95 6.45 17.5 2 12.04 2Zm0 18.15a8.2 8.2 0 0 1-4.19-1.15l-.3-.18-3.12.82.83-3.04-.2-.31a8.2 8.2 0 0 1-1.26-4.38c0-4.54 3.7-8.24 8.24-8.24 4.54 0 8.23 3.7 8.23 8.24 0 4.54-3.69 8.24-8.23 8.24Zm4.52-6.16c-.25-.12-1.47-.72-1.69-.81-.23-.08-.39-.12-.56.13-.17.25-.64.81-.78.97-.14.17-.29.19-.54.06-.25-.12-1.05-.39-1.99-1.23-.74-.66-1.23-1.47-1.38-1.72-.14-.25-.02-.38.11-.51.11-.11.25-.29.37-.43.13-.15.17-.25.25-.42.08-.17.04-.31-.02-.43-.06-.12-.56-1.34-.76-1.84-.2-.48-.41-.42-.56-.43h-.48c-.17 0-.43.06-.66.31-.22.25-.86.85-.86 2.07 0 1.22.89 2.4 1.01 2.56.12.17 1.75 2.67 4.23 3.74.59.26 1.05.41 1.41.52.59.19 1.13.16 1.56.1.48-.07 1.47-.6 1.67-1.18.21-.58.21-1.07.14-1.18-.06-.1-.22-.16-.47-.28Z"/></symbol>
     <symbol id="i-phone" viewBox="0 0 24 24"><path fill="currentColor" d="M6.62 10.79a15.05 15.05 0 0 0 6.59 6.59l2.2-2.2a1 1 0 0 1 1.01-.24c1.12.37 2.33.57 3.58.57a1 1 0 0 1 1 1V20a1 1 0 0 1-1 1A17 17 0 0 1 3 4a1 1 0 0 1 1-1h3.5a1 1 0 0 1 1 1c0 1.25.2 2.46.57 3.58a1 1 0 0 1-.25 1.01l-2.2 2.2Z"/></symbol>
     <symbol id="i-mail" viewBox="0 0 24 24"><path fill="currentColor" d="M4 4h16a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2Zm0 2v.51l8 5 8-5V6H4Zm16 2.86-7.47 4.67a1 1 0 0 1-1.06 0L4 8.86V18h16V8.86Z"/></symbol>
+    <symbol id="i-back" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" d="M15 5l-7 7 7 7"/></symbol>
     <symbol id="i-pin" viewBox="0 0 24 24"><path fill="currentColor" d="M12 2a7 7 0 0 0-7 7c0 5.25 7 13 7 13s7-7.75 7-13a7 7 0 0 0-7-7Zm0 9.5A2.5 2.5 0 1 1 12 6.5a2.5 2.5 0 0 1 0 5Z"/></symbol>
     <symbol id="i-leaf" viewBox="0 0 24 24"><path fill="currentColor" d="M20.6 3.4C11 3 4.5 7.6 4.5 14.6c0 1.6.4 3 1.1 4.2L3.3 21.1l1.4 1.4 2.3-2.3c1.2.7 2.6 1.1 4.2 1.1 7 0 11.6-6.5 11.2-16.1a2 2 0 0 0-1.8-1.8ZM11.2 19.3c-1 0-2-.3-2.8-.7l6.3-6.3-1.4-1.4-6.3 6.3a5.6 5.6 0 0 1-.7-2.6c0-5.6 5-9.3 12.7-9.3.1 8.1-3.6 14-7.8 14Z"/></symbol>
     <symbol id="i-ig" viewBox="0 0 24 24"><path fill="currentColor" d="M12 2.16c3.2 0 3.58.01 4.85.07 3.25.15 4.77 1.69 4.92 4.92.06 1.27.07 1.65.07 4.85s-.01 3.58-.07 4.85c-.15 3.23-1.66 4.77-4.92 4.92-1.27.06-1.64.07-4.85.07s-3.58-.01-4.85-.07c-3.26-.15-4.77-1.7-4.92-4.92C2.17 15.58 2.16 15.2 2.16 12s.01-3.58.07-4.85C2.38 3.92 3.9 2.38 7.15 2.23 8.42 2.17 8.8 2.16 12 2.16ZM12 0C8.74 0 8.33.01 7.05.07 2.7.27.27 2.69.07 7.05.01 8.33 0 8.74 0 12s.01 3.67.07 4.95c.2 4.36 2.62 6.78 6.98 6.98C8.33 23.99 8.74 24 12 24s3.67-.01 4.95-.07c4.35-.2 6.78-2.62 6.98-6.98.06-1.28.07-1.69.07-4.95s-.01-3.67-.07-4.95c-.2-4.35-2.62-6.78-6.98-6.98C15.67.01 15.26 0 12 0Zm0 5.84a6.16 6.16 0 1 0 0 12.32 6.16 6.16 0 0 0 0-12.32ZM12 16a4 4 0 1 1 0-8 4 4 0 0 1 0 8Zm6.4-11.85a1.44 1.44 0 1 0 0 2.88 1.44 1.44 0 0 0 0-2.88Z"/></symbol>
