@@ -1,0 +1,4 @@
+# order system: secrets and the order database never go into git
+api/private/*
+!api/private/.htaccess
+!api/private/index.php

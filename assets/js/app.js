@@ -222,7 +222,9 @@
     return y.concat(slotsFor(day));
   }
 
+  var REMOTE = { maintenance: false, paused: false };   // switches from the Ordini board (api/state.php)
   function ordering() {
+    if (REMOTE.paused) return { ok: false, msg: t("orders.paused") };
     var now = nowInZone();
     var early = num(ORD.startBeforeOpenMin, 0), stop = num(ORD.stopBeforeCloseMin, 0);
     if (ORD.open === false || CONFIG.ordersOpen === false) return { ok: false, msg: t("orders.paused") };
@@ -401,7 +403,7 @@
     return [street, [a.postcode || "", town].join(" ").trim()].filter(Boolean).join(", ");
   }
   function addressQuery() {
-    return form.elements.address.value.trim() + "|" + form.elements.cap.value.trim();
+    return form.elements.address.value.trim() + "|" + form.elements.civico.value.trim() + "|" + form.elements.cap.value.trim();
   }
   // the zone to use for fees/times: the verified one, or the nearest ring as a best guess
   function zoneFor() { return geo.zone || ZONES[0] || {}; }
@@ -409,14 +411,16 @@
   var NOMINATIM = "https://nominatim.openstreetmap.org/";
 
   function checkAddress(then) {
-    var street = form.elements.address.value.trim();
+    var civico = form.elements.civico.value.trim();
+    var street = (form.elements.address.value.trim() + " " + civico).trim();
     var cap = form.elements.cap.value.trim();
     var bad = [];
-    if (!street) bad.push(form.elements.address);
+    if (!form.elements.address.value.trim()) bad.push(form.elements.address);
+    if (!/\d/.test(civico)) bad.push(form.elements.civico);
     if (!/^\d{5}$/.test(cap)) bad.push(form.elements.cap);
     if (bad.length) {
       markInvalid(bad);
-      if (street && bad.length === 1) $("[data-cart-warn]").textContent = t("cart.capInvalid");
+      if (bad.length === 1 && bad[0] === form.elements.cap) $("[data-cart-warn]").textContent = t("cart.capInvalid");
       return;
     }
     if (geo.status === "checking") return;
@@ -445,6 +449,8 @@
           return;
         }
         setGeoPoint(parseFloat(hit.lat), parseFloat(hit.lon), "address", query, placeLabel(hit.address));
+        // the street exists but the map doesn't know this house number: warn, don't block
+        if (!(hit.address && hit.address.house_number)) geo.noNumber = civico;
       })
       .catch(function () { geo = { status: "unknown", query: query }; })
       .then(function () { renderCart(); if (then) then(); });
@@ -460,13 +466,14 @@
       setGeoPoint(lat, lng, "gps");
       renderCart();
       // fill in the street for the rider if the field is empty
-      if (!form.elements.address.value.trim() || !form.elements.cap.value.trim()) {
+      if (!form.elements.address.value.trim() || !form.elements.civico.value.trim() || !form.elements.cap.value.trim()) {
         fetch(NOMINATIM + "reverse?format=jsonv2&zoom=18&accept-language=it&lat=" + lat + "&lon=" + lng)
           .then(function (r) { return r.json(); })
           .then(function (j) {
             var a = (j && j.address) || {};
-            var street = [a.road || a.pedestrian || "", a.house_number || ""].join(" ").trim();
-            if (street && !form.elements.address.value.trim()) form.elements.address.value = street;
+            var road = a.road || a.pedestrian || "";
+            if (road && !form.elements.address.value.trim()) form.elements.address.value = road;
+            if (a.house_number && !form.elements.civico.value.trim()) form.elements.civico.value = a.house_number;
             if (a.postcode && !form.elements.cap.value.trim()) form.elements.cap.value = a.postcode.slice(0, 5);
             geo.label = placeLabel(a);
             geo.query = addressQuery();
@@ -542,6 +549,7 @@
     else if (geo.status === "ok") {
       cls = "is-ok";
       msg = t("cart.zoneOk", { addr: geo.label || "", km: String(geo.km).replace(".", lang === "it" ? "," : "."), fee: money(geo.zone.fee || 0), min: money(geo.zone.minOrder || 0) }).replace("✓  · ", "✓ ");
+      if (geo.noNumber) { msg += " " + t("cart.noNumber", { n: geo.noNumber }); cls = ""; }
     } else if (geo.status === "out") {
       cls = "is-bad";
       msg = t("cart.zoneOut", { max: maxKm(), km: String(geo.km).replace(".", lang === "it" ? "," : ".") });
@@ -614,12 +622,15 @@
       (delivery && (geo.status === "out" || geo.status === "checking" || geo.status === "mismatch"));
     $("[data-cart-continue]").disabled = blocked;
     $("[data-cart-send]").disabled = blocked;
+    $("[data-cart-submit]").disabled = blocked || submitting;
     if (step === "review" && empty) step = "order";
     renderStep();
   }
 
   // ---------- checkout steps: order -> review -> sent ----------
   var step = "order";
+  var CHANNEL = ORD.channel === "website" ? "website" : "whatsapp";
+  var webFailed = false;   // the order server isn't reachable (e.g. site opened as plain files): fall back to WhatsApp
   var lastWaUrl = "";
   var STEP_TITLE = { order: "cart.titleOrder", review: "cart.titleReview", sent: "cart.titleSent" };
 
@@ -630,6 +641,14 @@
     $("[data-step-back]").hidden = step !== "review";
     $("[data-step-label]").textContent = step === "order" ? t("cart.step1") : step === "review" ? t("cart.step2") : "";
     $("[data-cart-title]").textContent = t(STEP_TITLE[step]);
+    var web = CHANNEL === "website" && !webFailed;
+    $("[data-cart-submit]").hidden = !web;
+    $("[data-cart-send]").hidden = web;
+    $$("[data-wa-only]").forEach(function (el) { el.hidden = web; });
+    $("[data-email-field]").hidden = !web;
+    $("[data-send-hint]").textContent = web ? t("cart.sendHintWeb") : t("cart.sendHint");
+    $("[data-submit-total]").textContent = money(totals().total);
+    renderCashOptions();
     if (step === "review") renderReview();
   }
 
@@ -645,8 +664,13 @@
     return {
       mode: deliveryOn() ? mode() : "pickup",
       address: form.elements.address.value.trim(),
+      civico: form.elements.civico.value.trim(),
       cap: form.elements.cap.value.trim(),
       buzzer: form.elements.buzzer.value.trim(),
+      name: form.elements.name.value.trim(),
+      phone: form.elements.phone.value.trim(),
+      email: form.elements.email.value.trim(),
+      cashWith: payment() === "cash" ? cashWith() : null,
       time: tm.value,
       timeLabel: tm.label,
       payment: payment(),
@@ -660,11 +684,42 @@
     var data = collectData();
     $$(".is-invalid", form).forEach(function (el) { el.classList.remove("is-invalid"); });
     if (data.mode === "delivery") {
-      if (!data.address || !/^\d{5}$/.test(data.cap)) { checkAddress(); return; }   // flags the missing field
+      if (!data.address || !/\d/.test(data.civico) || !/^\d{5}$/.test(data.cap)) { checkAddress(); return; }   // flags the missing field
       if (geo.status === "none") { checkAddress(function () { validateOrder(then); }); return; }
       if (geo.status === "out" || geo.status === "checking" || geo.status === "mismatch") return;
     }
+    var bad = [];
+    if (data.name.length < 2) bad.push(form.elements.name);
+    if (!validPhone(data.phone)) bad.push(form.elements.phone);
+    if (data.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(data.email)) bad.push(form.elements.email);
+    if (bad.length) {
+      markInvalid(bad);
+      if (bad.length === 1 && bad[0] === form.elements.phone) $("[data-cart-warn]").textContent = t("cart.badPhone");
+      return;
+    }
     then(data);
+  }
+
+  function validPhone(p) { return /^\+?\d{8,15}$/.test(String(p).replace(/[\s().\/-]/g, "")); }
+
+  // ---------- cash: "what will you pay with?" so the rider brings change ----------
+  function cashWith() {
+    var r = form.querySelector('input[name="cashwith"]:checked');
+    return r && r.value !== "exact" ? parseInt(r.value, 10) : null;
+  }
+  function renderCashOptions() {
+    var box = $("[data-cash-with]");
+    var show = payment() === "cash";
+    box.hidden = !show;
+    if (!show) return;
+    var total = totals().total;
+    var prev = (form.querySelector('input[name="cashwith"]:checked') || {}).value || "exact";
+    var opts = [["exact", t("cart.cashExact")]].concat((ORD.cashOptions || [20, 50])
+      .filter(function (n) { return n > total; }).map(function (n) { return [String(n), money(n)]; }));
+    $("[data-cash-options]").innerHTML = opts.map(function (o) {
+      return '<label class="slot"><input type="radio" name="cashwith" value="' + o[0] + '"' + (o[0] === prev ? " checked" : "") + "><span>" + esc(o[1]) + "</span></label>";
+    }).join("");
+    if (!form.querySelector('input[name="cashwith"]:checked')) form.querySelector('input[name="cashwith"]').checked = true;
   }
 
   function renderReview() {
@@ -676,9 +731,10 @@
     }).join("");
     var area = (CONFIG.address && CONFIG.address.searchArea) || "";
     var rows = [[t("cart.detailMode"), data.mode === "delivery" ? t("cart.delivery") : t("cart.pickup")]];
-    if (data.mode === "delivery") rows.push([t("cart.detailAddress"), data.address + ", " + data.cap + (area ? " " + area : "") + (data.buzzer ? " · " + data.buzzer : "")]);
+    rows.push([t("cart.reviewContact"), data.name + " · " + data.phone]);
+    if (data.mode === "delivery") rows.push([t("cart.detailAddress"), data.address + " " + data.civico + ", " + data.cap + (area ? " " + area : "") + (data.buzzer ? " · " + data.buzzer : "")]);
     rows.push([t("cart.detailTime"), data.time === "asap" ? t("cart.asap", { time: data.timeLabel }) : data.time]);
-    rows.push([t("cart.detailPayment"), t(data.payment === "cash" ? "cart.cash" : "cart.card")]);
+    rows.push([t("cart.detailPayment"), t(data.payment === "cash" ? "cart.cash" : "cart.card") + (data.cashWith ? " · " + money(data.cashWith) : "")]);
     if (data.notes) rows.push([t("cart.detailNotes"), data.notes]);
     $("[data-review-details]").innerHTML = rows.map(function (r) {
       return "<div><dt>" + esc(r[0]) + "</dt><dd>" + esc(r[1]) + "</dd></div>";
@@ -705,16 +761,17 @@
     if (data.mode === "delivery") lines.push(t("wa.delivery") + ": " + (tot.feeKnown ? money(tot.fee) : t("cart.toConfirm")));
     lines.push("*" + t("wa.total") + ": " + money(tot.total) + (tot.feeKnown ? "" : " + " + t("wa.delivery").toLowerCase()) + "*");
     lines.push("");
+    lines.push(t("wa.name") + ": " + data.name + " · " + data.phone);
     lines.push(t("wa.mode") + ": " + (data.mode === "delivery" ? t("cart.delivery") : t("cart.pickup")));
     if (data.mode === "delivery") {
       var area = (CONFIG.address && CONFIG.address.searchArea) || "";
-      lines.push(t("wa.address") + ": " + data.address + ", " + data.cap + (area ? " " + area : ""));
+      lines.push(t("wa.address") + ": " + data.address + " " + data.civico + ", " + data.cap + (area ? " " + area : ""));
       if (data.buzzer) lines.push(t("wa.buzzer") + ": " + data.buzzer);
       lines.push(t("wa.distance") + ": " + (geo.status === "ok" ? km(geo.km) + " km" : t("wa.toCheck")));
       if (geo.lat) lines.push(t("wa.map") + ": https://maps.google.com/?q=" + geo.lat.toFixed(5) + "," + geo.lng.toFixed(5));
     }
     lines.push(t("wa.time") + ": " + (data.time === "asap" ? t("wa.asap", { time: data.timeLabel }) : data.time));
-    lines.push(t("wa.payment") + ": " + t(data.payment === "cash" ? "cart.cash" : "cart.card"));
+    lines.push(t("wa.payment") + ": " + t(data.payment === "cash" ? "cart.cash" : "cart.card") + (data.cashWith ? " (" + money(data.cashWith) + ")" : ""));
     if (data.notes) lines.push(t("wa.notes") + ": " + data.notes);
     lines.push("");
     lines.push(t("wa.thanks"));
@@ -736,10 +793,69 @@
 
   function sendOrder() {
     validateOrder(function (data) {
-      save(STORE_CUSTOMER, { address: data.address, cap: data.cap, buzzer: data.buzzer, payment: data.payment, mode: data.mode });
+      save(STORE_CUSTOMER, { address: data.address, civico: data.civico, cap: data.cap, buzzer: data.buzzer, payment: data.payment,
+        mode: data.mode, name: data.name, phone: data.phone, email: data.email });
       lastWaUrl = waUrl(buildMessage(data));
       openWhatsApp(lastWaUrl);
       goStep("sent");
+    });
+  }
+
+  var submitting = false;
+  var LAST_ORDER = "vc-last-order";
+  function submitOrder() {
+    validateOrder(function (data) {
+      if (submitting) return;
+      submitting = true;
+      var btn = $("[data-cart-submit]");
+      btn.firstElementChild.textContent = t("cart.sending");
+      renderCart();
+      save(STORE_CUSTOMER, { address: data.address, civico: data.civico, cap: data.cap, buzzer: data.buzzer, payment: data.payment,
+        mode: data.mode, name: data.name, phone: data.phone, email: data.email });
+      var payload = {
+        items: cart, mode: data.mode, name: data.name, phone: data.phone, email: data.email,
+        street: data.address, civico: data.civico, cap: data.cap, buzzer: data.buzzer,
+        lat: geo.status === "ok" ? geo.lat : null, lng: geo.status === "ok" ? geo.lng : null,
+        slot: data.time, payment: data.payment, cashWith: data.cashWith, notes: data.notes,
+        promo: promoCode || "", lang: lang, website: form.elements.website.value
+      };
+      fetch("api/order.php", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(payload) })
+        .then(function (r) { return r.json().catch(function () { return { ok: false, error: "network", status: r.status }; }); })
+        .then(function (res) {
+          submitting = false;
+          btn.firstElementChild.textContent = t("cart.sendWeb");
+          if (res && res.ok) {
+            save(LAST_ORDER, { c: res.code, t: res.token, at: Date.now() });
+            Object.keys(cart).forEach(function (id) { delete cart[id]; });
+            save(STORE_CART, cart);
+            location.href = "ordine.html?c=" + encodeURIComponent(res.code) + "&t=" + encodeURIComponent(res.token) + (lang === "en" ? "&lang=en" : "");
+            return;
+          }
+          var err = (res && res.error) || "network";
+          if (err === "invalid" && res.fields) {
+            var map = { name: "name", phone: "phone", email: "email", street: "address", civico: "civico", cap: "cap" };
+            step = "order"; renderCart();
+            markInvalid(res.fields.map(function (f) { return form.elements[map[f]]; }).filter(Boolean));
+          }
+          if (err === "maintenance" || err === "paused") { checkRemote(); err = err === "paused" ? "closed" : err; }
+          if (["closed", "out_of_zone", "below_minimum", "invalid", "rate_limited", "maintenance"].indexOf(err) === -1) {
+            err = "network";
+            webFailed = true;               // offer WhatsApp instead
+          }
+          renderCart();
+          var warnEl = $("[data-cart-warn]");
+          warnEl.hidden = false;
+          warnEl.textContent = t("err." + err);
+        })
+        .catch(function () {
+          submitting = false;
+          btn.firstElementChild.textContent = t("cart.sendWeb");
+          webFailed = true;
+          renderCart();
+          var warnEl = $("[data-cart-warn]");
+          warnEl.hidden = false;
+          warnEl.textContent = t("err.network");
+        });
     });
   }
 
@@ -817,6 +933,7 @@
   });
   dialog.addEventListener("click", function (e) { if (e.target === dialog) dialog.close(); });
   $("[data-cart-send]").addEventListener("click", sendOrder);
+  $("[data-cart-submit]").addEventListener("click", submitOrder);
   $("[data-cart-clear]").addEventListener("click", function () {
     Object.keys(cart).forEach(function (id) { delete cart[id]; });
     save(STORE_CART, cart);
@@ -825,21 +942,23 @@
   });
   form.addEventListener("change", function (e) {
     if (e.target.name === "mode" || e.target.name === "payment") renderCart();
+    if (e.target.name === "cashwith") renderReview();
   });
   form.addEventListener("input", function (e) {
     e.target.classList.remove("is-invalid");
     e.target.removeAttribute("aria-invalid");
     // a typed address that changed since it was checked needs checking again
-    if ((e.target.name === "address" || e.target.name === "cap") && geo.source !== "gps" &&
+    if ((e.target.name === "address" || e.target.name === "civico" || e.target.name === "cap") && geo.source !== "gps" &&
         geo.status !== "none" && geo.status !== "checking" && geo.query !== addressQuery()) {
       geo = { status: "none" };
       renderCart();
     }
     // check the address by itself once street and a full CAP are typed
-    if ((e.target.name === "address" || e.target.name === "cap") && geo.status === "none") {
+    if ((e.target.name === "address" || e.target.name === "civico" || e.target.name === "cap") && geo.status === "none") {
       clearTimeout(autoCheck);
       autoCheck = setTimeout(function () {
-        if (form.elements.address.value.trim() && /^\d{5}$/.test(form.elements.cap.value.trim()) && geo.status === "none") checkAddress();
+        if (form.elements.address.value.trim() && /\d/.test(form.elements.civico.value) &&
+            /^\d{5}$/.test(form.elements.cap.value.trim()) && geo.status === "none") checkAddress();
       }, 900);
     }
   });
@@ -847,7 +966,7 @@
   form.addEventListener("keydown", function (e) {
     if (e.key !== "Enter" || e.target.tagName === "TEXTAREA") return;
     e.preventDefault();
-    if (e.target.name === "address" || e.target.name === "cap") checkAddress();
+    if (e.target.name === "address" || e.target.name === "civico" || e.target.name === "cap") checkAddress();
     if (e.target.name === "promo") applyPromo();
   });
   $("[data-check-address]").addEventListener("click", function () { checkAddress(); });
@@ -866,7 +985,12 @@
   if (customer.cap) form.elements.cap.value = customer.cap;
   if (customer.buzzer) form.elements.buzzer.value = customer.buzzer;
   if (customer.payment === "cash") form.elements.payment.value = "cash";
-  if (customer.mode === "delivery" && deliveryOn()) form.elements.mode.value = "delivery";
+  if (customer.civico) form.elements.civico.value = customer.civico;
+  if (customer.name) form.elements.name.value = customer.name;
+  if (customer.phone) form.elements.phone.value = customer.phone;
+  if (customer.email) form.elements.email.value = customer.email;
+  // delivery is the default; remember a customer who prefers collection
+  if (customer.mode === "pickup" || !deliveryOn()) form.elements.mode.value = "pickup";
 
   // highlight the menu tab of the section in view
   if ("IntersectionObserver" in window) {
@@ -883,6 +1007,17 @@
     renderMenu = function () { io.disconnect(); origRenderMenu(); observeCats(); };
   }
 
+  // a recent order: offer a way back to its live status page
+  (function () {
+    var last = load("vc-last-order", null);
+    if (!last || !last.c || Date.now() - last.at > 6 * 3600 * 1000) return;
+    var a = document.createElement("a");
+    a.className = "order-pill";
+    a.href = "ordine.html?c=" + encodeURIComponent(last.c) + "&t=" + encodeURIComponent(last.t);
+    a.textContent = t("orderPill", { c: last.c });
+    document.body.appendChild(a);
+  })();
+
   if (PREVIEWING) {
     var pv = document.createElement("div");
     pv.className = "preview-bar";
@@ -894,7 +1029,37 @@
     document.body.appendChild(pv);
   }
 
+  // switches set from the Ordini board: maintenance page / orders paused
+  function showMaintenance(on) {
+    var el = $("[data-maint]");
+    if (on && !el) {
+      el = document.createElement("div");
+      el.className = "maint"; el.setAttribute("data-maint", "");
+      el.setAttribute("role", "dialog"); el.setAttribute("aria-modal", "true"); el.setAttribute("aria-labelledby", "maint-title");
+      el.innerHTML = '<div class="maint-box"><img src="assets/img/logo.png" alt="Vizi Capitali" width="1000" height="438">' +
+        '<img class="maint-mascot" src="assets/img/mascot-peel.png" alt="" width="560" height="640">' +
+        '<h1 id="maint-title">' + esc(t("maint.title")) + "</h1><p>" + esc(REMOTE.message || t("maint.body")) + "</p>" +
+        '<div class="maint-actions"><a class="btn btn--red" href="tel:' + esc(String(CONFIG.phone || "").replace(/[^\d+]/g, "")) + '">' + esc(t("maint.call")) + "</a>" +
+        '<a class="btn btn--wa" href="' + esc(waUrl(t("wa.hello"))) + '" target="_blank" rel="noopener">WhatsApp</a></div></div>';
+      document.body.appendChild(el);
+      document.body.style.overflow = "hidden";
+    }
+    if (!on && el) { el.remove(); document.body.style.overflow = ""; }
+  }
+  function checkRemote() {
+    if (CHANNEL !== "website") return;
+    fetch("api/state.php", { cache: "no-store" }).then(function (r) { return r.json(); }).then(function (st) {
+      if (!st || !st.ok) return;
+      var changed = st.paused !== REMOTE.paused || st.maintenance !== REMOTE.maintenance;
+      REMOTE = { maintenance: !!st.maintenance, paused: !!st.paused, message: st.message || "" };
+      showMaintenance(REMOTE.maintenance);
+      if (changed) { renderOrdering(); renderMenu(); renderCart(); renderStatus(); }
+    }).catch(function () { /* no order server (e.g. opened as files): ignore */ });
+  }
+
   renderAll();
+  checkRemote();
+  setInterval(checkRemote, 60 * 1000);
   // re-check every minute so ordering closes/opens on time without a reload
   var wasOpen = ordering().ok;
   setInterval(function () {

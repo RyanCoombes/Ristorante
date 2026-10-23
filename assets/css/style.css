@@ -556,3 +556,32 @@ h1, h2, h3, h4, p { margin: 0; }
 .btn--outline:hover, .sent-actions .btn--outline:hover { background: var(--red-ui); border-color: var(--red-ui); color: var(--cream); }
 [data-panel][hidden], [data-foot][hidden] { display: none !important; }
 @media (max-width: 480px) { .cart-head h2 { font-size: 20px; line-height: 1.1; } }
+
+/* ---------- basket: contact, house number, cash ---------- */
+.addr-row--3 { grid-template-columns: minmax(0, 1fr) 84px 96px; }
+@media (max-width: 480px) {
+  .addr-row--3 { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
+  .addr-row--3 > label:first-child { grid-column: 1 / -1; }
+}
+.contact-box { display: grid; gap: 10px; }
+.contact-box > label { display: grid; gap: 6px; font-size: 14px; font-weight: 700; }
+.contact-box > label[hidden] { display: none; }
+.cash-with { display: grid; gap: 6px; margin-top: 10px; }
+.cash-with[hidden] { display: none; }
+.hp { position: absolute; left: -9999px; width: 1px; height: 1px; opacity: 0; }
+
+/* link back to a recent order's live status */
+.order-pill {
+  position: fixed; top: calc(var(--header-h) + 10px); left: 50%; transform: translateX(-50%); z-index: 45;
+  padding: 10px 18px; border-radius: 999px; background: #1f6b36; color: #fff; font-weight: 800; font-size: 14px;
+  text-decoration: none; box-shadow: 0 8px 20px rgba(0,0,0,.25); white-space: nowrap;
+}
+
+/* maintenance page (switched on from the Ordini board) */
+.maint { position: fixed; inset: 0; z-index: 200; background: var(--cream); display: grid; place-items: center; padding: 24px 16px; overflow-y: auto; }
+.maint-box { max-width: 460px; text-align: center; display: grid; justify-items: center; gap: 14px; }
+.maint-box > img:first-child { width: 220px; }
+.maint-mascot { width: 140px; }
+.maint h1 { margin: 0; font-weight: 900; font-stretch: 120%; font-size: 32px; text-transform: uppercase; color: var(--red-ui); }
+.maint p { margin: 0; font-size: 18px; color: var(--black); }
+.maint-actions { display: flex; flex-wrap: wrap; gap: 10px; justify-content: center; }

@@ -273,16 +273,20 @@
             <div class="choice" data-mode-group>
               <span class="label" data-i18n="cart.mode">Ritiro o consegna?</span>
               <div class="choice-opts mode-cards">
-                <label><input type="radio" name="mode" value="pickup" checked><span class="mode-title" data-i18n="cart.pickup">Ritiro al locale</span><small class="mode-info" data-mode-info="pickup"></small></label>
-                <label data-delivery-opt><input type="radio" name="mode" value="delivery"><span class="mode-title" data-i18n="cart.delivery">Consegna a domicilio</span><small class="mode-info" data-mode-info="delivery"></small></label>
+                <label data-delivery-opt><input type="radio" name="mode" value="delivery" checked><span class="mode-title" data-i18n="cart.delivery">Consegna a domicilio</span><small class="mode-info" data-mode-info="delivery"></small></label>
+                <label><input type="radio" name="mode" value="pickup"><span class="mode-title" data-i18n="cart.pickup">Ritiro al locale</span><small class="mode-info" data-mode-info="pickup"></small></label>
               </div>
             </div>
 
             <div class="delivery-box" data-address-field hidden>
-              <div class="addr-row">
+              <div class="addr-row addr-row--3">
                 <label>
-                  <span><span data-i18n="cart.street">Via e numero civico</span> *</span>
+                  <span><span data-i18n="cart.street">Via / piazza</span> *</span>
                   <input name="address" autocomplete="address-line1" data-i18n-ph="cart.addressPh">
+                </label>
+                <label class="addr-num">
+                  <span><span data-i18n="cart.civico">N. civico</span> *</span>
+                  <input name="civico" autocomplete="off" maxlength="12" placeholder="12">
                 </label>
                 <label class="addr-cap">
                   <span><span data-i18n="cart.cap">CAP</span> *</span>
@@ -303,6 +307,22 @@
               <p class="osm small" data-i18n="cart.osm">Ricerca indirizzi © OpenStreetMap</p>
             </div>
 
+            <div class="contact-box">
+              <span class="label" data-i18n="cart.contact">I tuoi dati</span>
+              <label>
+                <span><span data-i18n="cart.name">Nome</span> *</span>
+                <input name="name" autocomplete="name" maxlength="60" data-i18n-ph="cart.namePh">
+              </label>
+              <label>
+                <span><span data-i18n="cart.phone">Telefono</span> *</span>
+                <input name="phone" type="tel" autocomplete="tel" inputmode="tel" maxlength="25" data-i18n-ph="cart.phonePh">
+              </label>
+              <label data-email-field>
+                <span data-i18n="cart.email">Email (facoltativa)</span>
+                <input name="email" type="email" autocomplete="email" maxlength="120" data-i18n-ph="cart.emailPh">
+              </label>
+            </div>
+
             <div class="choice">
               <span class="label" id="time-label" data-i18n="cart.when">Quando?</span>
               <div class="slots" role="radiogroup" aria-labelledby="time-label" data-time></div>
@@ -314,7 +334,12 @@
                 <label><input type="radio" name="payment" value="card" checked><span data-i18n="cart.card">Carta</span></label>
                 <label><input type="radio" name="payment" value="cash"><span data-i18n="cart.cash">Contanti</span></label>
               </div>
+              <div class="cash-with" data-cash-with hidden>
+                <span class="label" id="cash-label" data-i18n="cart.cashWith">Con quanto paghi?</span>
+                <div class="slots" role="radiogroup" aria-labelledby="cash-label" data-cash-options></div>
+              </div>
             </div>
+            <input name="website" class="hp" tabindex="-1" autocomplete="off" aria-hidden="true">
 
             <details class="more" data-promo-box>
               <summary data-i18n="cart.promoToggle">Hai un codice sconto?</summary>
@@ -350,7 +375,7 @@
             <div class="review-head"><h3 data-i18n="cart.reviewDetails">Dettagli</h3><button type="button" class="link" data-goto="order" data-i18n="cart.edit">Modifica</button></div>
             <dl class="review-details" data-review-details></dl>
           </section>
-          <section class="wa-preview" aria-labelledby="wa-preview-title">
+          <section class="wa-preview" aria-labelledby="wa-preview-title" data-wa-only>
             <p class="wa-preview-title" id="wa-preview-title" data-i18n="cart.preview">Il messaggio che invierai su WhatsApp</p>
             <p class="wa-bubble" data-wa-preview></p>
           </section>
@@ -379,11 +404,14 @@
           </div>
         </div>
         <div data-foot="review" hidden>
+          <button type="button" class="btn btn--red btn--block btn--split" data-cart-submit hidden>
+            <span data-i18n="cart.sendWeb">Invia ordine</span><span data-submit-total></span>
+          </button>
           <button type="button" class="btn btn--wa btn--block" data-cart-send>
             <svg class="ico" aria-hidden="true"><use href="#i-wa"/></svg>
             <span data-i18n="cart.send">Invia ordine su WhatsApp</span>
           </button>
-          <p class="small cart-foot-note" data-i18n="cart.sendHint">Si apre WhatsApp con il messaggio pronto: premi Invia nella chat.</p>
+          <p class="small cart-foot-note" data-send-hint></p>
         </div>
         <div data-foot="sent" hidden>
           <button type="button" class="btn btn--red btn--block" data-sent-yes data-i18n="sent.yes">Sì, l'ho inviato</button>

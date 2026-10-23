@@ -118,9 +118,54 @@ Visitors can switch language with the IT / EN buttons; the choice is remembered.
 
 ---
 
+## 🧾 Ordini dal sito / Website orders
+
+Con un hosting PHP i clienti ordinano direttamente dal sito: niente WhatsApp a pagamento, le notifiche arrivano gratis su Telegram e sulla bacheca `ordini.html`.
+*With PHP hosting, customers order straight from the website. Notifications are free, via Telegram and the `ordini.html` board.*
+
+### Prima installazione / First setup (una volta sola)
+
+1. Hosting: **PHP 8.1+** con `pdo_sqlite` e `curl` (quasi tutti gli hosting li hanno) e **HTTPS** attivo.
+2. Caricate tutta la cartella, poi aprite **subito** `https://vostrosito.it/api/setup.php` — finché non è configurato, chiunque potrebbe aprirlo.
+3. Telegram (gratis):
+   - in Telegram scrivete a **@BotFather** → `/newbot` → copiate il *token*;
+   - create un gruppo "Ordini" (e, se volete, uno "Rider") e aggiungete il bot;
+   - scrivete un messaggio nel gruppo, poi in `setup.php` premete **Trova chat** per ottenere gli ID.
+4. Scegliete il **PIN di 6 cifre** dello staff, i nomi dei rider, ed eventualmente l'email mittente per le conferme.
+5. Salvate. Il file con i segreti finisce in `api/private/config.php` (mai su GitHub, protetto da `.htaccess`). Per rifare la configurazione cancellate quel file e riaprite `setup.php`.
+
+> **nginx:** `.htaccess` funziona solo su Apache/LiteSpeed. Su nginx aggiungete `location ^~ /api/private/ { deny all; }`.
+
+### Ogni giorno / Daily use
+
+Aprite `ordini.html` su tablet o PC in cucina e inserite il PIN.
+
+- **Attiva suono** a inizio turno (i browser lo richiedono): suona finché c'è un ordine nuovo. Arriva anche un messaggio su Telegram, con i pulsanti *Accetta* / *Rifiuta*.
+- **Accetta** → scegliete l'orario (proposto in automatico). Il cliente lo vede sulla sua pagina dell'ordine.
+- **Rifiuta** → scegliete il motivo; il cliente lo vede subito.
+- **Stampa** → scontrino 80 mm con codice, piatti, indirizzo, resto e QR per la mappa.
+- **In consegna** → scegliete il rider: riceve su Telegram indirizzo, *Naviga* e *WhatsApp cliente*.
+- **+ Ordine telefono / app** → aggiungete gli ordini di telefono, Just Eat, Glovo, Deliveroo, così la cucina ha tutto in un posto.
+- **Archivio** → ordini dei giorni passati.
+- Interruttori in alto:
+  - **Ordini online** — spegnetelo per mettere in pausa gli ordini (il menu resta visibile).
+  - **Modalità manutenzione** — copre il sito con "Torniamo presto" e i pulsanti per chiamare/WhatsApp.
+
+Il pagamento resta alla consegna/al ritiro (SumUp o contanti): gli ordini vanno battuti in cassa come sempre.
+
+### Privacy
+
+Nome, telefono, email e indirizzo vengono cancellati automaticamente dopo **30 giorni** (`retention_days` in `setup.php`); restano solo i totali per l'archivio.
+
+### Senza PHP / Without PHP
+
+In `data/config.js` → `ordering.channel`: `"website"` (ordini al server) oppure `"whatsapp"` (vecchio metodo, messaggio precompilato). Se il server non risponde, il carrello offre comunque l'invio via WhatsApp.
+
+---
+
 ## Pubblicazione / Publishing
 
-Any static host works — just upload the whole folder:
+For **website orders** you need PHP hosting (see above) — any cheap shared host or VPS with PHP works, one bill. Without the order system, any static host works:
 
 - **GitHub Pages:** repository *Settings → Pages → Deploy from branch*, pick the branch and `/ (root)`.
 - **Netlify / Vercel / Cloudflare Pages:** drag and drop the folder, or connect the repository (no build command, output directory = root).
@@ -135,7 +180,13 @@ data/config.js        business details   ← edit
 data/menu.js          menu               ← edit
 data/i18n.js          IT / EN text       ← edit
 assets/css/style.css  styles (brand colours: #EE1A37 red, #F0E3CC cream)
-assets/js/app.js      menu, language switch, basket, WhatsApp message
+assets/js/app.js      menu, language switch, basket, checkout
+ordine.html           customer's live order page (status, cancel)
+ordini.html           staff board (PIN) ← orders, switches, archive
+api/                  PHP + SQLite backend (orders, Telegram, staff)
+api/setup.php         one-time setup: PIN, Telegram
+api/private/          secrets + database (never uploaded to GitHub)
+assets/vendor/        qrcode-generator (MIT) for printed slips
 assets/img/           logos, mascot, photos (from the brand identity book)
 ```
 

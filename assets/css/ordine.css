@@ -1,0 +1,40 @@
+/* Vizi Capitali · customer order page (builds on style.css) */
+
+.track { padding-bottom: 40px; }
+.track-head { background: var(--red-ui); padding: 14px 16px; display: flex; justify-content: center; }
+.track-head img { height: 40px; width: auto; }
+.track-main { max-width: 560px; margin: 0 auto; padding: 18px 16px 0; display: grid; gap: 16px; }
+.track-code { margin: 0; text-align: center; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; color: var(--red-deep); }
+
+.track-card { text-align: center; display: grid; justify-items: center; gap: 8px; padding: 18px; border-radius: var(--radius); background: #fff8ec; border: 3px solid var(--cream-2); }
+.track-card h1 { margin: 0; font-weight: 900; font-stretch: 120%; font-size: 26px; line-height: 1.1; text-transform: uppercase; color: var(--red-ui); }
+.track-msg { margin: 0; font-size: 16px; line-height: 1.45; color: var(--black); }
+.track-mascot { width: 120px; height: auto; }
+.track-card--accepted, .track-card--ready, .track-card--out { border-color: #2f5410; }
+.track-card--accepted h1, .track-card--ready h1, .track-card--out h1 { color: #1f5c30; }
+.track-card--done { border-color: var(--red-ui); }
+.track-card--rejected, .track-card--cancelled { border-color: #6b5e52; }
+.track-card--rejected h1, .track-card--cancelled h1 { color: #4b3b30; }
+
+.track-steps { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 6px; }
+.track-steps[hidden] { display: none; }
+.track-steps li { display: grid; gap: 6px; font-size: 12px; font-weight: 800; text-transform: uppercase; color: #6b5e52; text-align: center; }
+.track-steps li span { height: 6px; border-radius: 4px; background: var(--cream-2); }
+.track-steps li.is-done span { background: #2f5410; }
+.track-steps li.is-done { color: #2f5410; }
+.track-steps li.is-now span { background: var(--red-ui); }
+.track-steps li.is-now { color: var(--red-ui); }
+
+.track-box { background: #fff8ec; border: 2px solid var(--cream-2); border-radius: 16px; padding: 14px 16px; }
+.track-box[hidden] { display: none; }
+.track-box h2 { margin: 0 0 6px; font-size: 14px; font-weight: 900; text-transform: uppercase; color: var(--red-ui); }
+.track-items { list-style: none; margin: 0; padding: 0; }
+.track-items li { display: flex; justify-content: space-between; gap: 10px; padding: 6px 0; border-bottom: 1px dashed var(--cream-2); font-weight: 700; color: var(--black); }
+.track-sums { margin: 8px 0 0; display: grid; gap: 4px; }
+.track-sums div { display: flex; justify-content: space-between; gap: 10px; font-size: 14px; color: var(--black); }
+.track-sums dd { margin: 0; text-align: right; }
+.track-sums .track-total { font-weight: 900; font-size: 16px; color: var(--red-deep); padding-top: 6px; border-top: 2px solid var(--red-ui); }
+
+.track-actions { display: grid; gap: 10px; }
+.track-actions .btn[hidden] { display: none; }
+.track-back { justify-self: center; min-height: 44px; display: inline-flex; align-items: center; font-weight: 800; color: var(--red-ui); }

@@ -1,0 +1,119 @@
+<!doctype html>
+<html lang="it">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex, nofollow">
+  <title>Ordini · Vizi Capitali</title>
+  <meta name="theme-color" content="#C8102E">
+  <link rel="icon" type="image/png" href="assets/img/favicon.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,400..900&display=swap">
+  <link rel="stylesheet" href="assets/css/style.css">
+  <link rel="stylesheet" href="assets/css/ordini.css">
+</head>
+<body class="staff">
+  <!-- login -->
+  <main class="pin-wrap" data-login hidden>
+    <form class="pin-box" data-login-form>
+      <img src="assets/img/logo.png" alt="Vizi Capitali" width="1000" height="438">
+      <h1>Ordini</h1>
+      <label for="pin">PIN dello staff</label>
+      <input id="pin" name="pin" type="password" inputmode="numeric" maxlength="6" autocomplete="current-password" required>
+      <p class="pin-err" data-login-err hidden></p>
+      <button class="btn btn--red btn--block" type="submit">Entra</button>
+      <p class="small" data-setup-hint hidden>Prima volta? Apri <a href="api/setup.php">api/setup.php</a> per impostare il PIN.</p>
+    </form>
+  </main>
+
+  <!-- board -->
+  <div class="board-app" data-app hidden>
+    <header class="board-head">
+      <img src="assets/img/logo-cream.png" alt="Vizi Capitali" width="1000" height="438">
+      <h1 class="visually-hidden">Ordini</h1>
+      <span class="board-clock" data-clock></span>
+      <span class="board-online" data-online></span>
+      <div class="board-head-actions">
+        <button type="button" class="head-btn" data-sound aria-pressed="false">Attiva suono</button>
+        <button type="button" class="head-btn" data-logout>Esci</button>
+      </div>
+    </header>
+    <nav class="board-tabs" aria-label="Sezioni">
+      <button type="button" data-tab="live" aria-current="true">In corso <span class="tab-count" data-count-new></span></button>
+      <button type="button" data-tab="add" aria-current="false">+ Ordine telefono / app</button>
+      <button type="button" data-tab="archive" aria-current="false">Archivio</button>
+    </nav>
+
+    <main>
+    <div class="switches" role="group" aria-label="Interruttori del sito">
+      <button type="button" class="sw" data-flag="paused" aria-pressed="false">
+        <span class="sw-knob" aria-hidden="true"></span><span class="sw-text"><strong>Ordini online</strong><span data-flag-label="paused">Aperti</span></span>
+      </button>
+      <button type="button" class="sw sw--maint" data-flag="maintenance" aria-pressed="false">
+        <span class="sw-knob" aria-hidden="true"></span><span class="sw-text"><strong>Modalità manutenzione</strong><span data-flag-label="maintenance">Spenta</span></span>
+      </button>
+    </div>
+    <p class="board-banner" data-banner hidden></p>
+
+    <section data-view="live" class="cols">
+      <div class="col col--new"><h2>Nuovi <span data-n="new"></span></h2><div data-col="new"></div></div>
+      <div class="col col--prep"><h2>In preparazione <span data-n="accepted"></span></h2><div data-col="accepted"></div></div>
+      <div class="col col--go"><h2>Pronti / in consegna <span data-n="go"></span></h2><div data-col="go"></div></div>
+      <div class="col col--done">
+        <details><summary><h2>Completati oggi <span data-n="done"></span></h2></summary><div data-col="done"></div></details>
+        <details><summary><h2>Rifiutati / annullati <span data-n="off"></span></h2></summary><div data-col="off"></div></details>
+      </div>
+    </section>
+
+    <section data-view="add" class="add-wrap" hidden>
+      <form class="add-form" data-add-form autocomplete="off">
+        <h2>Nuovo ordine da telefono o app</h2>
+        <fieldset class="chips"><legend>Da dove arriva</legend>
+          <label><input type="radio" name="source" value="phone" checked><span>Telefono</span></label>
+          <label><input type="radio" name="source" value="justeat"><span>Just Eat</span></label>
+          <label><input type="radio" name="source" value="glovo"><span>Glovo</span></label>
+          <label><input type="radio" name="source" value="deliveroo"><span>Deliveroo</span></label>
+          <label><input type="radio" name="source" value="other"><span>Altro</span></label>
+        </fieldset>
+        <fieldset class="chips"><legend>Modalità</legend>
+          <label><input type="radio" name="mode" value="delivery" checked><span>Consegna</span></label>
+          <label><input type="radio" name="mode" value="pickup"><span>Ritiro</span></label>
+        </fieldset>
+        <div class="add-grid">
+          <label>Nome<input name="name" maxlength="60"></label>
+          <label>Telefono<input name="phone" type="tel" maxlength="25"></label>
+          <label class="span2" data-addr>Via / piazza<input name="street" maxlength="120"></label>
+          <label data-addr>N. civico<input name="civico" maxlength="12"></label>
+          <label data-addr>CAP<input name="cap" maxlength="5" inputmode="numeric"></label>
+          <label class="span2" data-addr>Citofono / interno<input name="buzzer" maxlength="120"></label>
+          <label>Pronto alle<input name="time" type="time"></label>
+          <label>Totale (se diverso dal menu)<input name="total" inputmode="decimal" placeholder="es. 24,50"></label>
+        </div>
+        <fieldset class="chips"><legend>Pagamento</legend>
+          <label><input type="radio" name="payment" value="card" checked><span>Carta</span></label>
+          <label><input type="radio" name="payment" value="cash"><span>Contanti</span></label>
+        </fieldset>
+        <h3>Piatti</h3>
+        <div class="picker" data-picker></div>
+        <label>Altro / note (es. "2 birre", "senza basilico")<input name="extra" maxlength="300"></label>
+        <p class="add-total" data-add-total></p>
+        <button type="submit" class="btn btn--red btn--block">Aggiungi alla bacheca</button>
+      </form>
+    </section>
+
+    <section data-view="archive" class="archive" hidden>
+      <div class="archive-days" data-days></div>
+      <div class="archive-day" data-day-orders></div>
+    </section>
+    </main>
+  </div>
+
+  <iframe class="print-frame" data-print title="Stampa" aria-hidden="true" tabindex="-1"></iframe>
+
+  <script src="assets/vendor/qrcode.js"></script>
+  <script src="data/config.js"></script>
+  <script src="data/menu.js"></script>
+  <script src="assets/js/ordini.js"></script>
+</body>
+</html>

@@ -1,0 +1,49 @@
+<!doctype html>
+<html lang="it">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex">
+  <title>Il tuo ordine · Vizi Capitali</title>
+  <meta name="theme-color" content="#C8102E">
+  <link rel="icon" type="image/png" href="assets/img/favicon.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,400..900&family=Yellowtail&display=swap">
+  <link rel="stylesheet" href="assets/css/style.css">
+  <link rel="stylesheet" href="assets/css/ordine.css">
+</head>
+<body class="track">
+  <header class="track-head">
+    <a href="index.html" aria-label="Vizi Capitali, torna al sito"><img src="assets/img/logo-cream.png" alt="Vizi Capitali" width="1000" height="438"></a>
+  </header>
+  <div class="checker" aria-hidden="true"></div>
+
+  <main class="track-main" aria-live="polite">
+    <p class="track-code" data-code></p>
+    <section class="track-card" data-card>
+      <img class="track-mascot" src="assets/img/mascot-peel.png" alt="" width="560" height="640">
+      <h1 data-title>…</h1>
+      <p class="track-msg" data-msg></p>
+    </section>
+
+    <ol class="track-steps" data-steps aria-label="Stato dell'ordine"></ol>
+
+    <section class="track-box" data-summary hidden>
+      <h2 data-t="summary">Il tuo ordine</h2>
+      <ul class="track-items" data-items></ul>
+      <dl class="track-sums" data-sums></dl>
+    </section>
+
+    <div class="track-actions">
+      <button type="button" class="btn btn--outline btn--block" data-cancel hidden></button>
+      <a class="btn btn--red btn--block" data-call></a>
+      <a class="btn btn--wa btn--block" data-wa target="_blank" rel="noopener"></a>
+      <a class="link track-back" href="index.html" data-t="back">Torna al sito</a>
+    </div>
+  </main>
+
+  <script src="data/config.js"></script>
+  <script src="assets/js/ordine.js"></script>
+</body>
+</html>
