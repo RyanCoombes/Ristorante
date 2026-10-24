@@ -154,21 +154,27 @@
   var annOn = ann.on !== false && inDates && !!((ann.text && (ann.text.it || ann.text.en)) || ann.code || theme);
   window.VC_ACTIVE_THEME = theme ? { id: id, name: theme.name } : null;   // app.js labels "Speciale <theme>" dishes
 
+  // Written into the page while it is still loading, so every browser waits for it before
+  // the first paint. A stylesheet added with appendChild doesn't hold the paint in Safari or
+  // Firefox: the page flashed in the standard red before the holiday colours arrived.
+  function addStylesheet(href) {
+    if (document.readyState === "loading") {
+      document.write('<link rel="stylesheet" href="' + href + '">');
+      return;
+    }
+    var link = document.createElement("link");
+    link.rel = "stylesheet";
+    link.href = href;
+    document.head.appendChild(link);
+  }
+
   if (theme) {
     root.setAttribute("data-theme", id);
     root.classList.add("lux");
-    var link = document.createElement("link");
-    link.rel = "stylesheet";
     // same version as the page's own files, so an update is never mixed with an old cached copy
     var ver = (document.querySelector('script[src*="themes.js?v="]') || { src: "" }).src.split("?v=")[1] || "";
-    link.href = "assets/css/themes/lux.css" + (ver ? "?v=" + ver : "");
-    if (id === "nataleroma") {   // Roman inscription capitals for S·P·Q·R and the year count
-      var font = document.createElement("link");
-      font.rel = "stylesheet";
-      font.href = "https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700&display=swap";
-      document.head.appendChild(font);
-    }
-    document.head.appendChild(link);
+    addStylesheet("assets/css/themes/lux.css" + (ver ? "?v=" + ver : ""));
+    if (id === "nataleroma") addStylesheet("https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700&display=swap");   // Roman capitals for S·P·Q·R
   }
   if (!theme && !annOn) return;
 
