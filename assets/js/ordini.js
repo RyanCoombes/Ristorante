@@ -136,7 +136,7 @@
   }
   function itemCount(o) { return o.items.reduce(function (n, l) { return n + (l.qty || 0); }, 0); }
   function itemsShort(o) { return o.items.map(function (l) { return l.qty + "× " + l.name; }).join(", "); }
-  function payText(o) { return o.payment === "cash" ? "Contanti" + (o.cashWith ? " (paga con " + money(o.cashWith) + ")" : "") : "Carta"; }
+  function payText(o) { return o.payment === "cash" ? "Contanti" + (o.cashWith ? " (paga con " + money(o.cashWith) + ")" : "") : o.payment === "online" ? "Pagato online" : "Carta"; }
   function feePending(o) { return o.fee == null && o.mode === "delivery" && o.source === "web"; }
   function customerMessage(o) {
     var name = o.name ? o.name.split(" ")[0] : "";
@@ -226,7 +226,7 @@
             (status ? '<span class="badge badge--state">' + status + "</span>" : "") +
             (o.notes ? '<span class="badge badge--note">Note</span>' : "") + "</span>" +
           '<span class="orow-line">' + esc(o.name || "—") + " · " + itemCount(o) + " pz · <b>" + money(o.total) + "</b>" +
-            (o.payment === "cash" ? " · contanti" : "") + "</span>" +
+            (o.payment === "cash" ? " · contanti" : o.payment === "online" ? " · pagato" : "") + "</span>" +
           '<span class="orow-items">' + esc(itemsShort(o)) + "</span>" +
         "</span>" +
       "</button>" +
@@ -505,7 +505,7 @@
       '<p class="big">' + esc(whenText(o)) + "</p><hr><table>" + items + "</table>" +
       (o.notes ? "<hr><p><b>Note:</b> " + esc(o.notes) + "</p>" : "") + "<hr>" +
       '<p class="big">TOTALE ' + money(o.total) + (o.fee == null && o.mode === "delivery" && o.source === "web" ? " + consegna" : "") + "</p>" +
-      '<p class="big">' + (o.payment === "cash" ? "CONTANTI" + (o.cashWith ? " · paga con " + money(o.cashWith) + " → resto " + money(o.cashWith - o.total) : "") : "CARTA · porta il POS") + "</p><hr>" +
+      '<p class="big">' + (o.payment === "cash" ? "CONTANTI" + (o.cashWith ? " · paga con " + money(o.cashWith) + " → resto " + money(o.cashWith - o.total) : "") : o.payment === "online" ? "PAGATO ONLINE · non incassare" : "CARTA · porta il POS") + "</p><hr>" +
       (o.purged ? "" : "<p><b>" + esc(o.name || "") + "</b> · " + esc(o.phone || "") + "</p>" +
         (o.mode === "delivery" ? '<p class="big">' + esc(addressText(o)) + "</p>" + (o.buzzer ? "<p>" + esc(o.buzzer) + "</p>" : "") : "")) +
       qr + "<p>Non è uno scontrino fiscale.</p></body></html>";

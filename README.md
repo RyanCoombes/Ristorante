@@ -34,8 +34,25 @@ Gli ordini per ora arrivano su **WhatsApp**: il cliente prepara l'ordine sul sit
 - Le modifiche vengono salvate sul server in `data/live.js` (non su GitHub), quindi un nuovo caricamento del sito da GitHub non le cancella.
 - **Temi:** Capodanno, Carnevale, San Valentino, Pasqua, Natale di Roma (21 aprile, con gli anni di Roma calcolati da soli), Festa della Repubblica, Santi Pietro e Paolo, Ferragosto, Halloween, Natale, oppure *Automatico* (cambia da solo con le date delle feste; se due feste si sovrappongono vince quella locale e più breve, es. il 21 aprile Natale di Roma prima di Pasqua) o *Nessun tema*. Ogni tema veste tutto il sito in stile elegante: colori della festa, logo in foglia metallica, cornici sottili e decorazioni discrete; carrello e ordini restano identici. Per provarne uno senza salvare: `index.html?tema=natale`.
 - **Striscia in alto** (Temi e avvisi): una sola striscia in cima al sito. Con un tema mostra i suoi auguri, oppure il vostro messaggio; potete aggiungere un codice sconto (*Usa il codice* lo mette già nel carrello) e date di inizio e fine. Si può spegnere.
-- **Nome della festa** sopra il logo (es. «Edizione notturna · Halloween»): si spegne da Temi e avvisi.
+- **Nome della festa** sopra il logo (es. «31 ottobre · Halloween»): si spegne da Temi e avvisi.
 - **Etichetta speciale sui piatti** (Menu → piatto): *Speciale della festa* (es. «Speciale Halloween», visibile solo con un tema attivo), *Edizione limitata*, oppure un testo vostro (es. «Speciale Derby»). Il piatto viene messo in evidenza.
+
+### Pagamenti online con SumUp (pronti, spenti)
+
+In **Gestione → Pagamenti online** c'è tutto il necessario per far pagare i clienti subito, sulla pagina sicura di SumUp (carta, Apple Pay, Google Pay). Finché non lo attivate, il sito resta com'è: «paghi alla consegna o al ritiro».
+
+- **Spenti**: nessun pagamento online (com'è adesso).
+- **Prova**: l'opzione «Paga ora online» compare **solo** sui dispositivi entrati in Gestione, con una pagina di pagamento finta (nessun soldo vero). Serve per provare tutto il percorso sul sito vero; i clienti non vedono niente.
+- **Attivi**: pagamenti veri per tutti. Servono il **merchant code** (app SumUp → Profilo) e una **chiave API segreta** (me.sumup.com → Impostazioni → Per sviluppatori). Premete *Verifica collegamento* prima di attivare.
+
+Come funziona per il cliente (ordini su WhatsApp): sceglie «Paga ora online», paga su SumUp, torna sul sito e invia l'ordine su WhatsApp; il messaggio contiene **«PAGATO ONLINE · rif. 261024-AB3K»**. Se Telegram è configurato, arriva anche un avviso «💳 Pagato online». **Prima di preparare, controllate che quel riferimento risulti *Pagato*** nella lista *Pagamenti ricevuti* (o nell'app SumUp): un messaggio WhatsApp da solo si può scrivere a mano.
+
+Da sapere:
+- La chiave resta solo sul server (`api/private/payments.json`), mai nel sito né su GitHub.
+- Per la consegna si può pagare online solo se l'indirizzo è stato trovato sulla mappa (serve il costo di consegna esatto).
+- **Rimborsi** (ordine rifiutato, piatto finito…): si fanno dall'app o dal sito SumUp; il sito non rimborsa da solo. Un ordine già pagato non si annulla dalla pagina del cliente: deve chiamarvi.
+- SumUp riporta il cliente all'**indirizzo del sito** salvato alla prima installazione (si compila da solo). Gestione lo mostra sotto i pulsanti: deve essere quello vero, in `https://`. Se è sbagliato si corregge in `api/private/config.php`, voce `site_url`.
+- Costo SumUp per i pagamenti online: circa 2,5% a transazione (verificate le condizioni del vostro contratto).
 
 ### Modificare i file a mano
 
@@ -218,10 +235,11 @@ ordine.html           customer's live order page (status, cancel)
 ordini.html           staff: orders board (PIN), status menu, archive
 admin.html            staff: management (menu, hours, delivery, promos, versions, PIN)
 api/                  PHP + SQLite backend (orders, Telegram, staff, admin saves)
+api/pay.php, sumup.php  SumUp online payments (off until keys are set in Gestione)
 data/live.js          what the management page saved (server only, not in git)
 assets/img/uploads/   photos uploaded from the management page (server only)
 api/setup.php         one-time setup: PIN, Telegram
-api/private/          secrets + database (never uploaded to GitHub)
+api/private/          secrets + database + payments.json (never uploaded to GitHub)
 assets/vendor/        qrcode-generator (MIT) for printed slips
 assets/img/           logos, mascot, photos (from the brand identity book)
 ```

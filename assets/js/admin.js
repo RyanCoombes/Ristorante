@@ -54,6 +54,28 @@
       "site.msgSave": "Salva messaggio", "site.done": "Fatto: il sito è aggiornato.", "site.fail": "Non riuscito. Riprova.",
       "site.unknown": "Non riesco a leggere lo stato del sito. Ricarica la pagina.",
       "tab.hours": "Orari e tempi", "tab.promo": "Sconti", "tab.history": "Versioni e PIN",
+      "tab.pay": "Pagamenti online", "pay.title": "Pagamenti online con SumUp",
+      "pay.help": "Già pronti, ma spenti. Quando SumUp vi dà le chiavi API, inseritele qui: i clienti potranno pagare subito con carta, Apple Pay o Google Pay sulla pagina sicura di SumUp, e i soldi arrivano sul vostro conto SumUp.",
+      "pay.mode": "Stato", "pay.off": "Spenti", "pay.test": "Prova", "pay.live": "Attivi",
+      "pay.offHelp": "I clienti vedono solo «paghi alla consegna o al ritiro».",
+      "pay.testHelp": "Prova senza soldi veri: l'opzione «Paga ora online» compare solo su questo telefono o computer (e su quelli entrati in Gestione), con una pagina di pagamento finta. I clienti non vedono niente.",
+      "pay.liveHelp": "Pagamenti veri: tutti i clienti vedono «Paga ora online».",
+      "pay.merchant": "Merchant code SumUp", "pay.merchantPh": "es. MC4ABCDE",
+      "pay.merchantHelp": "Lo trovate nell'app SumUp, in Profilo, oppure su me.sumup.com.",
+      "pay.key": "Chiave API segreta", "pay.keyPh": "sup_sk_…", "pay.keySet": "Configurata ✓ (finisce con {end}). Lasciate vuoto per tenerla.",
+      "pay.keyHelp": "Si crea su me.sumup.com → Impostazioni → Per sviluppatori → Chiavi API. Resta solo sul server: non viene mai mostrata né pubblicata.",
+      "pay.save": "Salva impostazioni pagamenti", "pay.verify": "Verifica collegamento", "pay.forget": "Rimuovi chiave",
+      "pay.forgetConfirm": "Rimuovere la chiave SumUp? I pagamenti online si spengono.",
+      "pay.saved": "Impostazioni pagamenti salvate.", "pay.missing": "Per attivarli servono merchant code e chiave API.",
+      "pay.badMerchant": "Il merchant code non sembra giusto (solo lettere e numeri).", "pay.badKey": "La chiave non sembra giusta: copiatela di nuovo da SumUp.",
+      "pay.verifyOk": "Collegamento riuscito: la chiave è valida.", "pay.verifyMatch": "Collegamento riuscito: chiave valida per {code}.",
+      "pay.verifyOther": "La chiave funziona ma appartiene a {code}, non al merchant code inserito.",
+      "pay.refused": "SumUp ha rifiutato la chiave.", "pay.noConn": "Il server non riesce a raggiungere SumUp. Riprovate più tardi.",
+      "pay.siteUrl": "Indirizzo del sito usato per i ritorni da SumUp: {url}",
+      "pay.list": "Pagamenti ricevuti", "pay.listHelp": "Chi paga online e poi ordina su WhatsApp scrive anche il riferimento (es. 261024-AB3K). Prima di preparare, controllate qui che risulti Pagato.",
+      "pay.none": "Ancora nessun pagamento online.", "pay.recheck": "Ricontrolla",
+      "pay.st.paid": "Pagato", "pay.st.pending": "In attesa", "pay.st.failed": "Non riuscito", "pay.st.expired": "Scaduto", "pay.sim": "PROVA",
+      "pay.loading": "Carico…",
       "tab.menu": "Menu", "tab.delivery": "Consegna", "tab.info": "Contatti", "tab.team": "Squadra",
       "orders.timing": "Tempi degli ordini",
       "tab.theme": "Temi e avvisi", "theme.title": "Tema del sito",
@@ -153,6 +175,28 @@
       "site.msgSave": "Save message", "site.done": "Done: the site is updated.", "site.fail": "Didn't work. Please try again.",
       "site.unknown": "Can't read the site status. Reload the page.",
       "tab.hours": "Hours & timing", "tab.promo": "Promos", "tab.history": "Versions & PIN",
+      "tab.pay": "Online payments", "pay.title": "Online payments with SumUp",
+      "pay.help": "Ready, but switched off. When SumUp gives you the API keys, enter them here: customers can then pay straight away by card, Apple Pay or Google Pay on SumUp's secure page, and the money goes to your SumUp account.",
+      "pay.mode": "Status", "pay.off": "Off", "pay.test": "Test", "pay.live": "On",
+      "pay.offHelp": "Customers only see \"pay on delivery or collection\".",
+      "pay.testHelp": "Try it without real money: \"Pay online now\" only appears on this phone or computer (and others logged in to Gestione), with a pretend payment page. Customers see nothing.",
+      "pay.liveHelp": "Real payments: every customer sees \"Pay online now\".",
+      "pay.merchant": "SumUp merchant code", "pay.merchantPh": "e.g. MC4ABCDE",
+      "pay.merchantHelp": "It's in the SumUp app under Profile, or on me.sumup.com.",
+      "pay.key": "Secret API key", "pay.keyPh": "sup_sk_…", "pay.keySet": "Set ✓ (ends in {end}). Leave empty to keep it.",
+      "pay.keyHelp": "Create it on me.sumup.com → Settings → For developers → API keys. It stays on the server only: never shown or published.",
+      "pay.save": "Save payment settings", "pay.verify": "Check connection", "pay.forget": "Remove key",
+      "pay.forgetConfirm": "Remove the SumUp key? Online payments will switch off.",
+      "pay.saved": "Payment settings saved.", "pay.missing": "Switching on needs the merchant code and the API key.",
+      "pay.badMerchant": "The merchant code doesn't look right (letters and numbers only).", "pay.badKey": "The key doesn't look right: copy it again from SumUp.",
+      "pay.verifyOk": "Connected: the key is valid.", "pay.verifyMatch": "Connected: the key is valid for {code}.",
+      "pay.verifyOther": "The key works but belongs to {code}, not the merchant code entered.",
+      "pay.refused": "SumUp refused the key.", "pay.noConn": "The server can't reach SumUp. Try again later.",
+      "pay.siteUrl": "Site address used for returns from SumUp: {url}",
+      "pay.list": "Payments received", "pay.listHelp": "Customers who pay online and then order on WhatsApp include the reference (e.g. 261024-AB3K). Before cooking, check here that it says Paid.",
+      "pay.none": "No online payments yet.", "pay.recheck": "Check again",
+      "pay.st.paid": "Paid", "pay.st.pending": "Pending", "pay.st.failed": "Failed", "pay.st.expired": "Expired", "pay.sim": "TEST",
+      "pay.loading": "Loading…",
       "tab.menu": "Menu", "tab.delivery": "Delivery", "tab.info": "Contact", "tab.team": "Team",
       "orders.timing": "Order timing",
       "tab.theme": "Themes & notices", "theme.title": "Site theme",
@@ -256,6 +300,8 @@
   var history = [];
   var tab = "site";
   var flags = null;   // pause / busy / maintenance, read from api/state.php; changed straight away, not via Save
+  var pay = null;     // SumUp settings (without the secret key) and recent payments; saved on their own, not via Save
+  var payDraft = { mode: "off", merchant_code: "", api_key: "" };
   var openKeys = {};
   var saving = false;
 
@@ -511,6 +557,38 @@
       return themeCard + stripCard;
     },
 
+    pay: function () {
+      if (!pay) return '<section class="card"><p class="help">' + esc(t("pay.loading")) + "</p></section>";
+      var mode = payDraft.mode;
+      var fmt = function (ts) {
+        return new Date(ts * 1000).toLocaleString(lang === "it" ? "it-IT" : "en-GB",
+          { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit", timeZone: TZ });
+      };
+      return '<section class="card"><h2>' + esc(t("pay.title")) + '</h2><p class="help">' + esc(t("pay.help")) + "</p>" +
+        '<h3 class="sub">' + esc(t("pay.mode")) + '</h3><div class="seg seg--3">' + ["off", "test", "live"].map(function (m) {
+          return '<button type="button" data-act="payMode" data-path="" data-value="' + m + '" aria-pressed="' + (mode === m) + '">' + esc(t("pay." + m)) + "</button>";
+        }).join("") + '</div><p class="help">' + esc(t("pay." + mode + "Help")) + "</p>" +
+        '<label class="f"><span>' + esc(t("pay.merchant")) + '</span><input type="text" autocomplete="off" autocapitalize="characters" maxlength="20" data-pay="merchant_code" value="' + esc(payDraft.merchant_code) + '" placeholder="' + esc(t("pay.merchantPh")) + '"></label>' +
+        '<p class="help">' + esc(t("pay.merchantHelp")) + "</p>" +
+        '<label class="f"><span>' + esc(t("pay.key")) + '</span><input type="password" autocomplete="off" spellcheck="false" maxlength="200" data-pay="api_key" value="' + esc(payDraft.api_key) + '" placeholder="' + esc(pay.hasKey ? "•••• " + pay.keyEnd : t("pay.keyPh")) + '"></label>' +
+        '<p class="help">' + esc((pay.hasKey ? t("pay.keySet", { end: pay.keyEnd }) + " " : "") + t("pay.keyHelp")) + "</p>" +
+        '<div class="row-tools"><button type="button" class="btn btn--red btn--sm" data-act="paySave" data-path="">' + esc(t("pay.save")) + "</button>" +
+        '<button type="button" class="btn btn--outline btn--sm" data-act="payVerify" data-path="">' + esc(t("pay.verify")) + "</button>" +
+        (pay.hasKey ? '<button type="button" class="mini mini--danger" data-act="payForget" data-path="">' + esc(t("pay.forget")) + "</button>" : "") + "</div>" +
+        '<p class="muted">' + esc(t("pay.siteUrl", { url: pay.siteUrl })) + "</p></section>" +
+        '<section class="card"><h2>' + esc(t("pay.list")) + '</h2><p class="help">' + esc(t("pay.listHelp")) + "</p>" +
+        (pay.payments.length ? '<ul class="paylist">' + pay.payments.map(function (p) {
+          return '<li><div class="paylist-top"><strong>' + esc(p.ref) + "</strong>" +
+            '<span class="pay-st pay-st--' + esc(p.status) + '">' + esc(t("pay.st." + p.status)) + "</span>" +
+            (p.sim ? '<span class="pay-st pay-st--sim">' + esc(t("pay.sim")) + "</span>" : "") +
+            '<span class="paylist-amt">' + money(p.amount) + "</span></div>" +
+            '<p class="muted">' + esc(fmt(p.createdAt) + (p.name ? " · " + p.name + " · " + p.phone : "") + (p.txn ? " · " + p.txn : "")) + "</p>" +
+            (p.summary ? '<p class="help">' + esc(p.summary) + "</p>" : "") +
+            (p.status === "pending" && !p.sim ? '<button type="button" class="mini" data-act="payRecheck" data-path="' + esc(p.ref) + '">' + esc(t("pay.recheck")) + "</button>" : "") +
+            "</li>";
+        }).join("") + "</ul>" : '<p class="help">' + esc(t("pay.none")) + "</p>") + "</section>";
+    },
+
     history: function () {
       var fmt = function (ts) {
         return new Date(ts * 1000).toLocaleString(lang === "it" ? "it-IT" : "en-GB",
@@ -555,7 +633,7 @@
   }
 
   // ---------- rendering ----------
-  var TABS = ["site", "menu", "hours", "delivery", "promo", "info", "team", "theme", "history"];
+  var TABS = ["site", "menu", "hours", "delivery", "promo", "info", "team", "theme", "pay", "history"];
 
   var rendering = false;
   function render() {
@@ -789,6 +867,23 @@
       });
       return false;
     },
+    payMode: function (p, el) { payDraft.mode = el.getAttribute("data-value"); render(); return false; },
+    paySave: function () { payCall("pay_save", { mode: payDraft.mode, merchant_code: payDraft.merchant_code, api_key: payDraft.api_key }, t("pay.saved")); return false; },
+    payForget: function () {
+      if (!confirm(t("pay.forgetConfirm"))) return false;
+      payDraft.mode = "off";
+      payCall("pay_save", { mode: "off", merchant_code: payDraft.merchant_code, forget_key: true }, t("pay.saved"));
+      return false;
+    },
+    payRecheck: function (ref) { payCall("pay_refresh", { ref: ref }); return false; },
+    payVerify: function () {
+      api("pay_test", { api_key: payDraft.api_key, merchant_code: payDraft.merchant_code }).then(function (r) {
+        if (r.httpStatus === 401) { showLogin(); return; }
+        if (r.ok) { toast(!r.merchant_code ? t("pay.verifyOk") : r.matches ? t("pay.verifyMatch", { code: r.merchant_code }) : t("pay.verifyOther", { code: r.merchant_code })); return; }
+        toast(payError(r.error));
+      }).catch(function () { toast(t("site.fail")); });
+      return false;
+    },
     changePin: function () {
       var cur = $('[data-pinc="current"]').value, a = $('[data-pinc="new"]').value, b = $('[data-pinc="new2"]').value;
       if (!/^\d{6}$/.test(a) || a !== b) { toast(t("pinc.bad")); return false; }
@@ -799,6 +894,34 @@
       return false;
     }
   };
+
+  function payError(e) {
+    return { missing_keys: t("pay.missing"), bad_merchant: t("pay.badMerchant"), bad_key: t("pay.badKey"), key_refused: t("pay.refused"),
+      no_connection: t("pay.noConn"), rate_limited: t("pin.wait") }[e] || t("app.saveFail", { e: e });
+  }
+  function takePay(r) {
+    pay = r;
+    payDraft = { mode: r.mode, merchant_code: r.merchant_code || "", api_key: "" };
+  }
+  function payCall(action, data, okMsg) {
+    api(action, data).then(function (r) {
+      if (r.httpStatus === 401) { showLogin(); return; }
+      if (!r.ok) { toast(payError(r.error)); return; }
+      takePay(r); render();
+      if (okMsg) toast(okMsg);
+    }).catch(function () { toast(t("site.fail")); });
+  }
+  function loadPay() {
+    api("pay_load").then(function (r) {
+      if (r.httpStatus === 401) { showLogin(); return; }
+      if (r.ok) { takePay(r); if (tab === "pay") render(); }
+    });
+  }
+  // typed SumUp details survive a re-render (e.g. changing the mode before saving)
+  document.addEventListener("input", function (e) {
+    var k = e.target.getAttribute && e.target.getAttribute("data-pay");
+    if (k) payDraft[k] = k === "merchant_code" ? e.target.value.toUpperCase().replace(/\s+/g, "") : e.target.value.trim();
+  });
 
   function loadFlags() {
     return fetch("api/state.php", { cache: "no-store" }).then(function (r) { return r.json(); })
@@ -832,7 +955,7 @@
       return;
     }
     var tb = e.target.closest("[data-tab]");
-    if (tb) { tab = tb.getAttribute("data-tab"); render(); window.scrollTo(0, 0); return; }
+    if (tb) { tab = tb.getAttribute("data-tab"); if (tab === "pay") loadPay(); render(); window.scrollTo(0, 0); return; }
     var lb = e.target.closest("[data-admin-lang]");
     if (lb) { lang = lb.getAttribute("data-admin-lang"); save(LANG, lang); if (!$("[data-app]").hidden) render(); else $$("[data-t]").forEach(function (el) { el.textContent = t(el.getAttribute("data-t")); }); $$("[data-admin-lang]").forEach(function (b) { b.setAttribute("aria-pressed", String(b.getAttribute("data-admin-lang") === lang)); }); return; }
     var ab = e.target.closest("[data-act]");

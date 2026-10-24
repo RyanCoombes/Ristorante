@@ -5,7 +5,7 @@
    and promo codes. Needs the same staff login as the Ordini board. */
 
 declare(strict_types=1);
-require __DIR__ . '/lib.php';
+require __DIR__ . '/sumup.php';
 
 const HISTORY_DIR = PRIVATE_DIR . '/history';
 const HISTORY_KEEP = 15;
@@ -137,5 +137,57 @@ switch ((string) ($in['action'] ?? '')) {
         start_session();
         json_out(['ok' => true]);
     }
+
+    // ---------- online payments (SumUp) ----------
+    case 'pay_load':
+        json_out(pay_state());
+
+    case 'pay_save': {
+        $s = pay_settings();
+        $mode = (string) ($in['mode'] ?? 'off');
+        if (!in_array($mode, PAY_MODES, true)) fail('bad_mode', 422);
+        $merchant = strtoupper(str($in['merchant_code'] ?? '', 20));
+        if ($merchant !== '' && !preg_match('/^[A-Z0-9]{4,20}$/', $merchant)) fail('bad_merchant', 422);
+        $key = str($in['api_key'] ?? '', 200);               // blank = keep the saved key
+        if ($key !== '' && !preg_match('/^\S{20,200}$/', $key)) fail('bad_key', 422);
+        if (!empty($in['forget_key'])) $s['api_key'] = '';
+        if ($key !== '') $s['api_key'] = $key;
+        $s['merchant_code'] = $merchant;
+        if ($mode === 'live' && ($s['api_key'] === '' || $s['merchant_code'] === '')) fail('missing_keys', 422);
+        $s['mode'] = $mode;
+        pay_save_settings($s);
+        json_out(pay_state());
+    }
+
+    case 'pay_test': {
+        // "Verifica collegamento": is the key accepted, and does it belong to this merchant code?
+        rate_limit('pay_test', 10, 600);
+        $s = pay_settings();
+        $key = str($in['api_key'] ?? '', 200) ?: $s['api_key'];
+        if ($key === '') fail('missing_keys', 422);
+        [$code, $res] = sumup('GET', '/v0.1/me', null, $key);
+        if ($code === 0) fail('no_connection', 502);
+        if ($code === 401 || $code === 403) fail('key_refused', 422);
+        if ($code !== 200) fail('sumup_error', 502, ['status' => $code]);
+        $found = (string) ($res['merchant_profile']['merchant_code'] ?? '');
+        json_out(['ok' => true, 'merchant_code' => $found,
+            'matches' => $found !== '' && strtoupper((string) ($in['merchant_code'] ?? $s['merchant_code'])) === $found]);
+    }
+
+    case 'pay_refresh': {
+        $p = get_payment('ref', str($in['ref'] ?? '', 20));
+        if (!$p) fail('not_found', 404);
+        pay_refresh($p);
+        json_out(pay_state());
+    }
 }
 fail('bad_action');
+
+/** Settings for Gestione: the secret key itself never leaves the server. */
+function pay_state(): array {
+    $s = pay_settings();
+    $q = pay_db()->query('SELECT * FROM payments ORDER BY created_at DESC LIMIT 40');
+    return ['ok' => true, 'mode' => $s['mode'], 'merchant_code' => $s['merchant_code'],
+        'hasKey' => $s['api_key'] !== '', 'keyEnd' => $s['api_key'] !== '' ? substr($s['api_key'], -4) : '',
+        'siteUrl' => site_base(), 'payments' => array_map('public_payment', $q->fetchAll())];
+}

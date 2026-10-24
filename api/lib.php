@@ -138,6 +138,16 @@ function db(): PDO {
         tg_message_id INTEGER
     )");
     $pdo->exec('CREATE INDEX IF NOT EXISTS orders_day ON orders(service_day)');
+    // "Paga ora online" (api/pay.php): one row per SumUp checkout
+    $pdo->exec("CREATE TABLE IF NOT EXISTS payments (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        ref TEXT NOT NULL UNIQUE, token TEXT NOT NULL,
+        created_at INTEGER NOT NULL, updated_at INTEGER NOT NULL,
+        status TEXT NOT NULL, amount REAL NOT NULL, channel TEXT NOT NULL, sim INTEGER DEFAULT 0,
+        name TEXT, phone TEXT, summary TEXT, payload TEXT,
+        checkout_id TEXT, txn_code TEXT, order_id INTEGER, purged INTEGER DEFAULT 0
+    )");
+    $pdo->exec('CREATE INDEX IF NOT EXISTS payments_checkout ON payments(checkout_id)');
     $pdo->exec('CREATE TABLE IF NOT EXISTS sessions (token TEXT PRIMARY KEY, expires INTEGER NOT NULL)');
     $pdo->exec('CREATE TABLE IF NOT EXISTS hits (kind TEXT, ip TEXT, ts INTEGER)');
     $pdo->exec('CREATE TABLE IF NOT EXISTS meta (k TEXT PRIMARY KEY, v TEXT)');
@@ -249,6 +259,86 @@ function price_lines(array $wanted, array $notes = []): array {
     return [$lines, round($sub, 2)];
 }
 
+// ---------- a customer's order, checked and priced on the server ----------
+/** Validates the checkout form and returns the order row; prices, fees and discounts are recalculated here.
+    Fails with a JSON error the website understands (invalid, out_of_zone, below_minimum…). */
+function build_order(array $in, bool $paidOnline = false): array {
+    $cfg = site_config();
+    $lang = ($in['lang'] ?? 'it') === 'en' ? 'en' : 'it';
+    $mode = ($in['mode'] ?? '') === 'delivery' && !empty($cfg['delivery']['enabled']) ? 'delivery' : 'pickup';
+
+    // customer
+    $name = str($in['name'] ?? '', 60);
+    $phone = preg_replace('/[^\d+]/', '', str($in['phone'] ?? '', 25)) ?? '';
+    $email = str($in['email'] ?? '', 120);
+    $bad = [];
+    if (mb_strlen($name) < 2) $bad[] = 'name';
+    if (!preg_match('/^\+?\d{8,15}$/', $phone)) $bad[] = 'phone';
+    if ($email !== '' && !filter_var($email, FILTER_VALIDATE_EMAIL)) $bad[] = 'email';
+
+    // items, priced from data/menu.js
+    [$lines, $sub] = price_lines(is_array($in['items'] ?? null) ? $in['items'] : [], is_array($in['itemNotes'] ?? null) ? $in['itemNotes'] : []);
+    if (!$lines) $bad[] = 'items';
+
+    // delivery address and zone
+    $street = $civico = $cap = $buzzer = null; $lat = $lng = $km = null; $fee = 0.0; $geo = null; $zone = null;
+    if ($mode === 'delivery') {
+        $street = str($in['street'] ?? '', 120);
+        $civico = str($in['civico'] ?? '', 12);
+        $cap = str($in['cap'] ?? '', 5);
+        $buzzer = str($in['buzzer'] ?? '', 120);
+        if ($street === '') $bad[] = 'street';
+        if ($civico === '' || !preg_match('/\d/', $civico)) $bad[] = 'civico';
+        if (!preg_match('/^\d{5}$/', $cap)) $bad[] = 'cap';
+        if (isset($in['lat'], $in['lng']) && is_numeric($in['lat']) && is_numeric($in['lng'])) {
+            $lat = (float) $in['lat']; $lng = (float) $in['lng'];
+            $shop = $cfg['shopLocation'] ?? ['lat' => 0, 'lng' => 0];
+            $km = km_between((float) $shop['lat'], (float) $shop['lng'], $lat, $lng);
+            foreach (zones() as $z) { if ($km <= $z['upToKm']) { $zone = $z; break; } }
+            if (!$zone) fail('out_of_zone', 422, ['km' => $km]);
+            $fee = (float) ($zone['fee'] ?? 0);
+            $geo = 'ok';
+        } else {
+            $fee = null;                                    // address not found on the map: staff confirm the fee
+            $geo = 'unverified';
+            $zone = zones()[0] ?? null;
+        }
+    }
+    if ($bad) fail('invalid', 422, ['fields' => $bad]);
+
+    // minimum order and promo
+    $promo = eval_promo(str($in['promo'] ?? '', 30), $sub);
+    $discount = $promo['discount'] ?? 0.0;
+    if ($promo && $promo['freeDelivery'] && $mode === 'delivery') $fee = 0.0;
+    if ($mode === 'delivery' && $zone && $sub < (float) ($zone['minOrder'] ?? 0)) fail('below_minimum', 422, ['minimum' => (float) $zone['minOrder']]);
+    $total = round($sub - $discount + ($fee ?? 0), 2);
+
+    // time slot: "asap" or HH:MM inside the current service
+    $slot = str($in['slot'] ?? 'asap', 5);
+    if ($slot !== 'asap' && !preg_match('/^\d{2}:\d{2}$/', $slot)) $slot = 'asap';
+
+    $payment = $paidOnline ? 'online' : (($in['payment'] ?? '') === 'cash' ? 'cash' : 'card');
+    $cashWith = $payment === 'cash' && isset($in['cashWith']) && is_numeric($in['cashWith']) ? max(0, min(500, (int) $in['cashWith'])) : null;
+
+    $now = time();
+    return [
+        'code' => new_code(), 'token' => bin2hex(random_bytes(16)), 'created_at' => $now, 'updated_at' => $now,
+        'service_day' => service_day($now), 'status' => 'new', 'source' => 'web', 'lang' => $lang, 'mode' => $mode,
+        'slot' => $slot, 'name' => $name, 'phone' => $phone, 'email' => $email ?: null,
+        'street' => $street, 'civico' => $civico, 'cap' => $cap, 'buzzer' => $buzzer ?: null,
+        'lat' => $lat, 'lng' => $lng, 'km' => $km, 'geo' => $geo,
+        'items' => json_encode($lines, JSON_UNESCAPED_UNICODE), 'subtotal' => $sub, 'discount' => $discount,
+        'promo' => $promo['code'] ?? null, 'fee' => $fee, 'total' => $total, 'payment' => $payment, 'cash_with' => $cashWith,
+        'notes' => str($in['notes'] ?? '', 300) ?: null,
+    ];
+}
+function insert_order(array $order): array {
+    $cols = implode(', ', array_keys($order));
+    $ph = implode(', ', array_map(fn($k) => ":$k", array_keys($order)));
+    db()->prepare("INSERT INTO orders ($cols) VALUES ($ph)")->execute($order);
+    return get_order((int) db()->lastInsertId());
+}
+
 // ---------- staff login ----------
 function staff_session(): bool {
     $t = $_COOKIE['vc_staff'] ?? '';
@@ -336,7 +426,7 @@ function order_text(array $o, bool $withContacts = true): string {
     }
     if ($o['notes']) $t .= "Note: {$o['notes']}\n";
     $t .= 'Totale: ' . money((float) $o['total']) . ($o['fee'] === null && $o['mode'] === 'delivery' ? ' + consegna' : '');
-    $t .= ' · ' . ($o['payment'] === 'cash' ? 'Contanti' . ($o['cash_with'] ? ' (paga con ' . $o['cash_with'] . ' €)' : '') : 'Carta') . "\n";
+    $t .= ' · ' . ($o['payment'] === 'cash' ? 'Contanti' . ($o['cash_with'] ? ' (paga con ' . $o['cash_with'] . ' €)' : '') : ($o['payment'] === 'online' ? 'PAGATO ONLINE' : 'Carta')) . "\n";
     if ($withContacts && !$o['purged']) {
         $t .= "{$o['name']} · {$o['phone']}\n";
         if ($o['mode'] === 'delivery') {
@@ -430,6 +520,8 @@ function housekeeping(): void {
     $days = max(1, (int) private_config()['retention_days']);
     $db->prepare("UPDATE orders SET name = NULL, phone = NULL, email = NULL, street = NULL, civico = NULL, buzzer = NULL,
         lat = NULL, lng = NULL, notes = NULL, token = '', purged = 1 WHERE purged = 0 AND created_at < ?")
+        ->execute([time() - $days * 86400]);
+    $db->prepare("UPDATE payments SET name = NULL, phone = NULL, payload = NULL, token = '', purged = 1 WHERE purged = 0 AND created_at < ?")
         ->execute([time() - $days * 86400]);
 
     // 2) second alert for orders nobody has accepted

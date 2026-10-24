@@ -17,7 +17,7 @@
     it: {
       summary: "Il tuo ordine", back: "Torna al sito", code: "Ordine #{c}", call: "Chiama il locale", wa: "Scrivici su WhatsApp",
       cancel: "Annulla l'ordine", cancelConfirm: "Vuoi davvero annullare l'ordine?", subtotal: "Subtotale", discount: "Sconto",
-      delivery: "Consegna", total: "Totale", toConfirm: "da confermare", card: "Carta", cash: "Contanti", payWith: "paghi con {n}",
+      delivery: "Consegna", total: "Totale", toConfirm: "da confermare", card: "Carta", cash: "Contanti", online: "Pagato online", payWith: "paghi con {n}",
       "s.sent": "Inviato", "s.accepted": "Confermato", "s.ready": "Pronto", "s.out": "In consegna", "s.done.pickup": "Ritirato", "s.done.delivery": "Consegnato",
       "new.t": "Ordine ricevuto!", "new.m": "La cucina lo sta guardando: di solito confermiamo in pochi minuti. Resta su questa pagina.",
       "slow.m": "Ci stiamo mettendo più del solito. Se hai fretta, chiamaci.",
@@ -28,13 +28,14 @@
       "done.t": "Buon appetito!", "done.m": "Grazie per aver scelto Vizi Capitali. Concediti il tuo vizio anche la prossima volta.",
       "rejected.t": "Ci dispiace, non possiamo accettarlo", "rejected.m": "Motivo: {r}. Nessun addebito. Per qualsiasi cosa chiamaci.",
       "cancelled.t": "Ordine annullato", "cancelled.m": "{r}. Nessun addebito.",
+      "accepted.m.paid": "Già pagato online: grazie!", "refund.m": "Motivo: {r}. Ti rimborsiamo l'importo pagato online. Per qualsiasi cosa chiamaci.",
       "notfound.t": "Ordine non trovato", "notfound.m": "Il link potrebbe essere incompleto o scaduto. Chiamaci se hai bisogno.",
       "offline.m": "Connessione assente: riprovo tra poco."
     },
     en: {
       summary: "Your order", back: "Back to the website", code: "Order #{c}", call: "Call the pizzeria", wa: "Message us on WhatsApp",
       cancel: "Cancel order", cancelConfirm: "Do you really want to cancel your order?", subtotal: "Subtotal", discount: "Discount",
-      delivery: "Delivery", total: "Total", toConfirm: "to be confirmed", card: "Card", cash: "Cash", payWith: "paying with {n}",
+      delivery: "Delivery", total: "Total", toConfirm: "to be confirmed", card: "Card", cash: "Cash", online: "Paid online", payWith: "paying with {n}",
       "s.sent": "Sent", "s.accepted": "Confirmed", "s.ready": "Ready", "s.out": "On its way", "s.done.pickup": "Collected", "s.done.delivery": "Delivered",
       "new.t": "Order received!", "new.m": "The kitchen is looking at it: we usually confirm within a few minutes. Stay on this page.",
       "slow.m": "This is taking longer than usual. If you're in a hurry, call us.",
@@ -45,6 +46,7 @@
       "done.t": "Enjoy!", "done.m": "Thanks for choosing Vizi Capitali.",
       "rejected.t": "Sorry, we can't accept it", "rejected.m": "Reason: {r}. You haven't been charged. Call us for anything.",
       "cancelled.t": "Order cancelled", "cancelled.m": "{r}. You haven't been charged.",
+      "accepted.m.paid": "Already paid online: thank you!", "refund.m": "Reason: {r}. We'll refund the amount you paid online. Call us for anything.",
       "notfound.t": "Order not found", "notfound.m": "The link may be incomplete or expired. Call us if you need help.",
       "offline.m": "No connection: retrying shortly."
     }
@@ -77,10 +79,10 @@
       msg = Date.now() / 1000 - o.createdAt > alertAfter ? t("slow.m") : t("new.m");
     } else if (s === "accepted") {
       title = t("accepted.t." + (pick ? "pickup" : "delivery"), { time: o.readyAt || "" });
-      msg = t("accepted.m." + (pick ? "pickup" : "delivery"));
+      msg = o.payment === "online" ? t("accepted.m.paid") : t("accepted.m." + (pick ? "pickup" : "delivery"));
     } else if (s === "rejected" || s === "cancelled") {
       title = t(s + ".t");
-      msg = t(s + ".m", { r: o.rejectReason || "" });
+      msg = t(o.payment === "online" ? "refund.m" : s + ".m", { r: o.rejectReason || "" });
     } else {
       title = t(s + ".t");
       msg = t(s + ".m");
@@ -108,7 +110,7 @@
     var rows = [[t("subtotal"), money(o.subtotal)]];
     if (o.discount) rows.push([t("discount") + (o.promo ? " (" + o.promo + ")" : ""), "−" + money(o.discount)]);
     if (o.mode === "delivery") rows.push([t("delivery"), o.fee == null ? t("toConfirm") : money(o.fee)]);
-    rows.push([t("total"), money(o.total) + " · " + (o.payment === "cash" ? t("cash") + (o.cashWith ? ", " + t("payWith", { n: money(o.cashWith) }) : "") : t("card"))]);
+    rows.push([t("total"), money(o.total) + " · " + (o.payment === "cash" ? t("cash") + (o.cashWith ? ", " + t("payWith", { n: money(o.cashWith) }) : "") : o.payment === "online" ? t("online") : t("card"))]);
     $("[data-sums]").innerHTML = rows.map(function (r, i) {
       return '<div class="' + (i === rows.length - 1 ? "track-total" : "") + '"><dt>' + esc(r[0]) + "</dt><dd>" + esc(r[1]) + "</dd></div>";
     }).join("");

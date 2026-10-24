@@ -222,7 +222,7 @@
     return y.concat(slotsFor(day));
   }
 
-  var REMOTE = { maintenance: false, paused: false, busy: null };   // switches from the Ordini board (api/state.php)
+  var REMOTE = { maintenance: false, paused: false, busy: null, payOnline: false };   // switches from the Ordini board (api/state.php)
   function ordering() {
     if (REMOTE.paused) return { ok: false, msg: t("orders.paused") };
     var now = nowInZone();
@@ -381,6 +381,7 @@
   }
   function payment() {
     var r = form && form.querySelector('input[name="payment"]:checked');
+    if (r && r.value === "online" && !REMOTE.payOnline) return "card";
     return r ? r.value : "card";
   }
 
@@ -624,12 +625,14 @@
     }
 
     var warn = [];
+    var online = payment() === "online";
+    if (online && !tot.feeKnown) warn.push(t("cart.payNeedsAddress"));
     var min = delivery ? Number(zoneFor().minOrder || 0) : 0;
     var belowMin = delivery && min > 0 && tot.sub < min;
     if (belowMin) warn.push(t("cart.minOrder", { amount: money(min) }));
     if (!open.ok) warn.push(open.msg);
     var warnEl = $("[data-cart-warn]");
-    warnEl.hidden = empty || warn.length === 0 || step === "sent";
+    warnEl.hidden = empty || warn.length === 0 || step === "sent" || step === "pay";
     warnEl.textContent = warn.join(" ");
 
     var blocked = empty || belowMin || !open.ok ||
@@ -637,6 +640,7 @@
     $("[data-cart-continue]").disabled = blocked;
     $("[data-cart-send]").disabled = blocked;
     $("[data-cart-submit]").disabled = blocked || submitting;
+    $("[data-cart-pay]").disabled = blocked || submitting || (online && !tot.feeKnown);
     if (step === "review" && empty) step = "order";
     renderStep();
   }
@@ -646,7 +650,7 @@
   var CHANNEL = ORD.channel === "website" ? "website" : "whatsapp";
   var webFailed = false;   // the order server isn't reachable (e.g. site opened as plain files): fall back to WhatsApp
   var lastWaUrl = "";
-  var STEP_TITLE = { order: "cart.titleOrder", review: "cart.titleReview", sent: "cart.titleSent" };
+  var STEP_TITLE = { order: "cart.titleOrder", review: "cart.titleReview", sent: "cart.titleSent", pay: "cart.titlePay" };
 
   function renderStep() {
     dialog.setAttribute("data-step", step);
@@ -656,12 +660,22 @@
     $("[data-step-label]").textContent = step === "order" ? t("cart.step1") : step === "review" ? t("cart.step2") : "";
     $("[data-cart-title]").textContent = t(STEP_TITLE[step]);
     var web = CHANNEL === "website" && !webFailed;
-    $("[data-cart-submit]").hidden = !web;
-    $("[data-cart-send]").hidden = web;
-    $$("[data-wa-only]").forEach(function (el) { el.hidden = web; });
+    var online = payment() === "online";
+    $("[data-cart-submit]").hidden = !web || online;
+    $("[data-cart-send]").hidden = web || online;
+    $("[data-cart-pay]").hidden = !online;
+    $$("[data-wa-only]").forEach(function (el) { el.hidden = web || online; });
     $("[data-email-field]").hidden = !web;
-    $("[data-send-hint]").textContent = web ? t("cart.sendHintWeb") : t("cart.sendHint");
+    $("[data-send-hint]").textContent = online ? t(CHANNEL === "website" ? "cart.payHintWeb" : "cart.payHint") : web ? t("cart.sendHintWeb") : t("cart.sendHint");
     $("[data-submit-total]").textContent = money(totals().total);
+    $("[data-pay-total]").textContent = money(totals().total);
+    // "Paga ora online" only appears once SumUp is switched on in Gestione
+    $("[data-pay-online]").hidden = !REMOTE.payOnline;
+    if (!REMOTE.payOnline && form.elements.payment.value === "online") form.querySelector('input[name="payment"][value="card"]').checked = true;
+    $("[data-pay-label]").textContent = t(REMOTE.payOnline ? "cart.paymentAny" : "cart.payment");
+    $("[data-pay-later]").textContent = t(REMOTE.payOnline ? "cart.payLaterOrOnline" : "cart.payLater");
+    $("[data-online-note]").hidden = !online;
+    $("[data-online-note]").textContent = t("cart.onlineNote");
     renderCashOptions();
     if (step === "review") renderReview();
   }
@@ -748,7 +762,7 @@
     rows.push([t("cart.reviewContact"), data.name + " · " + data.phone]);
     if (data.mode === "delivery") rows.push([t("cart.detailAddress"), data.address + " " + data.civico + ", " + data.cap + (area ? " " + area : "") + (data.buzzer ? " · " + data.buzzer : "")]);
     rows.push([t("cart.detailTime"), data.time === "asap" ? t("cart.asap", { time: data.timeLabel }) : data.time]);
-    rows.push([t("cart.detailPayment"), t(data.payment === "cash" ? "cart.cash" : "cart.card") + (data.cashWith ? " · " + money(data.cashWith) : "")]);
+    rows.push([t("cart.detailPayment"), t(data.payment === "cash" ? "cart.cash" : data.payment === "online" ? "cart.online" : "cart.card") + (data.cashWith ? " · " + money(data.cashWith) : "")]);
     if (data.notes) rows.push([t("cart.detailNotes"), data.notes]);
     $("[data-review-details]").innerHTML = rows.map(function (r) {
       return "<div><dt>" + esc(r[0]) + "</dt><dd>" + esc(r[1]) + "</dd></div>";
@@ -762,7 +776,7 @@
     $("[data-sent-summary]").textContent = cartLines().map(function (l) { return l.qty + "× " + l.item.name; }).join(", ") + " · " + money(tot.total);
   }
 
-  function buildMessage(data) {
+  function buildMessage(data, paid) {
     var tot = totals();
     var km = function (v) { return String(v).replace(".", lang === "it" ? "," : "."); };
     var lines = [t("wa.greeting"), ""];
@@ -785,7 +799,8 @@
       if (geo.lat) lines.push(t("wa.map") + ": https://maps.google.com/?q=" + geo.lat.toFixed(5) + "," + geo.lng.toFixed(5));
     }
     lines.push(t("wa.time") + ": " + (data.time === "asap" ? t("wa.asap", { time: data.timeLabel }) : data.time));
-    lines.push(t("wa.payment") + ": " + t(data.payment === "cash" ? "cart.cash" : "cart.card") + (data.cashWith ? " (" + money(data.cashWith) + ")" : ""));
+    lines.push(t("wa.payment") + ": " + (paid ? t("wa.paidOnline", { amount: money(paid.amount), ref: paid.ref }) :
+      t(data.payment === "cash" ? "cart.cash" : "cart.card") + (data.cashWith ? " (" + money(data.cashWith) + ")" : "")));
     if (data.notes) lines.push(t("wa.notes") + ": " + data.notes);
     lines.push("");
     lines.push(t("wa.thanks"));
@@ -817,6 +832,109 @@
 
   var submitting = false;
   var LAST_ORDER = "vc-last-order";
+  function orderPayload(data) {
+    return {
+      items: cart, mode: data.mode, name: data.name, phone: data.phone, email: data.email,
+      street: data.address, civico: data.civico, cap: data.cap, buzzer: data.buzzer,
+      lat: geo.status === "ok" ? geo.lat : null, lng: geo.status === "ok" ? geo.lng : null,
+      slot: data.time, payment: data.payment, cashWith: data.cashWith, notes: data.notes,
+      promo: promoCode || "", lang: lang, website: form.elements.website.value
+    };
+  }
+  function showCartError(err) {
+    renderCart();
+    var warnEl = $("[data-cart-warn]");
+    warnEl.hidden = false;
+    warnEl.textContent = t("err." + err);
+  }
+
+  // ---------- "Paga ora online": SumUp's hosted page, then back here (api/pay.php) ----------
+  var STORE_PAY = "vc-pay";
+  function payOnline() {
+    validateOrder(function (data) {
+      if (submitting) return;
+      submitting = true;
+      var btn = $("[data-cart-pay]");
+      btn.firstElementChild.textContent = t("cart.paying");
+      renderCart();
+      save(STORE_CUSTOMER, { address: data.address, civico: data.civico, cap: data.cap, buzzer: data.buzzer, payment: data.payment,
+        mode: data.mode, name: data.name, phone: data.phone, email: data.email });
+      var done = function (err) {
+        submitting = false;
+        btn.firstElementChild.textContent = t("cart.payNow");
+        if (err === "maintenance" || err === "paused" || err === "pay_off") { checkRemote(); err = err === "paused" ? "closed" : err === "pay_off" ? "pay_unavailable" : err; }
+        if (["closed", "out_of_zone", "below_minimum", "invalid", "rate_limited", "maintenance", "fee_unknown", "pay_unavailable"].indexOf(err) === -1) err = "pay_unavailable";
+        showCartError(err);
+      };
+      fetch("api/pay.php", { method: "POST", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(Object.assign({ action: "create" }, orderPayload(data))) })
+        .then(function (r) { return r.json().catch(function () { return { ok: false, error: "network" }; }); })
+        .then(function (res) {
+          if (!res || !res.ok || !/^https?:\/\//.test(res.url || "")) return done(res && res.error);
+          // kept for the way back: the WhatsApp message, with the payment reference in it
+          save(STORE_PAY, { ref: res.ref, k: res.k, amount: res.amount, at: Date.now(),
+            wa: buildMessage(data, { ref: res.ref, amount: res.amount }), summary: $("[data-sent-summary]").textContent });
+          location.href = res.url;
+        })
+        .catch(function () { done("network"); });
+    });
+  }
+
+  var payBack = null;   // { ref, k } while showing the result of a payment
+  function showPay(state, res) {
+    var stash = load(STORE_PAY, null) || {};
+    var amount = money(res && res.amount != null ? res.amount : stash.amount || 0);
+    var k = { checking: "checking", paid: "ok", failed: "fail", expired: "fail", pending: "wait" }[state] || "wait";
+    $("[data-pay-kicker]").textContent = t("pay." + k + "Kicker");
+    $("[data-pay-title]").textContent = t("pay." + k + "Title");
+    $("[data-pay-body]").textContent = k === "checking" ? "" : t("pay." + k + "Body", { amount: amount });
+    $("[data-pay-ref]").textContent = payBack && k !== "checking" ? t("pay.ref", { ref: payBack.ref }) : "";
+    $("[data-pay-wa]").hidden = k !== "ok";
+    $("[data-pay-retry]").hidden = k !== "fail";
+    $("[data-pay-check]").hidden = k !== "wait";
+    if (k === "ok") lastWaUrl = waUrl(stash.ref === payBack.ref && stash.wa ? stash.wa : t("wa.paidOnly", { amount: amount, ref: payBack.ref }));
+    step = "pay";
+    renderCart();
+    if (!dialog.open) { if (dialog.showModal) dialog.showModal(); else dialog.setAttribute("open", ""); }
+  }
+  function checkPayment(tries) {
+    showPay("checking");
+    fetch("api/pay.php", { method: "POST", headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ action: "status", ref: payBack.ref, k: payBack.k }) })
+      .then(function (r) { return r.json(); })
+      .then(function (res) {
+        if (!res || !res.ok) return showPay("pending");
+        if (res.status === "paid" && res.code) {
+          // website orders: the order was created when the payment arrived
+          save(LAST_ORDER, { c: res.code, t: res.token, at: Date.now() });
+          Object.keys(cart).forEach(function (id) { delete cart[id]; });
+          save(STORE_CART, cart);
+          try { localStorage.removeItem(STORE_PAY); } catch (e) { /* ignore */ }
+          location.href = "ordine.html?c=" + encodeURIComponent(res.code) + "&t=" + encodeURIComponent(res.token) + (lang === "en" ? "&lang=en" : "");
+          return;
+        }
+        // SumUp can take a few seconds to confirm
+        if (res.status === "pending" && tries > 0) { setTimeout(function () { checkPayment(tries - 1); }, 3000); return; }
+        showPay(res.status, res);
+      })
+      .catch(function () { showPay("pending"); });
+  }
+  // back from SumUp with the browser's Back button: the page comes back as it was left
+  window.addEventListener("pageshow", function (e) {
+    if (!e.persisted || !submitting) return;
+    submitting = false;
+    $("[data-cart-pay]").firstElementChild.textContent = t("cart.payNow");
+    renderCart();
+  });
+  (function payReturn() {
+    var q = new URLSearchParams(location.search);
+    var ref = q.get("pay"), k = q.get("k");
+    if (!ref || !k) return;
+    q.delete("pay"); q.delete("k");
+    history.replaceState(null, "", location.pathname + (q.toString() ? "?" + q : "") + location.hash);
+    payBack = { ref: ref, k: k };
+    setTimeout(function () { checkPayment(5); }, 0);
+  })();
   function submitOrder() {
     validateOrder(function (data) {
       if (submitting) return;
@@ -826,14 +944,7 @@
       renderCart();
       save(STORE_CUSTOMER, { address: data.address, civico: data.civico, cap: data.cap, buzzer: data.buzzer, payment: data.payment,
         mode: data.mode, name: data.name, phone: data.phone, email: data.email });
-      var payload = {
-        items: cart, mode: data.mode, name: data.name, phone: data.phone, email: data.email,
-        street: data.address, civico: data.civico, cap: data.cap, buzzer: data.buzzer,
-        lat: geo.status === "ok" ? geo.lat : null, lng: geo.status === "ok" ? geo.lng : null,
-        slot: data.time, payment: data.payment, cashWith: data.cashWith, notes: data.notes,
-        promo: promoCode || "", lang: lang, website: form.elements.website.value
-      };
-      fetch("api/order.php", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(payload) })
+      fetch("api/order.php", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(orderPayload(data)) })
         .then(function (r) { return r.json().catch(function () { return { ok: false, error: "network", status: r.status }; }); })
         .then(function (res) {
           submitting = false;
@@ -920,7 +1031,7 @@
   // cart dialog
   var dialog = $("[data-cart]");
   $("[data-cart-open]").addEventListener("click", function () {
-    if (step !== "sent") step = "order";
+    if (step !== "sent" && step !== "pay") step = "order";
     renderCart();
     if (dialog.showModal) dialog.showModal(); else dialog.setAttribute("open", "");
   });
@@ -934,6 +1045,8 @@
   });
   $("[data-sent-again]").addEventListener("click", function () { if (lastWaUrl) openWhatsApp(lastWaUrl); });
   $("[data-sent-yes]").addEventListener("click", function () {
+    try { localStorage.removeItem(STORE_PAY); } catch (e) { /* ignore */ }
+    payBack = null;
     Object.keys(cart).forEach(function (id) { delete cart[id]; });
     save(STORE_CART, cart);
     promoCode = null;
@@ -949,6 +1062,10 @@
   dialog.addEventListener("click", function (e) { if (e.target === dialog) dialog.close(); });
   $("[data-cart-send]").addEventListener("click", sendOrder);
   $("[data-cart-submit]").addEventListener("click", submitOrder);
+  $("[data-cart-pay]").addEventListener("click", payOnline);
+  $("[data-pay-wa]").addEventListener("click", function () { openWhatsApp(lastWaUrl); goStep("sent"); });
+  $("[data-pay-retry]").addEventListener("click", function () { payBack = null; goStep("review"); });
+  $("[data-pay-check]").addEventListener("click", function () { checkPayment(2); });
   $("[data-cart-clear]").addEventListener("click", function () {
     Object.keys(cart).forEach(function (id) { delete cart[id]; });
     save(STORE_CART, cart);
@@ -1088,8 +1205,8 @@
     fetch("api/state.php", { cache: "no-store" }).then(function (r) { return r.json(); }).then(function (st) {
       if (!st || !st.ok) return;
       var busy = typeof st.busy === "number" ? st.busy : null;
-      var changed = st.paused !== REMOTE.paused || st.maintenance !== REMOTE.maintenance || busy !== REMOTE.busy;
-      REMOTE = { maintenance: !!st.maintenance, paused: !!st.paused, message: st.message || "", busy: busy };
+      var changed = st.paused !== REMOTE.paused || st.maintenance !== REMOTE.maintenance || busy !== REMOTE.busy || !!st.payOnline !== REMOTE.payOnline;
+      REMOTE = { maintenance: !!st.maintenance, paused: !!st.paused, message: st.message || "", busy: busy, payOnline: !!st.payOnline };
       showMaintenance(REMOTE.maintenance);
       if (changed) { renderOrdering(); renderMenu(); renderCart(); renderStatus(); }
     }).catch(function () { /* no order server (e.g. opened as files): ignore */ });

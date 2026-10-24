@@ -1,6 +1,6 @@
 <?php
 /* GET  api/status.php?c=CODE&t=TOKEN  — the customer's live order status
-   POST api/status.php {c, t, action: "cancel"} — cancel while not yet accepted */
+   POST api/status.php {c, t, action: "cancel"} — cancel while not yet accepted (not once paid online: that needs a refund, so they call) */
 
 declare(strict_types=1);
 require __DIR__ . '/lib.php';
@@ -19,10 +19,10 @@ if (!$o) fail('not_found', 404);
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     rate_limit('cancel', 10, 600);
     if (($in['action'] ?? '') !== 'cancel') fail('bad_action');
-    if ($o['status'] !== 'new') fail('too_late', 409);
+    if ($o['status'] !== 'new' || $o['payment'] === 'online') fail('too_late', 409);
     $o = set_status((int) $o['id'], 'cancelled', ['reject_reason' => 'Annullato dal cliente']);
 }
 
 $cfg = site_config();
-json_out(['ok' => true, 'order' => public_order($o), 'canCancel' => $o['status'] === 'new',
+json_out(['ok' => true, 'order' => public_order($o), 'canCancel' => $o['status'] === 'new' && $o['payment'] !== 'online',
     'shop' => ['phone' => $cfg['phone'] ?? '', 'whatsapp' => $cfg['whatsapp'] ?? '']]);
