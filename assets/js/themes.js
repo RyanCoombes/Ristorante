@@ -13,26 +13,32 @@
   // dates are "MM-DD"; Easter moves every year, so it's worked out below
   var THEMES = {
     halloween: {
+      name: { it: "Halloween", en: "Halloween" }, title: { it: "Halloween", en: "Halloween" }, eyebrow: { it: "Edizione notturna", en: "Night edition" },
       swatch: "#0b0908", from: "10-20", to: "11-01", sticker: "🎃", check: "#1d1714", particles: "embers",
       msg: { it: "Halloween · Una notte di vizi, fino al 1° novembre", en: "Halloween · A night of vices, until 1 November" }
     },
     natale: {
+      name: { it: "Natale", en: "Christmas" }, title: { it: "Buon Natale", en: "Merry Christmas" }, eyebrow: { it: "Edizione delle feste", en: "Holiday edition" },
       swatch: "#0e1f18", from: "12-01", to: "12-27", sticker: "🎄", check: "#12261d", particles: "glints",
       msg: { it: "Natale · Il vizio più prezioso è stare insieme", en: "Christmas · The most precious vice is being together" }
     },
     capodanno: {
+      name: { it: "Capodanno", en: "New Year" }, title: { it: "Buon Anno", en: "Happy New Year" }, eyebrow: { it: "Edizione di mezzanotte", en: "Midnight edition" },
       swatch: "#1b1916", from: "12-28", to: "01-06", sticker: "🥂", check: "#1b1916", particles: "glitter",
       msg: { it: "Capodanno · Brindiamo a un nuovo anno di vizi", en: "New Year · A toast to a new year of vices" }
     },
     sanvalentino: {
+      name: { it: "San Valentino", en: "Valentine's" }, title: { it: "San Valentino", en: "Valentine's Day" }, eyebrow: { it: "Edizione per due", en: "For two" },
       swatch: "#3a0f1b", from: "02-07", to: "02-14", sticker: "💘", check: "#2a0e15", particles: "petals",
       msg: { it: "San Valentino · Un vizio da condividere", en: "Valentine's Day · A vice to share" }
     },
     pasqua: {
+      name: { it: "Pasqua", en: "Easter" }, title: { it: "Buona Pasqua", en: "Happy Easter" }, eyebrow: { it: "Edizione di primavera", en: "Spring edition" },
       swatch: "#3d5a40", easter: true, sticker: "🐣", check: "#dfe7d4", particles: "blossom",
       msg: { it: "Pasqua · Buone feste da Vizi Capitali", en: "Easter · Happy holidays from Vizi Capitali" }
     },
     ferragosto: {
+      name: { it: "Ferragosto", en: "Ferragosto" }, title: { it: "Ferragosto", en: "Ferragosto" }, eyebrow: { it: "Edizione d'estate", en: "Summer edition" },
       swatch: "#123b63", from: "08-08", to: "08-16", sticker: "🏖️", check: "#dde7ee", particles: "",
       msg: { it: "Ferragosto · L'estate romana ha un nuovo vizio", en: "Ferragosto · Roman summer has a new vice" }
     }
@@ -95,57 +101,117 @@
   // the top strip: the staff's own message / promo code wins over the theme's greeting
   var ann = CONFIG.announce || {};
   var today = isoDay(new Date());
-  var annOn = !!ann.on && (!ann.from || today >= ann.from) && (!ann.to || today <= ann.to) &&
-    !!((ann.text && (ann.text.it || ann.text.en)) || ann.code);
+  // one strip at the top: shown unless switched off, between its dates if it has any.
+  // Its text is the staff's own message, or the theme's greeting when they leave it empty.
+  var inDates = (!ann.from || today >= ann.from) && (!ann.to || today <= ann.to);
+  var annOn = ann.on !== false && inDates && !!((ann.text && (ann.text.it || ann.text.en)) || ann.code || theme);
+  window.VC_ACTIVE_THEME = theme ? { id: id, name: theme.name } : null;   // app.js labels "Speciale <theme>" dishes
 
   if (theme) {
     root.setAttribute("data-theme", id);
     root.classList.add("lux");
     var link = document.createElement("link");
     link.rel = "stylesheet";
-    link.href = "assets/css/themes/lux.css";
+    // same version as the page's own files, so an update is never mixed with an old cached copy
+    var ver = (document.querySelector('script[src*="themes.js?v="]') || { src: "" }).src.split("?v=")[1] || "";
+    link.href = "assets/css/themes/lux.css" + (ver ? "?v=" + ver : "");
     document.head.appendChild(link);
   }
   if (!theme && !annOn) return;
 
-  // ---------- hand-drawn graphics per theme ----------
+  // ---------- hand-drawn graphics per theme (fine gold line, never cartoon) ----------
+  // every SVG gets its own gradient id: a shared one stops painting when the SVG that
+  // defines it is hidden (we hide some drawings on phones)
+  var gid = 0;
+  function foil(c1, c2, c3, c4) {
+    var g = "lxg" + (++gid);
+    return { id: "url(#" + g + ")", defs: '<defs><linearGradient id="' + g + '" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="' + c1 +
+      '"/><stop offset=".45" stop-color="' + c2 + '"/><stop offset=".6" stop-color="' + c3 + '"/><stop offset="1" stop-color="' + c4 + '"/></linearGradient></defs>' };
+  }
+  function gold() { return foil("#f6e3ad", "#c9a45c", "#fff1c2", "#8a6a2e"); }
+  var BAT = '<path d="M50 34c-2-6-6-9-11-8-1-6-7-11-14-12 3 4 4 8 3 12-5-2-11-1-16 3 6 1 10 4 12 9 4-3 9-3 13 0 3-3 8-4 13-4zm0 0c2-6 6-9 11-8 1-6 7-11 14-12-3 4-4 8-3 12 5-2 11-1 16 3-6 1-10 4-12 9-4-3-9-3-13 0-3-3-8-4-13-4z"/>';
+  var FRAME = '<div class="lx-frame"></div>';
+
   var ART = {
-    halloween:
-      // candle-lit smoke, a thin gold crescent and a gold hairline frame
-      '<div class="lx-smoke"><span></span><span></span><span></span></div>' +
-      '<svg class="lx-moon" viewBox="0 0 100 100"><defs><linearGradient id="lxg" x1="0" y1="0" x2="1" y2="1">' +
-        '<stop offset="0" stop-color="#f3dfa6"/><stop offset=".5" stop-color="#c9a45c"/><stop offset="1" stop-color="#8a6a2e"/></linearGradient></defs>' +
-        '<path d="M62 6a46 46 0 1 0 32 66A38 38 0 1 1 62 6Z" fill="url(#lxg)"/></svg>' +
-      '<div class="lx-frame"></div>',
-    natale:
-      '<svg class="lx-garland" viewBox="0 0 1200 90" preserveAspectRatio="none"><g fill="none" stroke="#d4af62" stroke-width="1" opacity=".55">' +
-        '<path d="M0 10Q150 80 300 10T600 10T900 10T1200 10"/><path d="M0 22Q150 86 300 22T600 22T900 22T1200 22" opacity=".5"/></g>' +
-        '<g fill="#d4af62"><circle cx="150" cy="45" r="3"/><circle cx="450" cy="45" r="3"/><circle cx="750" cy="45" r="3"/><circle cx="1050" cy="45" r="3"/></g></svg>' +
-      '<svg class="lx-star" viewBox="0 0 100 100"><defs><linearGradient id="lxs" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#fff3c9"/><stop offset=".5" stop-color="#d4af62"/><stop offset="1" stop-color="#9b7a3a"/></linearGradient></defs>' +
-        '<path d="M50 2L57 39L94 26L66 50L94 74L57 61L50 98L43 61L6 74L34 50L6 26L43 39Z" fill="url(#lxs)"/></svg>' +
-      '<div class="lx-frame"></div>',
-    capodanno:
-      '<div class="lx-burst"></div>' +
-      '<svg class="lx-deco" viewBox="0 0 120 120"><g fill="none" stroke="#e2c88c" stroke-width="1.2">' +
-        '<path d="M60 8L112 60L60 112L8 60Z"/><path d="M60 22L98 60L60 98L22 60Z" opacity=".6"/><path d="M60 8V112M8 60H112" opacity=".35"/></g>' +
-        '<circle cx="60" cy="60" r="6" fill="#e2c88c"/></svg>' +
-      '<div class="lx-frame"></div>',
-    sanvalentino:
-      '<svg class="lx-heart" viewBox="0 0 100 90"><path d="M50 84C20 62 4 46 4 27 4 13 15 4 28 4c9 0 17 5 22 13C55 9 63 4 72 4c13 0 24 9 24 23 0 19-16 35-46 57Z" fill="none" stroke="#e6a896" stroke-width="2.2"/></svg>' +
-      '<div class="lx-frame"></div>',
-    pasqua:
-      '<svg class="lx-olive" viewBox="0 0 200 80"><g fill="none" stroke="#3d5a40" stroke-width="1.6" stroke-linecap="round"><path d="M6 60C60 46 120 40 194 18"/></g>' +
-        '<g fill="#7a9472"><ellipse cx="40" cy="44" rx="14" ry="4.5" transform="rotate(-30 40 44)"/><ellipse cx="62" cy="58" rx="14" ry="4.5" transform="rotate(22 62 58)"/>' +
-        '<ellipse cx="92" cy="32" rx="14" ry="4.5" transform="rotate(-34 92 32)"/><ellipse cx="114" cy="46" rx="14" ry="4.5" transform="rotate(18 114 46)"/>' +
-        '<ellipse cx="146" cy="18" rx="14" ry="4.5" transform="rotate(-38 146 18)"/><ellipse cx="166" cy="32" rx="14" ry="4.5" transform="rotate(14 166 32)"/></g>' +
-        '<g fill="#b8963f"><ellipse cx="80" cy="50" rx="5" ry="6.5"/><ellipse cx="132" cy="36" rx="5" ry="6.5"/></g></svg>' +
-      '<div class="lx-frame"></div>',
-    ferragosto:
-      '<div class="lx-sun"></div>' +
-      '<svg class="lx-waves" viewBox="0 0 1200 70" preserveAspectRatio="none"><g fill="none" stroke="currentColor" stroke-width="1.2">' +
-        '<path d="M0 30Q50 18 100 30T200 30T300 30T400 30T500 30T600 30T700 30T800 30T900 30T1000 30T1100 30T1200 30"/>' +
-        '<path d="M0 48Q50 36 100 48T200 48T300 48T400 48T500 48T600 48T700 48T800 48T900 48T1000 48T1100 48T1200 48" opacity=".6"/></g></svg>' +
-      '<div class="lx-frame"></div>'
+    halloween: function () {
+      var w = gold(), b = gold(), p = gold(), m = foil("#f3dfa6", "#c9a45c", "#e8cf8e", "#8a6a2e");
+      return '<div class="lx-smoke"><span></span><span></span><span></span></div>' +
+        '<svg class="lx-moon" viewBox="0 0 100 100">' + m.defs + '<path d="M62 6a46 46 0 1 0 32 66A38 38 0 1 1 62 6Z" fill="' + m.id + '"/></svg>' +
+        '<svg class="lx-web" viewBox="0 0 200 200">' + w.defs + '<g fill="none" stroke="' + w.id + '" stroke-width=".9">' +
+          '<path d="M0 0L200 120M0 0L150 200M0 0L60 200M0 0L200 40"/><path d="M0 34Q22 30 30 18Q30 8 34 0M0 70Q44 62 58 40Q62 20 68 0M0 110Q66 98 88 64Q96 32 104 0M0 150Q90 136 118 90Q130 46 140 0"/></g></svg>' +
+        '<svg class="lx-bats" viewBox="0 0 300 160">' + b.defs + '<g fill="' + b.id + '"><g transform="translate(20 60) scale(.9)">' + BAT +
+          '</g><g transform="translate(130 10) scale(.6)">' + BAT + '</g><g transform="translate(200 80) scale(.45)">' + BAT + '</g></g></svg>' +
+        '<svg class="lx-pumpkin" viewBox="0 0 220 190">' + p.defs + '<g fill="none" stroke="' + p.id + '" stroke-width="1.6">' +
+          '<ellipse cx="110" cy="118" rx="96" ry="62"/><ellipse cx="110" cy="118" rx="62" ry="66"/><ellipse cx="110" cy="118" rx="26" ry="68"/>' +
+          '<path d="M106 52c0-14 2-26 10-38l9 4c-7 10-9 22-8 34"/><path d="M118 30c14-14 34-14 46-4-12 2-22 8-30 18"/></g>' +
+          '<ellipse cx="110" cy="118" rx="96" ry="62" fill="' + p.id + '" opacity=".16"/></svg>' + FRAME;
+    },
+    natale: function () {
+      return '<svg class="lx-garland" viewBox="0 0 1200 90" preserveAspectRatio="none"><g fill="none" stroke="#d4af62" stroke-width="1" opacity=".55">' +
+          '<path d="M0 10Q150 80 300 10T600 10T900 10T1200 10"/><path d="M0 22Q150 86 300 22T600 22T900 22T1200 22" opacity=".5"/></g></svg>' +
+        '<div class="lx-baubles">' + ["l", "m", "r"].map(function (k) {
+          var g = gold();
+          return '<span class="lx-b lx-b-' + k + '"><i></i><svg viewBox="0 0 80 96">' + g.defs +
+            '<rect x="32" y="2" width="16" height="10" rx="2" fill="' + g.id + '"/><circle cx="40" cy="52" r="38" fill="' + g.id + '"/>' +
+            '<g fill="none" stroke="#6b5220" stroke-width="1" opacity=".55"><ellipse cx="40" cy="52" rx="38" ry="9"/><path d="M6 40q34 12 68 0M6 64q34 -12 68 0"/></g>' +
+            '<ellipse cx="27" cy="36" rx="8" ry="12" fill="#fff" opacity=".35" transform="rotate(30 27 36)"/></svg></span>';
+        }).join("") + "</div>" + FRAME;
+    },
+    capodanno: function () {
+      var c = "#e2c88c";
+      return '<div class="lx-burst"></div>' +
+        '<svg class="lx-coupe" viewBox="0 0 200 240"><g fill="none" stroke="' + c + '" stroke-width="1.8">' +
+          '<path d="M30 70Q100 66 170 70Q160 130 100 132Q40 130 30 70Z"/><path d="M100 132V206"/><ellipse cx="100" cy="210" rx="44" ry="8"/><path d="M42 84Q100 92 158 84" opacity=".6"/></g>' +
+          '<g fill="' + c + '" class="lx-bubbles"><circle cx="86" cy="104" r="3"/><circle cx="104" cy="96" r="2.4"/><circle cx="116" cy="110" r="2"/><circle cx="96" cy="118" r="1.8"/></g></svg>' +
+        '<svg class="lx-clock" viewBox="0 0 120 120"><g fill="none" stroke="' + c + '" stroke-width="1.4"><circle cx="60" cy="60" r="54"/><circle cx="60" cy="60" r="48" opacity=".5"/></g>' +
+          '<g stroke="' + c + '" stroke-width="2">' + Array.apply(null, Array(12)).map(function (_, i) {
+            var a = i * Math.PI / 6, r2 = i % 3 ? 46 : 38;
+            return '<line x1="' + (60 + Math.sin(a) * 42).toFixed(1) + '" y1="' + (60 - Math.cos(a) * 42).toFixed(1) + '" x2="' + (60 + Math.sin(a) * r2).toFixed(1) + '" y2="' + (60 - Math.cos(a) * r2).toFixed(1) + '"/>';
+          }).join("") + '<line x1="60" y1="60" x2="60" y2="22" stroke-width="2.6"/><line x1="60" y1="60" x2="60" y2="14"/></g><circle cx="60" cy="60" r="3" fill="' + c + '"/></svg>' + FRAME;
+    },
+    sanvalentino: function () {
+      var r = foil("#fbd9cc", "#e6a896", "#f6c8b8", "#a8675b");
+      return '<svg class="lx-hearts" viewBox="0 0 240 180">' + r.defs + '<g fill="none" stroke="' + r.id + '" stroke-width="2">' +
+          '<path d="M90 160C46 128 20 104 20 74 20 52 38 36 58 36c14 0 26 8 32 20 6-12 18-20 32-20 20 0 38 16 38 38 0 30-26 54-70 86Z"/>' +
+          '<path d="M150 150C112 122 90 102 90 76c0-19 15-33 33-33 12 0 22 7 27 17 5-10 15-17 27-17 18 0 33 14 33 33 0 26-22 46-60 74Z"/>' +
+          '<path d="M8 120L232 40"/></g><path d="M232 40l-14 2 6 6Z" fill="#e6a896"/></svg>' + FRAME;
+    },
+    pasqua: function () {
+      var d = foil("#f4e3b0", "#c9a45c", "#fff1c2", "#8a6a2e"), e = foil("#e9d39a", "#b8963f", "#e9d39a", "#7d6224");
+      return '<svg class="lx-olive" viewBox="0 0 200 80"><g fill="none" stroke="#3d5a40" stroke-width="1.6" stroke-linecap="round"><path d="M6 60C60 46 120 40 194 18"/></g>' +
+          '<g fill="#7a9472"><ellipse cx="40" cy="44" rx="14" ry="4.5" transform="rotate(-30 40 44)"/><ellipse cx="62" cy="58" rx="14" ry="4.5" transform="rotate(22 62 58)"/>' +
+          '<ellipse cx="92" cy="32" rx="14" ry="4.5" transform="rotate(-34 92 32)"/><ellipse cx="114" cy="46" rx="14" ry="4.5" transform="rotate(18 114 46)"/>' +
+          '<ellipse cx="146" cy="18" rx="14" ry="4.5" transform="rotate(-38 146 18)"/><ellipse cx="166" cy="32" rx="14" ry="4.5" transform="rotate(14 166 32)"/></g></svg>' +
+        // a gold dove carrying an olive sprig
+        '<svg class="lx-dove" viewBox="0 0 210 130">' + d.defs +
+          '<path d="M40 86C60 70 96 66 120 74c16 5 28 2 40-8 6-4 12-3 14 2-4 2-8 6-10 12-6 16-26 26-52 26-24 0-46-6-60-10L20 104l14-12-20-4Z" fill="' + d.id + '"/>' +
+          '<path d="M96 76C92 50 104 22 132 8c-4 22 2 38 18 50-20 0-38 8-46 22Z" fill="' + d.id + '"/>' +
+          '<g fill="none" stroke="#7a5a22" stroke-width="1" opacity=".55"><path d="M104 72c4-14 12-28 24-40M110 70c6-10 14-18 24-24M60 92c14 4 30 6 46 4"/></g>' +
+          '<path d="M174 68l12 2-12 3Z" fill="#8a6a2e"/><circle cx="167" cy="67" r="1.6" fill="#3a2a10"/>' +
+          '<path d="M184 71c6 4 10 10 12 18" fill="none" stroke="#3d5a40" stroke-width="1.4"/>' +
+          '<g fill="#7a9472"><ellipse cx="190" cy="78" rx="6" ry="2.2" transform="rotate(50 190 78)"/><ellipse cx="196" cy="86" rx="6" ry="2.2" transform="rotate(-20 196 86)"/></g></svg>' +
+        '<svg class="lx-eggs" viewBox="0 0 260 170">' + e.defs + '<g fill="#fbf8f1" stroke="' + e.id + '" stroke-width="1.8">' +
+          '<ellipse cx="80" cy="100" rx="44" ry="58"/><ellipse cx="180" cy="104" rx="40" ry="54"/><ellipse cx="130" cy="78" rx="46" ry="62"/></g>' +
+          '<g fill="none" stroke="' + e.id + '" stroke-width="1.3"><path d="M84 66l10 8 10-8 10 8 10-8 10 8 10-8 10 8M84 92h92M84 98h92M140 104l8 6 8-6 8 6M40 104q40 10 80 0M146 116q34 8 70 0"/></g>' +
+          '<g fill="#b8963f"><circle cx="110" cy="120" r="2.4"/><circle cx="124" cy="128" r="2.4"/><circle cx="138" cy="120" r="2.4"/><circle cx="62" cy="80" r="2"/><circle cx="196" cy="132" r="2"/></g>' +
+          '<path d="M20 156q110 -26 220 0" fill="none" stroke="#7a9472" stroke-width="1.6"/></svg>' + FRAME;
+    },
+    ferragosto: function () {
+      return '<div class="lx-sun"></div>' +
+        '<svg class="lx-umbrella" viewBox="0 0 240 280"><g transform="rotate(-10 120 120)">' +
+          Array.apply(null, Array(8)).map(function (_, i) {
+            var r = 112, cx = 120, cy = 116, a1 = Math.PI + i * Math.PI / 8, a2 = Math.PI + (i + 1) * Math.PI / 8;
+            var x1 = cx + r * Math.cos(a1), y1 = cy + r * Math.sin(a1), x2 = cx + r * Math.cos(a2), y2 = cy + r * Math.sin(a2);
+            var nx = cx + (r - 14) * Math.cos((a1 + a2) / 2), ny = cy + (r - 14) * Math.sin((a1 + a2) / 2);
+            return '<path d="M' + cx + " " + cy + "L" + x1.toFixed(1) + " " + y1.toFixed(1) + "A" + r + " " + r + " 0 0 1 " + x2.toFixed(1) + " " + y2.toFixed(1) +
+              'Z" fill="' + (i % 2 ? "#fbf6ea" : "#123b63") + '" stroke="#123b63" stroke-width="1"/>' +
+              '<path d="M' + x1.toFixed(1) + " " + y1.toFixed(1) + "Q" + nx.toFixed(1) + " " + ny.toFixed(1) + " " + x2.toFixed(1) + " " + y2.toFixed(1) + '" fill="none" stroke="#b8892f" stroke-width="1.2"/>';
+          }).join("") +
+          '<line x1="120" y1="116" x2="120" y2="272" stroke="#b8892f" stroke-width="3" stroke-linecap="round"/><circle cx="120" cy="2" r="5" fill="#b8892f"/><line x1="120" y1="4" x2="120" y2="116" stroke="#b8892f" stroke-width="2"/></g></svg>' +
+        '<svg class="lx-waves" viewBox="0 0 1200 70" preserveAspectRatio="none"><g fill="none" stroke="currentColor" stroke-width="1.2">' +
+          '<path d="M0 30Q50 18 100 30T200 30T300 30T400 30T500 30T600 30T700 30T800 30T900 30T1000 30T1100 30T1200 30"/>' +
+          '<path d="M0 48Q50 36 100 48T200 48T300 48T400 48T500 48T600 48T700 48T800 48T900 48T1000 48T1100 48T1200 48" opacity=".6"/></g></svg>' + FRAME;
+    }
   };
 
   function ready(fn) { if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", fn); else fn(); }
@@ -157,15 +223,18 @@
     if (!header) return;
     var banner = document.createElement("aside");   // a landmark, so screen readers can find or skip it
     banner.className = "theme-banner";
-    header.parentNode.insertBefore(banner, header);
+    if (annOn) header.parentNode.insertBefore(banner, header);
+    var title = null;
     function renderBanner() {
       var L = lang();
+      if (title) title.innerHTML = '<span class="lx-eyebrow">' + theme.eyebrow[L] + '</span><span class="lx-word">' + theme.title[L] + "</span>";
+      if (!annOn) return;
       banner.setAttribute("aria-label", L === "en" ? "News" : "Avviso");
-      var msg = annOn ? (ann.text && (ann.text[L] || ann.text.it)) || "" :
-        (settings.messages && settings.messages[id] && settings.messages[id][L]) || theme.msg[L];
+      var custom = ann.text && (ann.text[L] || ann.text.it);
+      var msg = custom || (theme ? (settings.messages && settings.messages[id] && settings.messages[id][L]) || theme.msg[L] : "");
       banner.innerHTML = "";
       if (msg) { var s = document.createElement("span"); s.textContent = msg; banner.appendChild(s); }
-      if (annOn && ann.code) {
+      if (ann.code) {
         var b = document.createElement("button");
         b.type = "button";
         b.className = "banner-code";
@@ -174,19 +243,24 @@
         banner.appendChild(b);
       }
     }
+    var hero = document.querySelector(".hero"), copy = document.querySelector(".hero-copy");
+    // the holiday's name above the logo, in foil (can be switched off in Gestione)
+    if (theme && copy && settings.title !== false) {
+      title = document.createElement("p");
+      title.className = "lx-title";
+      copy.insertBefore(title, copy.querySelector(".hero-logo"));
+    }
     renderBanner();
     new MutationObserver(renderBanner).observe(root, { attributes: true, attributeFilter: ["lang"] });
 
-    if (!theme) return;
-    var hero = document.querySelector(".hero");
-    if (!hero) return;
+    if (!theme || !hero) return;
 
     // ---------- theme graphics ----------
     if (ART[id]) {
       var art = document.createElement("div");
       art.className = "theme-art";
       art.setAttribute("aria-hidden", "true");
-      art.innerHTML = ART[id];
+      art.innerHTML = ART[id]();
       hero.appendChild(art);
     } else {
       var st = document.createElement("span");

@@ -57,7 +57,10 @@
       "tab.menu": "Menu", "tab.delivery": "Consegna", "tab.info": "Contatti", "tab.team": "Squadra",
       "orders.timing": "Tempi degli ordini",
       "tab.theme": "Temi e avvisi", "theme.title": "Tema del sito",
-      "ann.title": "Striscia in alto", "ann.help": "Un messaggio e/o un codice sconto in cima a tutte le pagine, con o senza tema. Se c'è un tema, prende il posto dei suoi auguri.",
+      "ann.title": "Striscia in alto", "ann.help": "Una sola striscia in cima al sito: gli auguri del tema oppure il vostro messaggio, con un codice sconto se volete. Funziona anche senza tema.",
+      "ann.textPh": "Es. Pizza del mese: la Gola", "ann.textHelp": "Senza tema e senza testo né codice, la striscia non compare.",
+      "ann.textHelpTheme": "Lasciate vuoto per gli auguri del tema (in grigio), oppure scrivete il vostro messaggio.",
+      "theme.showTitle": "Mostra il nome della festa sopra il logo", "theme.showTitleHelp": "Es. «Edizione notturna · Halloween» in foglia d'oro.",
       "ann.on": "Mostra la striscia", "ann.text": "Messaggio", "ann.code": "Codice sconto da mostrare", "ann.noCode": "Nessun codice",
       "ann.codeHelp": "Il cliente tocca \"Usa il codice\" e lo trova già nel carrello. Il codice diventa pubblico: usatelo per promozioni aperte a tutti.",
       "ann.from": "Dal (facoltativo)", "ann.to": "Al (facoltativo)", "ann.datesHelp": "Con le date, la striscia compare e sparisce da sola.",
@@ -90,7 +93,10 @@
       "menu.catTitle": "Nome categoria", "menu.catNote": "Nota (facoltativa)", "menu.items": "{n} piatti",
       "menu.available": "Disponibile", "menu.soldOut": "Esaurito",
       "menu.name": "Nome del piatto", "menu.price": "Prezzo (€)", "menu.desc": "Descrizione / ingredienti",
-      "menu.tags": "Etichette", "menu.allergens": "Allergeni (Reg. UE 1169/2011)", "menu.photo": "Foto",
+      "menu.tags": "Etichette",
+      "menu.special": "Etichetta speciale", "menu.specialNone": "Nessuna", "menu.specialTheme": "Speciale della festa (solo con un tema attivo)",
+      "menu.specialLimited": "Edizione limitata", "menu.specialCustom": "Testo vostro (es. Speciale Derby)", "menu.specialText": "Testo dell'etichetta",
+      "menu.specialHelp": "Mette in evidenza il piatto con una cornice e un'etichetta in evidenza.", "menu.allergens": "Allergeni (Reg. UE 1169/2011)", "menu.photo": "Foto",
       "menu.newItem": "Nuovo piatto", "menu.newCat": "Nuova categoria",
       "tag.veg": "Vegetariana", "tag.vegan": "Vegana", "tag.piccante": "Piccante", "tag.novita": "Novità", "tag.top": "Il più amato",
       "delivery.title": "Consegna a domicilio", "delivery.enabled": "Facciamo consegne",
@@ -149,7 +155,10 @@
       "tab.menu": "Menu", "tab.delivery": "Delivery", "tab.info": "Contact", "tab.team": "Team",
       "orders.timing": "Order timing",
       "tab.theme": "Themes & notices", "theme.title": "Site theme",
-      "ann.title": "Top strip", "ann.help": "A message and/or a promo code at the top of every page, with or without a theme. With a theme on, it replaces the theme's greeting.",
+      "ann.title": "Top strip", "ann.help": "One strip at the top of the site: the theme's greeting or your own message, with a promo code if you like. Works without a theme too.",
+      "ann.textPh": "E.g. Pizza of the month: Gola", "ann.textHelp": "With no theme, no text and no code, the strip doesn't show.",
+      "ann.textHelpTheme": "Leave empty for the theme's greeting (in grey), or write your own message.",
+      "theme.showTitle": "Show the holiday's name above the logo", "theme.showTitleHelp": "E.g. “Night edition · Halloween” in gold foil.",
       "ann.on": "Show the strip", "ann.text": "Message", "ann.code": "Promo code to show", "ann.noCode": "No code",
       "ann.codeHelp": "Customers tap \"Use code\" and find it already in their basket. The code becomes public: use it for promotions open to everyone.",
       "ann.from": "From (optional)", "ann.to": "Until (optional)", "ann.datesHelp": "With dates, the strip appears and disappears by itself.",
@@ -182,7 +191,10 @@
       "menu.catTitle": "Category name", "menu.catNote": "Note (optional)", "menu.items": "{n} dishes",
       "menu.available": "Available", "menu.soldOut": "Sold out",
       "menu.name": "Dish name", "menu.price": "Price (€)", "menu.desc": "Description / ingredients",
-      "menu.tags": "Labels", "menu.allergens": "Allergens (EU Reg. 1169/2011)", "menu.photo": "Photo",
+      "menu.tags": "Labels",
+      "menu.special": "Special label", "menu.specialNone": "None", "menu.specialTheme": "Holiday special (only while a theme is on)",
+      "menu.specialLimited": "Limited edition", "menu.specialCustom": "Your own text (e.g. Derby special)", "menu.specialText": "Label text",
+      "menu.specialHelp": "Highlights the dish with a frame and a standout label.", "menu.allergens": "Allergens (EU Reg. 1169/2011)", "menu.photo": "Photo",
       "menu.newItem": "New dish", "menu.newCat": "New category",
       "tag.veg": "Vegetarian", "tag.vegan": "Vegan", "tag.piccante": "Spicy", "tag.novita": "New", "tag.top": "Fan favourite",
       "delivery.title": "Home delivery", "delivery.enabled": "We deliver",
@@ -448,10 +460,42 @@
     theme: function () {
       var th = state.config.theme || {};   // read only: opening the tab must not count as a change
       var an = state.config.announce || {};
+      var THEMES = window.VC_THEMES || {}, ids = Object.keys(THEMES);
+      var today = window.VC_themeFor ? window.VC_themeFor(new Date()) : "";
+      var mode = th.mode || "off";
+      var shown = mode === "auto" ? today : THEMES[mode] ? mode : "";
+      var greet = shown ? THEMES[shown].msg : null;
+      var dm = function (x) { var p = x.split("-"); return parseInt(p[1], 10) + "/" + parseInt(p[0], 10); };
+      var opt = function (value, title, sub, sticker, color) {
+        return '<label class="theme-opt"><input type="radio" name="theme-mode" value="' + value + '" data-bind="config.theme.mode" data-kind="text"' +
+          (mode === value ? " checked" : "") + '><span class="theme-card">' +
+          '<span class="theme-sticker-mini" style="background:' + (color || "var(--cream-2)") + '">' + sticker + "</span>" +
+          "<strong>" + esc(title) + "</strong><small>" + esc(sub) + "</small></span></label>";
+      };
+      var tick = function (path, on, label) {
+        return '<label class="chk"><input type="checkbox" data-bind="' + path + '" data-kind="bool"' + (on ? " checked" : "") + "><span>" + esc(label) + "</span></label>";
+      };
       var codes = (state.promos || []).map(function (p) { return p.code; }).filter(Boolean);
-      var annCard = '<section class="card"><h2>' + esc(t("ann.title")) + '</h2><p class="help">' + esc(t("ann.help")) + "</p>" +
-        '<label class="chk"><input type="checkbox" data-bind="config.announce.on" data-kind="bool"' + (an.on ? " checked" : "") + "><span>" + esc(t("ann.on")) + "</span></label>" +
-        '<div class="f-pair">' + field(t("ann.text") + " · " + t("common.it"), "config.announce.text.it") + field(t("ann.text") + " · " + t("common.en"), "config.announce.text.en") + "</div>" +
+
+      var themeCard = '<section class="card"><h2>' + esc(t("theme.title")) + '</h2><p class="help">' + esc(t("theme.help")) + "</p>" +
+        '<div class="theme-grid" role="radiogroup" aria-label="' + esc(t("theme.title")) + '">' +
+        opt("off", t("theme.off"), t("theme.offSub"), "🍕") +
+        opt("auto", t("theme.auto"), today ? t("theme.today", { name: t("theme." + today) }) : t("theme.todayNone"), "📅") +
+        ids.map(function (id) {
+          var x = THEMES[id];
+          return opt(id, t("theme." + id), x.easter ? t("theme.easter") : t("theme.dates", { from: dm(x.from), to: dm(x.to) }), x.sticker, x.swatch || x.check);
+        }).join("") + "</div>" +
+        tick("config.theme.title", th.title !== false, t("theme.showTitle")) + '<p class="help">' + esc(t("theme.showTitleHelp")) + "</p>" +
+        tick("config.theme.effects", th.effects !== false, t("theme.effects")) + '<p class="help">' + esc(t("theme.effectsHelp")) + "</p>" +
+        '<p class="help">' + esc(t("theme.previewHint")) + "</p></section>";
+
+      // one strip at the top: the theme's greeting by default, or their own words, plus an optional promo code
+      var stripCard = '<section class="card"><h2>' + esc(t("ann.title")) + '</h2><p class="help">' + esc(t("ann.help")) + "</p>" +
+        tick("config.announce.on", an.on !== false, t("ann.on")) +
+        '<div class="f-pair">' +
+          field(t("ann.text") + " · " + t("common.it"), "config.announce.text.it", "text", ' placeholder="' + esc(greet ? greet.it : t("ann.textPh")) + '"') +
+          field(t("ann.text") + " · " + t("common.en"), "config.announce.text.en", "text", ' placeholder="' + esc(greet ? greet.en : t("ann.textPh")) + '"') + "</div>" +
+        '<p class="help">' + esc(greet ? t("ann.textHelpTheme") : t("ann.textHelp")) + "</p>" +
         '<label class="f"><span>' + esc(t("ann.code")) + '</span><select data-bind="config.announce.code" data-kind="text">' +
           '<option value="">' + esc(t("ann.noCode")) + "</option>" +
           codes.map(function (c) { return '<option value="' + esc(c) + '"' + (an.code === c ? " selected" : "") + ">" + esc(c) + "</option>"; }).join("") +
@@ -460,33 +504,7 @@
         '<p class="help">' + esc(codes.length ? t("ann.codeHelp") : t("ann.noPromos")) + "</p>" +
         '<div class="grid2">' + field(t("ann.from"), "config.announce.from", "date") + field(t("ann.to"), "config.announce.to", "date") + "</div>" +
         '<p class="help">' + esc(t("ann.datesHelp")) + "</p></section>";
-      var THEMES = window.VC_THEMES || {}, ids = Object.keys(THEMES);
-      var today = window.VC_themeFor ? window.VC_themeFor(new Date()) : "";
-      var mode = th.mode || "off";
-      var dm = function (x) { var p = x.split("-"); return parseInt(p[1], 10) + "/" + parseInt(p[0], 10); };
-      var opt = function (value, title, sub, sticker, color) {
-        return '<label class="theme-opt"><input type="radio" name="theme-mode" value="' + value + '" data-bind="config.theme.mode" data-kind="text"' +
-          (mode === value ? " checked" : "") + '><span class="theme-card">' +
-          '<span class="theme-sticker-mini" style="background:' + (color || "var(--cream-2)") + '">' + sticker + "</span>" +
-          "<strong>" + esc(title) + "</strong><small>" + esc(sub) + "</small></span></label>";
-      };
-      var shown = mode === "auto" ? today : THEMES[mode] ? mode : "";
-      var def = shown ? THEMES[shown].msg : null;
-      return annCard + '<section class="card"><h2>' + esc(t("theme.title")) + '</h2><p class="help">' + esc(t("theme.help")) + "</p>" +
-        '<div class="theme-grid" role="radiogroup" aria-label="' + esc(t("theme.title")) + '">' +
-        opt("off", t("theme.off"), t("theme.offSub"), "🍕") +
-        opt("auto", t("theme.auto"), today ? t("theme.today", { name: t("theme." + today) }) : t("theme.todayNone"), "📅") +
-        ids.map(function (id) {
-          var x = THEMES[id];
-          return opt(id, t("theme." + id), x.easter ? t("theme.easter") : t("theme.dates", { from: dm(x.from), to: dm(x.to) }), x.sticker, x.swatch || x.check);
-        }).join("") + "</div>" +
-        '<label class="chk"><input type="checkbox" data-bind="config.theme.effects" data-kind="bool"' + (th.effects !== false ? " checked" : "") +
-          "><span>" + esc(t("theme.effects")) + "</span></label>" + '<p class="help">' + esc(t("theme.effectsHelp")) + "</p>" +
-        '<p class="help">' + esc(t("theme.previewHint")) + "</p></section>" +
-        (shown ? '<section class="card"><h2>' + esc(t("theme.msg", { name: t("theme." + shown) })) + '</h2><p class="help">' + esc(t("theme.msgHelp")) + "</p>" +
-          '<div class="f-pair">' +
-          field(t("common.it"), "config.theme.messages." + shown + ".it", "text", ' placeholder="' + esc(def.it) + '"') +
-          field(t("common.en"), "config.theme.messages." + shown + ".en", "text", ' placeholder="' + esc(def.en) + '"') + "</div></section>" : "");
+      return themeCard + stripCard;
     },
 
     history: function () {
@@ -519,6 +537,12 @@
       bilingual(t("menu.desc"), p + ".desc", "textarea") +
       '<div class="f"><span>' + esc(t("menu.tags")) + '</span><div class="chips">' +
       TAGS.map(function (tg) { return toggleIn(t("tag." + tg), p + ".tags", tg); }).join("") + "</div></div>" +
+      '<label class="f"><span>' + esc(t("menu.special")) + '</span><select data-bind="' + p + '.special" data-kind="text">' +
+        [["", "menu.specialNone"], ["theme", "menu.specialTheme"], ["limited", "menu.specialLimited"], ["custom", "menu.specialCustom"]].map(function (o) {
+          return '<option value="' + o[0] + '"' + ((it.special || "") === o[0] ? " selected" : "") + ">" + esc(t(o[1])) + "</option>";
+        }).join("") + '</select></label>' +
+      (it.special === "custom" ? bilingual(t("menu.specialText"), p + ".specialText") : "") +
+      (it.special ? '<p class="help">' + esc(t("menu.specialHelp")) + "</p>" : "") +
       '<div class="f"><span>' + esc(t("menu.allergens")) + '</span><div class="chips">' +
       ALLERGENS.map(function (a) { return toggleIn(t("allergen." + a), p + ".allergens", a); }).join("") + "</div></div>" +
       '<div class="f"><span>' + esc(t("menu.photo")) + "</span>" + photo(p + ".image", 360, 360, "contain") + "</div>" +

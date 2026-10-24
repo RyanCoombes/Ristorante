@@ -289,6 +289,8 @@ h1, h2, h3, h4, p { margin: 0; }
 .tag--vegan { background: #2f5410; color: #eef5e4; }
 .tag--top { background: var(--black); color: var(--cream); }
 .tag--soldout { background: #555; color: #fff; }
+.tag--special { background: var(--red-ui); color: var(--cream); }
+.dish.is-special { border-color: var(--red); box-shadow: 0 0 0 1px var(--red), 0 18px 36px -24px rgba(184, 15, 41, .6); }
 @media (max-width: 480px) {
   .dish { padding: 16px 14px 14px; gap: 6px 12px; }
   .dish.has-img { grid-template-columns: 60px minmax(0, 1fr) auto; }

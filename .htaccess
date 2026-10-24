@@ -1,0 +1,8 @@
+# Browsers must check for a newer copy of pages, styles and scripts before using a saved one
+# (unchanged files are answered with a quick "not modified", so the site stays fast).
+<IfModule mod_headers.c>
+  <FilesMatch "\.(html|css|js)$">
+    Header set Cache-Control "no-cache"
+  </FilesMatch>
+</IfModule>
+Options -Indexes

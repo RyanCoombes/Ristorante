@@ -317,9 +317,11 @@
       var icon = tg === "veg" || tg === "vegan" ? LEAF : "";
       return '<span class="tag tag--' + esc(tg) + '">' + icon + esc(t("tag." + tg)) + "</span>";
     });
+    var special = specialLabel(item);
+    if (special) tags.unshift('<span class="tag tag--special">✦ ' + esc(special) + "</span>");
     if (soldOut) tags.unshift('<span class="tag tag--soldout">' + esc(t("menu.soldOut")) + "</span>");
     var allergens = (item.allergens || []).map(function (a) { return t("allergen." + a); });
-    return '<article class="dish' + (soldOut ? " is-soldout" : "") + (item.image ? " has-img" : "") + '" data-dish="' + esc(item.id) + '">' +
+    return '<article class="dish' + (soldOut ? " is-soldout" : "") + (special ? " is-special" : "") + (item.image ? " has-img" : "") + '" data-dish="' + esc(item.id) + '">' +
       (item.image ? '<img class="dish-img" src="' + esc(item.image) + '" alt="' + esc(item.name) + '" loading="lazy" width="96" height="96">' : "") +
       '<h4 class="dish-name">' + esc(item.name) + "</h4>" +
       '<span class="dish-price">' + money(item.price) + "</span>" +
@@ -328,6 +330,15 @@
       '<div class="dish-foot"><div class="tags">' + tags.join("") + "</div>" +
       (soldOut || !canOrder ? "" : '<div data-ctrl="' + esc(item.id) + '">' + qtyControl(item, cart[item.id] || 0) + "</div>") +
       "</div></article>";
+  }
+
+  /** "Speciale Halloween" (only while that theme is on), "Edizione limitata", or the staff's own words. */
+  function specialLabel(item) {
+    var th = window.VC_ACTIVE_THEME;
+    if (item.special === "theme") return th ? t("special.theme", { name: th.name[lang] || th.name.it }) : "";
+    if (item.special === "limited") return t("special.limited");
+    if (item.special === "custom") return pick(item.specialText || {}) || "";
+    return "";
   }
 
   function refreshDishControl(id) {

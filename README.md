@@ -33,7 +33,9 @@ Gli ordini per ora arrivano su **WhatsApp**: il cliente prepara l'ordine sul sit
 - **Versioni e PIN:** ogni salvataggio conserva la versione precedente (le ultime 15), ripristinabile con un tocco. Qui si cambia anche il PIN dello staff.
 - Le modifiche vengono salvate sul server in `data/live.js` (non su GitHub), quindi un nuovo caricamento del sito da GitHub non le cancella.
 - **Temi:** Halloween, Natale, Capodanno, San Valentino, Pasqua, Ferragosto, oppure *Automatico* (cambia da solo con le date delle feste) o *Nessun tema*. Ogni tema veste tutto il sito in stile elegante: colori della festa, logo in foglia metallica, cornici sottili e decorazioni discrete; carrello e ordini restano identici. Per provarne uno senza salvare: `index.html?tema=natale`.
-- **Striscia in alto** (Temi e avvisi): un messaggio e/o un codice sconto in cima al sito, con date facoltative di inizio e fine. Il cliente tocca *Usa il codice* e lo trova già nel carrello.
+- **Striscia in alto** (Temi e avvisi): una sola striscia in cima al sito. Con un tema mostra i suoi auguri, oppure il vostro messaggio; potete aggiungere un codice sconto (*Usa il codice* lo mette già nel carrello) e date di inizio e fine. Si può spegnere.
+- **Nome della festa** sopra il logo (es. «Edizione notturna · Halloween»): si spegne da Temi e avvisi.
+- **Etichetta speciale sui piatti** (Menu → piatto): *Speciale della festa* (es. «Speciale Halloween», visibile solo con un tema attivo), *Edizione limitata*, oppure un testo vostro (es. «Speciale Derby»). Il piatto viene messo in evidenza.
 
 ### Modificare i file a mano
 
@@ -195,6 +197,11 @@ For **website orders** you need PHP hosting (see above) — any cheap shared hos
 - **Netlify / Vercel / Cloudflare Pages:** drag and drop the folder, or connect the repository (no build command, output directory = root).
 
 Once you have a real domain, change `og:image` in `index.html` to a full URL (e.g. `https://vizicapitali.it/assets/img/logo-badge.png`) so link previews show the logo.
+
+## Aggiornare il codice / Updating the code
+
+Dopo aver cambiato un file in `assets/` o `data/`, aumentate il numero `?v=` nei file `.html` (es. `?v=20261024` → `?v=20261101`): così i browser scaricano subito la versione nuova invece di usarne una vecchia salvata. Il file `.htaccess` nella cartella principale chiede inoltre ai browser di controllare sempre se c'è una versione nuova.
+*After changing anything in `assets/` or `data/`, bump the `?v=` number in the `.html` files so browsers fetch the new version instead of a cached one.*
 
 ## Struttura / Structure
 
