@@ -672,7 +672,7 @@
     // "Paga ora online" only appears once SumUp is switched on in Gestione
     $("[data-pay-online]").hidden = !REMOTE.payOnline;
     if (!REMOTE.payOnline && form.elements.payment.value === "online") form.querySelector('input[name="payment"][value="card"]').checked = true;
-    $("[data-pay-label]").textContent = t(REMOTE.payOnline ? "cart.paymentAny" : "cart.payment");
+    $("[data-pay-label]").textContent = t(REMOTE.payOnline ? "cart.paymentAny" : deliveryOn() && mode() === "delivery" ? "cart.payDelivery" : "cart.payPickup");
     $("[data-pay-later]").textContent = t(REMOTE.payOnline ? "cart.payLaterOrOnline" : "cart.payLater");
     $("[data-online-note]").hidden = !online;
     $("[data-online-note]").textContent = t("cart.onlineNote");
@@ -698,7 +698,7 @@
       name: form.elements.name.value.trim(),
       phone: form.elements.phone.value.trim(),
       email: form.elements.email.value.trim(),
-      cashWith: payment() === "cash" ? cashWith() : null,
+      cashWith: cashWith(),
       time: tm.value,
       timeLabel: tm.label,
       payment: payment(),
@@ -730,20 +730,32 @@
 
   function validPhone(p) { return /^\+?\d{8,15}$/.test(String(p).replace(/[\s().\/-]/g, "")); }
 
-  // ---------- cash: "what will you pay with?" so the rider brings change ----------
+  // ---------- cash on delivery: "do you need change?" so the rider brings it ----------
+  // (not asked at collection: the till has change)
+  function askChange() { return payment() === "cash" && deliveryOn() && mode() === "delivery"; }
+  function wholeEuro(n) {
+    return new Intl.NumberFormat(lang === "it" ? "it-IT" : "en-GB", { style: "currency", currency: "EUR", minimumFractionDigits: 0 }).format(n);
+  }
+  function cashText(data) {
+    if (!data.cashWith) return t("cart.cash");
+    var tot = totals();
+    return t("cart.cash") + " · " + (tot.feeKnown ? t("cart.cashChange", { amount: wholeEuro(data.cashWith), change: money(data.cashWith - tot.total) })
+      : t("cart.cashNote", { amount: wholeEuro(data.cashWith) }));
+  }
   function cashWith() {
+    if (!askChange()) return null;
     var r = form.querySelector('input[name="cashwith"]:checked');
     return r && r.value !== "exact" ? parseInt(r.value, 10) : null;
   }
   function renderCashOptions() {
     var box = $("[data-cash-with]");
-    var show = payment() === "cash";
+    var show = askChange();
     box.hidden = !show;
     if (!show) return;
     var total = totals().total;
     var prev = (form.querySelector('input[name="cashwith"]:checked') || {}).value || "exact";
     var opts = [["exact", t("cart.cashExact")]].concat((ORD.cashOptions || [20, 50])
-      .filter(function (n) { return n > total; }).map(function (n) { return [String(n), money(n)]; }));
+      .filter(function (n) { return n > total; }).map(function (n) { return [String(n), t("cart.cashNote", { amount: wholeEuro(n) })]; }));
     $("[data-cash-options]").innerHTML = opts.map(function (o) {
       return '<label class="slot"><input type="radio" name="cashwith" value="' + o[0] + '"' + (o[0] === prev ? " checked" : "") + "><span>" + esc(o[1]) + "</span></label>";
     }).join("");
@@ -762,7 +774,7 @@
     rows.push([t("cart.reviewContact"), data.name + " · " + data.phone]);
     if (data.mode === "delivery") rows.push([t("cart.detailAddress"), data.address + " " + data.civico + ", " + data.cap + (area ? " " + area : "") + (data.buzzer ? " · " + data.buzzer : "")]);
     rows.push([t("cart.detailTime"), data.time === "asap" ? t("cart.asap", { time: data.timeLabel }) : data.time]);
-    rows.push([t("cart.detailPayment"), t(data.payment === "cash" ? "cart.cash" : data.payment === "online" ? "cart.online" : "cart.card") + (data.cashWith ? " · " + money(data.cashWith) : "")]);
+    rows.push([t("cart.detailPayment"), data.payment === "cash" ? cashText(data) : t(data.payment === "online" ? "cart.online" : "cart.card")]);
     if (data.notes) rows.push([t("cart.detailNotes"), data.notes]);
     $("[data-review-details]").innerHTML = rows.map(function (r) {
       return "<div><dt>" + esc(r[0]) + "</dt><dd>" + esc(r[1]) + "</dd></div>";
@@ -800,7 +812,7 @@
     }
     lines.push(t("wa.time") + ": " + (data.time === "asap" ? t("wa.asap", { time: data.timeLabel }) : data.time));
     lines.push(t("wa.payment") + ": " + (paid ? t("wa.paidOnline", { amount: money(paid.amount), ref: paid.ref }) :
-      t(data.payment === "cash" ? "cart.cash" : "cart.card") + (data.cashWith ? " (" + money(data.cashWith) + ")" : "")));
+      (data.payment === "cash" ? cashText(data) : t("cart.card"))));
     if (data.notes) lines.push(t("wa.notes") + ": " + data.notes);
     lines.push("");
     lines.push(t("wa.thanks"));
