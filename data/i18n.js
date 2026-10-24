@@ -37,7 +37,7 @@ window.I18N = {
     "about.body": "Vizi Capitali è la pizzeria che celebra la pizza come un lusso da concedersi, un premio da meritare, uno strappo alla regola. Un vizio a cui è impossibile resistere: il più buono di tutti.",
     "team.kicker": "La nostra",
     "team.title": "Squadra",
-    "team.body": "Due gemelli, il loro pizzaiolo e un amico. Quattro persone, un forno e un'unica ossessione.",
+    "team.body": "Due gemelli, il loro pizzaiolo e un amico di sempre.",
 
     "menu.kicker": "Il nostro",
     "menu.title": "Menu",
@@ -280,7 +280,7 @@ window.I18N = {
     "about.body": "Vizi Capitali (\"Deadly Sins\") is the pizzeria that celebrates pizza as a luxury to treat yourself to, a reward you've earned, a little rule worth breaking. A vice that's impossible to resist: the tastiest of them all.",
     "team.kicker": "Meet the",
     "team.title": "Crew",
-    "team.body": "Two twins, their pizzaiolo and a friend. Four people, one oven and a single obsession.",
+    "team.body": "Twins, their pizzaiolo and a lifelong friend.",
 
     "menu.kicker": "Our",
     "menu.title": "Menu",

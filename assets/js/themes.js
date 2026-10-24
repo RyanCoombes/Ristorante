@@ -15,54 +15,54 @@
   // In the order of the year, which is also the order Gestione lists them in.
   var THEMES = {
     capodanno: {
-      name: { it: "Capodanno", en: "New Year" }, title: { it: "Buon Anno", en: "Happy New Year" }, eyebrow: { it: "Edizione di mezzanotte", en: "Midnight edition" },
+      name: { it: "Capodanno", en: "New Year" }, title: { it: "Buon Anno", en: "Happy New Year" }, eyebrow: { it: "{newyear}", en: "{newyear}" },
       swatch: "#1b1916", from: "12-28", to: "01-06", sticker: "🥂", check: "#1b1916", particles: "glitter",
-      msg: { it: "Capodanno · Brindiamo a un nuovo anno di vizi", en: "New Year · A toast to a new year of vices" }
+      msg: { it: "Buon anno da Vizi Capitali!", en: "Happy New Year from Vizi Capitali!" }
     },
     carnevale: {
-      name: { it: "Carnevale", en: "Carnival" }, title: { it: "Carnevale", en: "Carnival" }, eyebrow: { it: "A Carnevale ogni vizio vale", en: "At Carnival every vice goes" },
+      name: { it: "Carnevale", en: "Carnival" }, title: { it: "Carnevale", en: "Carnival" }, eyebrow: { it: "Fino a martedì grasso", en: "Until Shrove Tuesday" },
       swatch: "#1c1424", easter: [-58, -47], sticker: "🎭", check: "#1c1424", particles: "glitter",
-      msg: { it: "Carnevale · A Carnevale ogni vizio vale", en: "Carnival · At Carnival every vice goes" }
+      msg: { it: "A Carnevale ogni vizio vale!", en: "Anything goes at Carnival!" }
     },
     sanvalentino: {
-      name: { it: "San Valentino", en: "Valentine's" }, title: { it: "San Valentino", en: "Valentine's Day" }, eyebrow: { it: "Edizione per due", en: "For two" },
+      name: { it: "San Valentino", en: "Valentine's" }, title: { it: "San Valentino", en: "Valentine's Day" }, eyebrow: { it: "14 febbraio", en: "14 February" },
       swatch: "#3a0f1b", from: "02-07", to: "02-14", priority: 2, sticker: "💘", check: "#2a0e15", particles: "petals",
-      msg: { it: "San Valentino · Un vizio da condividere", en: "Valentine's Day · A vice to share" }
+      msg: { it: "San Valentino: certi vizi sono più buoni in due", en: "Valentine's Day: some vices are better shared" }
     },
     pasqua: {
-      name: { it: "Pasqua", en: "Easter" }, title: { it: "Buona Pasqua", en: "Happy Easter" }, eyebrow: { it: "Edizione di primavera", en: "Spring edition" },
+      name: { it: "Pasqua", en: "Easter" }, title: { it: "Buona Pasqua", en: "Happy Easter" }, eyebrow: { it: "{easter}", en: "{easter}" },
       swatch: "#3d5a40", easter: [-7, 1], sticker: "🐣", check: "#dfe7d4", particles: "blossom",   // Palm Sunday → Pasquetta
-      msg: { it: "Pasqua · Buone feste da Vizi Capitali", en: "Easter · Happy holidays from Vizi Capitali" }
+      msg: { it: "Buona Pasqua da Vizi Capitali!", en: "Happy Easter from Vizi Capitali!" }
     },
     nataleroma: {
       name: { it: "Natale di Roma", en: "Rome's Birthday" }, title: { it: "Natale di Roma", en: "Rome's Birthday" }, eyebrow: { it: "{roman} · {age} anni", en: "{roman} · {age} years" },
       swatch: "#7a1420", from: "04-19", to: "04-21", priority: 3, sticker: "🏛️", check: "#e6d9c2", particles: "glints",
-      msg: { it: "Natale di Roma · Tanti auguri, Roma: {age} anni", en: "Rome's Birthday · Happy {age}th birthday, Rome" }
+      msg: { it: "Buon compleanno, Roma! {age} anni e non sentirli", en: "Happy {ageth} birthday, Rome!" }
     },
     repubblica: {
       name: { it: "Festa della Repubblica", en: "Republic Day" }, title: { it: "Festa della Repubblica", en: "Republic Day" }, eyebrow: { it: "2 giugno", en: "2 June" },
       swatch: "#1f5a3c", from: "05-30", to: "06-02", priority: 3, sticker: "🇮🇹", check: "#e3e8dc", particles: "",
-      msg: { it: "Festa della Repubblica · Buon 2 giugno da Vizi Capitali", en: "Republic Day · Happy 2 June from Vizi Capitali" }
+      msg: { it: "Buona Festa della Repubblica!", en: "Happy Republic Day!" }
     },
     pietropaolo: {
-      name: { it: "Santi Pietro e Paolo", en: "Saints Peter and Paul" }, title: { it: "Santi Pietro e Paolo", en: "Saints Peter and Paul" }, eyebrow: { it: "Festa di Roma", en: "Rome's feast day" },
+      name: { it: "Santi Pietro e Paolo", en: "Saints Peter and Paul" }, title: { it: "Santi Pietro e Paolo", en: "Saints Peter and Paul" }, eyebrow: { it: "29 giugno", en: "29 June" },
       swatch: "#8c3b1f", from: "06-27", to: "06-29", priority: 3, sticker: "🗝️", check: "#ead8c2", particles: "glints",
-      msg: { it: "Santi Pietro e Paolo · Buona festa, Roma", en: "Saints Peter and Paul · Happy feast day, Rome" }
+      msg: { it: "Buona festa, Roma! E auguri a tutti i Pietro e i Paolo", en: "Happy feast day, Rome!" }
     },
     ferragosto: {
-      name: { it: "Ferragosto", en: "Ferragosto" }, title: { it: "Ferragosto", en: "Ferragosto" }, eyebrow: { it: "Edizione d'estate", en: "Summer edition" },
+      name: { it: "Ferragosto", en: "Ferragosto" }, title: { it: "Ferragosto", en: "Ferragosto" }, eyebrow: { it: "15 agosto", en: "15 August" },
       swatch: "#123b63", from: "08-08", to: "08-16", sticker: "🏖️", check: "#dde7ee", particles: "",
-      msg: { it: "Ferragosto · L'estate romana ha un nuovo vizio", en: "Ferragosto · Roman summer has a new vice" }
+      msg: { it: "Buon Ferragosto da Vizi Capitali!", en: "Happy Ferragosto from Vizi Capitali!" }
     },
     halloween: {
-      name: { it: "Halloween", en: "Halloween" }, title: { it: "Halloween", en: "Halloween" }, eyebrow: { it: "Edizione notturna", en: "Night edition" },
+      name: { it: "Halloween", en: "Halloween" }, title: { it: "Halloween", en: "Halloween" }, eyebrow: { it: "31 ottobre", en: "31 October" },
       swatch: "#0b0908", from: "10-20", to: "11-01", sticker: "🎃", check: "#1d1714", particles: "embers",
-      msg: { it: "Halloween · Una notte di vizi, fino al 1° novembre", en: "Halloween · A night of vices, until 1 November" }
+      msg: { it: "Dolcetto, scherzetto… o pizza?", en: "Trick, treat… or pizza?" }
     },
     natale: {
-      name: { it: "Natale", en: "Christmas" }, title: { it: "Buon Natale", en: "Merry Christmas" }, eyebrow: { it: "Edizione delle feste", en: "Holiday edition" },
+      name: { it: "Natale", en: "Christmas" }, title: { it: "Buon Natale", en: "Merry Christmas" }, eyebrow: { it: "25 dicembre", en: "25 December" },
       swatch: "#0e1f18", from: "12-01", to: "12-27", sticker: "🎄", check: "#12261d", particles: "glints",
-      msg: { it: "Natale · Il vizio più prezioso è stare insieme", en: "Christmas · The most precious vice is being together" }
+      msg: { it: "Buon Natale da tutti noi di Vizi Capitali!", en: "Merry Christmas from all of us at Vizi Capitali!" }
     }
   };
   window.VC_THEMES = THEMES;   // the Gestione page lists these
@@ -119,10 +119,18 @@
       .forEach(function (r) { while (num >= r[0]) { out += r[1]; num -= r[0]; } });
     return { age: n, roman: out };
   }
+  /** Fills the date-dependent bits of the holiday text: Rome's age, Easter Sunday, the coming year. */
   function fill(text) {
-    var a = romeAge(new Date());
-    var en = document.documentElement.lang === "en";
-    return String(text).split("{age}").join(a.age.toLocaleString(en ? "en-GB" : "it-IT")).split("{roman}").join(a.roman);
+    var now = new Date(), a = romeAge(now), p = parts(now);
+    var en = document.documentElement.lang === "en", loc = en ? "en-GB" : "it-IT";
+    var n = a.age % 100, suffix = n >= 11 && n <= 13 ? "th" : ["th", "st", "nd", "rd"][a.age % 10] || "th";
+    var day = new Intl.DateTimeFormat(loc, { day: "numeric", month: "long", timeZone: "UTC" }).format(easter(Number(p.year)));
+    return String(text)
+      .split("{ageth}").join(a.age.toLocaleString(loc) + suffix)
+      .split("{age}").join(a.age.toLocaleString(loc))
+      .split("{roman}").join(a.roman)
+      .split("{easter}").join(day)
+      .split("{newyear}").join(String(Number(p.year) + (p.month === "12" ? 1 : 0)));
   }
   window.VC_themeFor = themeFor;
   window.VC_themeText = fill;
