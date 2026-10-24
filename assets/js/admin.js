@@ -53,14 +53,15 @@
       "site.msg": "Messaggio della pagina di manutenzione (facoltativo)", "site.msgPh": "Es. Siamo in ferie fino al 25 agosto. A presto!",
       "site.msgSave": "Salva messaggio", "site.done": "Fatto: il sito è aggiornato.", "site.fail": "Non riuscito. Riprova.",
       "site.unknown": "Non riesco a leggere lo stato del sito. Ricarica la pagina.",
-      "soon.title": "Prossimamente", "soon.on": "Sito nascosto", "soon.off": "Sito aperto a tutti",
+      "soon.noteTitle": "Il sito è nascosto:", "soon.note": "i clienti vedono «Apriamo presto». Si apre da Avanzate → Prossimamente.", "soon.noteGo": "Vai ad Avanzate",
+      "soon.title": "Prossimamente (prima dell'apertura)", "soon.on": "Sito nascosto", "soon.off": "Sito aperto a tutti",
       "soon.help": "Quando è attivo, chi apre il sito vede «Apriamo presto» con il link a Instagram. Il sito vero lo vede chi inserisce il codice di anteprima, e voi da questo dispositivo perché siete entrati in Gestione.",
       "soon.openConfirm": "Aprire il sito a tutti? Da ora chiunque vedrà il menu e potrà ordinare.",
       "soon.hideConfirm": "Nascondere il sito? I clienti vedranno solo «Apriamo presto».",
       "soon.pin": "Codice di anteprima (4–8 cifre)", "soon.pinSet": "Codice impostato ✓. Scrivetene uno nuovo per cambiarlo: chi usava quello vecchio dovrà inserire il nuovo.",
       "soon.pinNone": "Nessun codice: il sito vero lo vedete solo voi.", "soon.pinSave": "Salva codice", "soon.pinBad": "Il codice deve avere da 4 a 8 cifre.",
       "soon.view": "Vedi «Apriamo presto» come un cliente: apri il sito in una finestra anonima.",
-      "tab.hours": "Orari e tempi", "tab.promo": "Sconti", "tab.history": "Versioni e PIN",
+      "tab.hours": "Orari e tempi", "tab.promo": "Sconti", "tab.history": "Avanzate",
       "tab.pay": "Pagamenti online", "pay.title": "Pagamenti online con SumUp",
       "pay.help": "Già pronti, ma spenti. Quando SumUp vi dà le chiavi API, inseritele qui: i clienti potranno pagare subito con carta, Apple Pay o Google Pay sulla pagina sicura di SumUp, e i soldi arrivano sul vostro conto SumUp.",
       "pay.mode": "Stato", "pay.off": "Spenti", "pay.test": "Prova", "pay.live": "Attivi",
@@ -184,14 +185,15 @@
       "site.msg": "Message on the maintenance page (optional)", "site.msgPh": "E.g. We're on holiday until 25 August. See you soon!",
       "site.msgSave": "Save message", "site.done": "Done: the site is updated.", "site.fail": "Didn't work. Please try again.",
       "site.unknown": "Can't read the site status. Reload the page.",
-      "soon.title": "Coming soon", "soon.on": "Site hidden", "soon.off": "Site open to everyone",
+      "soon.noteTitle": "The site is hidden:", "soon.note": "customers see \"Opening soon\". Open it from Advanced → Coming soon.", "soon.noteGo": "Go to Advanced",
+      "soon.title": "Coming soon (before opening)", "soon.on": "Site hidden", "soon.off": "Site open to everyone",
       "soon.help": "While on, visitors see \"Opening soon\" with a link to Instagram. The real site is shown to anyone who enters the preview code, and to you on this device because you're logged in to Gestione.",
       "soon.openConfirm": "Open the site to everyone? From now on anyone can see the menu and order.",
       "soon.hideConfirm": "Hide the site? Customers will only see \"Opening soon\".",
       "soon.pin": "Preview code (4–8 digits)", "soon.pinSet": "Code set ✓. Type a new one to change it: people using the old one will need the new one.",
       "soon.pinNone": "No code: only you can see the real site.", "soon.pinSave": "Save code", "soon.pinBad": "The code must have 4 to 8 digits.",
       "soon.view": "To see \"Opening soon\" as a customer, open the site in a private window.",
-      "tab.hours": "Hours & timing", "tab.promo": "Promos", "tab.history": "Versions & PIN",
+      "tab.hours": "Hours & timing", "tab.promo": "Promos", "tab.history": "Advanced",
       "tab.pay": "Online payments", "pay.title": "Online payments with SumUp",
       "pay.help": "Ready, but switched off. When SumUp gives you the API keys, enter them here: customers can then pay straight away by card, Apple Pay or Google Pay on SumUp's secure page, and the money goes to your SumUp account.",
       "pay.mode": "Status", "pay.off": "Off", "pay.test": "Test", "pay.live": "On",
@@ -515,16 +517,10 @@
     site: function () {
       if (!flags) return '<section class="card"><p class="help">' + esc(t("site.unknown")) + "</p></section>";
       var open = !flags.paused, busy = flags.busy || 0, m = flags.maintenance;
-      var soon = !!flags.soon;
       return '<section class="card"><h2>' + esc(t("site.title")) + '</h2><p class="help">' + esc(t("site.help")) + "</p></section>" +
-        '<section class="card"><h2>' + esc(t("soon.title")) + "</h2>" +
-          '<button type="button" class="big-switch big-switch--maint ' + (soon ? "is-on" : "is-off") + '" data-act="flagSoon" data-path="" aria-pressed="' + soon + '">' +
-          '<span class="knob"></span><strong>' + esc(soon ? t("soon.on") : t("soon.off")) + "</strong></button>" +
-          '<p class="help">' + esc(t("soon.help")) + "</p>" +
-          '<label class="f"><span>' + esc(t("soon.pin")) + '</span><input type="text" inputmode="numeric" maxlength="8" autocomplete="off" data-soon-pin></label>' +
-          '<p class="help">' + esc(flags.soonPin ? t("soon.pinSet") : t("soon.pinNone")) + "</p>" +
-          '<button type="button" class="btn btn--outline btn--sm" data-act="soonPin" data-path="">' + esc(t("soon.pinSave")) + "</button>" +
-          '<p class="muted">' + esc(t("soon.view")) + "</p></section>" +
+        // "Prossimamente" lives in Avanzate (used once, before opening); only a reminder here while it's on
+        (flags.soon ? '<section class="card soon-note"><p><strong>' + esc(t("soon.noteTitle")) + "</strong> " + esc(t("soon.note")) + "</p>" +
+          '<button type="button" class="btn btn--outline btn--sm" data-tab="history">' + esc(t("soon.noteGo")) + "</button></section>" : "") +
         '<section class="card"><h2>' + esc(t("site.orders")) + "</h2>" +
           '<button type="button" class="big-switch ' + (open ? "is-on" : "is-off") + '" data-act="flagPaused" data-path="" aria-pressed="' + open + '">' +
           '<span class="knob"></span><strong>' + esc(open ? t("site.ordersOn") : t("site.ordersOff")) + "</strong></button>" +
@@ -639,7 +635,15 @@
         '<label class="f"><span>' + esc(t("pinc.current")) + '</span><input type="password" inputmode="numeric" maxlength="6" autocomplete="current-password" data-pinc="current"></label><span></span>' +
         '<label class="f"><span>' + esc(t("pinc.new")) + '</span><input type="password" inputmode="numeric" maxlength="6" autocomplete="new-password" data-pinc="new"></label>' +
         '<label class="f"><span>' + esc(t("pinc.new2")) + '</span><input type="password" inputmode="numeric" maxlength="6" autocomplete="new-password" data-pinc="new2"></label></div>' +
-        '<button type="button" class="btn btn--outline btn--sm" data-act="changePin" data-path="">' + esc(t("pinc.set")) + "</button></section>";
+        '<button type="button" class="btn btn--outline btn--sm" data-act="changePin" data-path="">' + esc(t("pinc.set")) + "</button></section>" +
+        (flags ? '<section class="card">' + details("soon", "<span><strong>" + esc(t("soon.title")) + "</strong><br><span class=\"muted\">" + esc(flags.soon ? t("soon.on") : t("soon.off")) + "</span></span>",
+          '<p class="help">' + esc(t("soon.help")) + "</p>" +
+          '<button type="button" class="big-switch big-switch--maint ' + (flags.soon ? "is-on" : "is-off") + '" data-act="flagSoon" data-path="" aria-pressed="' + !!flags.soon + '">' +
+          '<span class="knob"></span><strong>' + esc(flags.soon ? t("soon.on") : t("soon.off")) + "</strong></button>" +
+          '<label class="f"><span>' + esc(t("soon.pin")) + '</span><input type="text" inputmode="numeric" maxlength="8" autocomplete="off" data-soon-pin></label>' +
+          '<p class="help">' + esc(flags.soonPin ? t("soon.pinSet") : t("soon.pinNone")) + "</p>" +
+          '<button type="button" class="btn btn--outline btn--sm" data-act="soonPin" data-path="">' + esc(t("soon.pinSave")) + "</button>" +
+          '<p class="muted">' + esc(t("soon.view")) + "</p>") + "</section>" : "");
     }
   };
 

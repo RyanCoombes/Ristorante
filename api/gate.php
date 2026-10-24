@@ -73,7 +73,7 @@ header('X-Robots-Tag: noindex');
 <title><?= $h($T['title']) ?> · Vizi Capitali</title>
 <meta name="theme-color" content="#c8102e">
 <link rel="icon" type="image/png" href="assets/img/favicon.png">
-<link rel="stylesheet" href="assets/fonts/fonts.css?v=20261024l">
+<link rel="stylesheet" href="assets/fonts/fonts.css?v=20261024m">
 <style>
   *, *::before, *::after { box-sizing: border-box; }
   html, body { margin: 0; min-height: 100%; }

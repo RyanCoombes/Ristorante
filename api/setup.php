@@ -97,8 +97,8 @@ if (!$done && $_SERVER['REQUEST_METHOD'] === 'POST') {
   <?php if ($done): ?>
     <div class="box">
       <p><strong>Fatto.</strong> Ora entrate nella gestione del sito con il PIN: <a href="../admin.html">admin.html</a></p>
-      <?php if (flag('soon') === '1'): ?><p class="help">Il sito mostra «Apriamo presto». Quando siete pronti: Gestione → Stato del sito → Prossimamente.</p><?php endif; ?>
-      <p class="help">Il PIN si può cambiare da Gestione → Versioni e PIN.</p>
+      <?php if (flag('soon') === '1'): ?><p class="help">Il sito mostra «Apriamo presto». Quando siete pronti: Gestione → Avanzate → Prossimamente.</p><?php endif; ?>
+      <p class="help">Il PIN si può cambiare da Gestione → Avanzate.</p>
     </div>
   <?php else: ?>
   <form method="post" class="box">
