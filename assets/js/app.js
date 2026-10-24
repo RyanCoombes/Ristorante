@@ -993,6 +993,16 @@
     renderCart();
   }
   $("[data-promo-apply]").addEventListener("click", applyPromo);
+  // "Usa il codice" in the strip at the top of the page (assets/js/themes.js)
+  window.addEventListener("vc:promo", function (e) {
+    var code = String(e.detail || "").toUpperCase();
+    if (!code) return;
+    form.elements.promo.value = code;
+    var box = $("[data-promo-box]");
+    if (box) box.open = true;
+    applyPromo();
+    toast(t("promo.saved", { code: code }));
+  });
 
   // remember returning customers
   var customer = load(STORE_CUSTOMER, {});

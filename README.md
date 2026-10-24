@@ -22,6 +22,7 @@ Aprite `tuosito/ordini.html` → **Gestione** (o direttamente `admin.html`) con 
 - Le modifiche vengono salvate sul server in `data/live.js` (non su GitHub), quindi un nuovo caricamento del sito da GitHub non le cancella.
 - Pausa degli ordini online, attesa extra e manutenzione si cambiano dalla pagina **Ordini**, dal pulsante di stato in alto.
 - **Temi:** Halloween, Natale, Capodanno, San Valentino, Pasqua, Ferragosto, oppure *Automatico* (cambia da solo con le date delle feste) o *Nessun tema*. Aggiungono una striscia di auguri (testo modificabile), la scacchiera nei colori della festa, un adesivo sulla pizza e decorazioni animate nella prima schermata. Per provarne uno senza salvare: `index.html?tema=natale`.
+- **Striscia in alto** (Temi e avvisi): un messaggio e/o un codice sconto in cima al sito, con date facoltative di inizio e fine. Il cliente tocca *Usa il codice* e lo trova già nel carrello.
 
 ### Modificare i file a mano
 
@@ -94,7 +95,7 @@ Dopo aver salvato, apri `index.html` nel browser (doppio clic) e ricarica la pag
 
 ## 🇬🇧 How to update the site
 
-**Easiest: the management page.** Open `ordini.html` → **Gestione** (or `admin.html`) with the staff PIN. Edit the menu (prices, photos, allergens, sold out), hours and timing, delivery, promo codes, contacts and team. A bar appears at the bottom while there are unsaved changes: **Anteprima** previews them on that device only, **Salva e pubblica** puts them live straight away. Every save keeps the previous version (the last 15) under *Versioni e PIN*, where the staff PIN can also be changed. Changes are stored on the server in `data/live.js`, not in git, so redeploying from GitHub doesn't overwrite them. Pausing online orders, extra waiting time and maintenance mode are on the **Ordini** page. **Temi** (themes): Halloween, Christmas, New Year, Valentine's, Easter, Ferragosto, *Automatico* (follows the calendar) or none — a greeting strip (editable), checkerboard in the holiday colour, a sticker on the pizza and light animated decorations in the hero. Try one without saving with `index.html?tema=natale`.
+**Easiest: the management page.** Open `ordini.html` → **Gestione** (or `admin.html`) with the staff PIN. Edit the menu (prices, photos, allergens, sold out), hours and timing, delivery, promo codes, contacts and team. A bar appears at the bottom while there are unsaved changes: **Anteprima** previews them on that device only, **Salva e pubblica** puts them live straight away. Every save keeps the previous version (the last 15) under *Versioni e PIN*, where the staff PIN can also be changed. Changes are stored on the server in `data/live.js`, not in git, so redeploying from GitHub doesn't overwrite them. Pausing online orders, extra waiting time and maintenance mode are on the **Ordini** page. **Temi** (themes): Halloween, Christmas, New Year, Valentine's, Easter, Ferragosto, *Automatico* (follows the calendar) or none — a greeting strip (editable), checkerboard in the holiday colour, a sticker on the pizza and light animated decorations in the hero. Try one without saving with `index.html?tema=natale`. **Top strip** (same tab): a message and/or a promo code at the top of the site, with optional start and end dates; *Use code* puts it straight into the basket.
 
 **By hand** (only before going live, or without PHP hosting; on the live site whatever the management page saved wins):
 
@@ -190,7 +191,8 @@ data/menu.js          menu               ← edit
 data/i18n.js          IT / EN text       ← edit
 assets/css/style.css  styles (brand colours: #EE1A37 red, #F0E3CC cream)
 assets/js/app.js      menu, language switch, basket, checkout
-assets/js/themes.js   seasonal themes (Gestione → Temi)
+assets/js/themes.js   seasonal themes + top strip (Gestione → Temi e avvisi)
+assets/css/themes/    full re-skins per theme (halloween.css …)
 ordine.html           customer's live order page (status, cancel)
 ordini.html           staff: orders board (PIN), status menu, archive
 admin.html            staff: management (menu, hours, delivery, promos, versions, PIN)

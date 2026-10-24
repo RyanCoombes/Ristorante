@@ -45,7 +45,12 @@
       "tab.hours": "Orari e tempi", "tab.promo": "Sconti", "tab.history": "Versioni e PIN",
       "tab.menu": "Menu", "tab.delivery": "Consegna", "tab.info": "Contatti", "tab.team": "Squadra",
       "orders.timing": "Tempi degli ordini",
-      "tab.theme": "Temi", "theme.title": "Tema del sito",
+      "tab.theme": "Temi e avvisi", "theme.title": "Tema del sito",
+      "ann.title": "Striscia in alto", "ann.help": "Un messaggio e/o un codice sconto in cima a tutte le pagine, con o senza tema. Se c'è un tema, prende il posto dei suoi auguri.",
+      "ann.on": "Mostra la striscia", "ann.text": "Messaggio", "ann.code": "Codice sconto da mostrare", "ann.noCode": "Nessun codice",
+      "ann.codeHelp": "Il cliente tocca \"Usa il codice\" e lo trova già nel carrello. Il codice diventa pubblico: usatelo per promozioni aperte a tutti.",
+      "ann.from": "Dal (facoltativo)", "ann.to": "Al (facoltativo)", "ann.datesHelp": "Con le date, la striscia compare e sparisce da sola.",
+      "ann.noPromos": "Nessun codice sconto: createne uno in Sconti.",
       "theme.help": "Un tocco di festa: striscia di auguri in alto, scacchiera colorata, adesivo sulla pizza e decorazioni animate nella prima schermata. Menu e ordini non cambiano.",
       "theme.off": "Nessun tema", "theme.offSub": "Il sito di sempre", "theme.auto": "Automatico", "theme.autoSub": "Cambia da solo con le feste",
       "theme.today": "Oggi: {name}", "theme.todayNone": "Oggi: nessuna festa",
@@ -121,7 +126,12 @@
       "tab.hours": "Hours & timing", "tab.promo": "Promos", "tab.history": "Versions & PIN",
       "tab.menu": "Menu", "tab.delivery": "Delivery", "tab.info": "Contact", "tab.team": "Team",
       "orders.timing": "Order timing",
-      "tab.theme": "Themes", "theme.title": "Site theme",
+      "tab.theme": "Themes & notices", "theme.title": "Site theme",
+      "ann.title": "Top strip", "ann.help": "A message and/or a promo code at the top of every page, with or without a theme. With a theme on, it replaces the theme's greeting.",
+      "ann.on": "Show the strip", "ann.text": "Message", "ann.code": "Promo code to show", "ann.noCode": "No code",
+      "ann.codeHelp": "Customers tap \"Use code\" and find it already in their basket. The code becomes public: use it for promotions open to everyone.",
+      "ann.from": "From (optional)", "ann.to": "Until (optional)", "ann.datesHelp": "With dates, the strip appears and disappears by itself.",
+      "ann.noPromos": "No promo codes yet: create one under Promos.",
       "theme.help": "A festive touch: a greeting strip at the top, a coloured checkerboard, a sticker on the pizza and animated decorations on the first screen. Menu and ordering don't change.",
       "theme.off": "No theme", "theme.offSub": "The usual site", "theme.auto": "Automatic", "theme.autoSub": "Changes by itself with the holidays",
       "theme.today": "Today: {name}", "theme.todayNone": "Today: no holiday",
@@ -395,6 +405,19 @@
 
     theme: function () {
       var th = state.config.theme || {};   // read only: opening the tab must not count as a change
+      var an = state.config.announce || {};
+      var codes = (state.promos || []).map(function (p) { return p.code; }).filter(Boolean);
+      var annCard = '<section class="card"><h2>' + esc(t("ann.title")) + '</h2><p class="help">' + esc(t("ann.help")) + "</p>" +
+        '<label class="chk"><input type="checkbox" data-bind="config.announce.on" data-kind="bool"' + (an.on ? " checked" : "") + "><span>" + esc(t("ann.on")) + "</span></label>" +
+        '<div class="f-pair">' + field(t("ann.text") + " · " + t("common.it"), "config.announce.text.it") + field(t("ann.text") + " · " + t("common.en"), "config.announce.text.en") + "</div>" +
+        '<label class="f"><span>' + esc(t("ann.code")) + '</span><select data-bind="config.announce.code" data-kind="text">' +
+          '<option value="">' + esc(t("ann.noCode")) + "</option>" +
+          codes.map(function (c) { return '<option value="' + esc(c) + '"' + (an.code === c ? " selected" : "") + ">" + esc(c) + "</option>"; }).join("") +
+          (an.code && codes.indexOf(an.code) === -1 ? '<option value="' + esc(an.code) + '" selected>' + esc(an.code) + "</option>" : "") +
+        "</select></label>" +
+        '<p class="help">' + esc(codes.length ? t("ann.codeHelp") : t("ann.noPromos")) + "</p>" +
+        '<div class="grid2">' + field(t("ann.from"), "config.announce.from", "date") + field(t("ann.to"), "config.announce.to", "date") + "</div>" +
+        '<p class="help">' + esc(t("ann.datesHelp")) + "</p></section>";
       var THEMES = window.VC_THEMES || {}, ids = Object.keys(THEMES);
       var today = window.VC_themeFor ? window.VC_themeFor(new Date()) : "";
       var mode = th.mode || "off";
@@ -407,7 +430,7 @@
       };
       var shown = mode === "auto" ? today : THEMES[mode] ? mode : "";
       var def = shown ? THEMES[shown].msg : null;
-      return '<section class="card"><h2>' + esc(t("theme.title")) + '</h2><p class="help">' + esc(t("theme.help")) + "</p>" +
+      return annCard + '<section class="card"><h2>' + esc(t("theme.title")) + '</h2><p class="help">' + esc(t("theme.help")) + "</p>" +
         '<div class="theme-grid" role="radiogroup" aria-label="' + esc(t("theme.title")) + '">' +
         opt("off", t("theme.off"), t("theme.offSub"), "🍕") +
         opt("auto", t("theme.auto"), today ? t("theme.today", { name: t("theme." + today) }) : t("theme.todayNone"), "📅") +

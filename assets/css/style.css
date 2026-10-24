@@ -588,11 +588,16 @@ h1, h2, h3, h4, p { margin: 0; }
 
 /* ---------- seasonal themes (assets/js/themes.js, chosen in Gestione → Temi) ---------- */
 .theme-banner {
-  margin: 0; padding: 9px var(--gutter); text-align: center;
+  display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 6px 14px;
+  margin: 0; padding: 8px var(--gutter); text-align: center;
   font-weight: 800; font-size: 15px; line-height: 1.35;
   background: var(--black); color: #fff;
 }
-[data-theme="halloween"] .theme-banner { background: #1a1022; color: #ffb27a; }
+.banner-code {
+  min-height: 36px; padding: 4px 14px; border-radius: 999px; border: 2px dashed currentColor;
+  background: transparent; color: inherit; font: inherit; font-size: 14px; letter-spacing: .04em; cursor: pointer;
+}
+.banner-code:hover { background: rgba(255, 255, 255, .15); }
 [data-theme="natale"] .theme-banner { background: #1d6b3c; color: #fff; }
 [data-theme="capodanno"] .theme-banner { background: var(--black); color: #f3d77a; }
 [data-theme="sanvalentino"] .theme-banner { background: #b0154f; color: #fff; }
