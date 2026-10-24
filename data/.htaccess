@@ -1,0 +1,6 @@
+# Menu and settings change from the Gestione page: browsers must re-check them
+<IfModule mod_headers.c>
+  <FilesMatch "\.js$">
+    Header set Cache-Control "no-cache"
+  </FilesMatch>
+</IfModule>

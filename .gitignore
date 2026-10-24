@@ -2,3 +2,9 @@
 api/private/*
 !api/private/.htaccess
 !api/private/index.php
+
+# content saved from the Gestione page and uploaded photos live only on the server,
+# so redeploying from git never overwrites what the staff changed
+data/live.js
+assets/img/uploads/*
+!assets/img/uploads/.htaccess

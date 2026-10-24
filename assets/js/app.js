@@ -222,7 +222,7 @@
     return y.concat(slotsFor(day));
   }
 
-  var REMOTE = { maintenance: false, paused: false };   // switches from the Ordini board (api/state.php)
+  var REMOTE = { maintenance: false, paused: false, busy: null };   // switches from the Ordini board (api/state.php)
   function ordering() {
     if (REMOTE.paused) return { ok: false, msg: t("orders.paused") };
     var now = nowInZone();
@@ -252,7 +252,7 @@
     return { ok: false, msg: msg };
   }
 
-  function baseWait() { return num(ORD.prepMinutes, 20) + num(ORD.busyExtraMinutes, 0); }
+  function baseWait() { return num(ORD.prepMinutes, 20) + num(REMOTE.busy != null ? REMOTE.busy : ORD.busyExtraMinutes, 0); }
 
   function renderOrdering() {
     var o = ordering();
@@ -490,12 +490,15 @@
 
   // ---------- promo codes ----------
   var promoCode = null;
+  var promoDef = null;   // the code's rules as checked by the server (the list itself is not public)
   function todayISO() {
     return new Intl.DateTimeFormat("en-CA", { timeZone: CONFIG.timeZone || "Europe/Rome" }).format(new Date());
   }
   function evalPromo(code, sub) {
     if (!code) return null;
-    var p = (CONFIG.promoCodes || []).filter(function (c) { return String(c.code).toUpperCase() === code; })[0];
+    if (promoDef === "checking") return { ok: false, keep: true, msg: t("cart.promoChecking") };
+    var p = promoDef && String(promoDef.code).toUpperCase() === code ? promoDef :
+      (CONFIG.promoCodes || []).filter(function (c) { return String(c.code).toUpperCase() === code; })[0];
     if (!p || (p.validUntil && todayISO() > p.validUntil)) return { ok: false, msg: t("cart.promoInvalid") };
     if (p.minOrder && sub < p.minOrder) return { ok: false, keep: true, msg: t("cart.promoMin", { code: p.code, amount: money(p.minOrder) }) };
     var discount = p.type === "percent" ? round2(sub * p.value / 100) : p.type === "fixed" ? Math.min(p.value, sub) : 0;
@@ -923,6 +926,7 @@
     Object.keys(cart).forEach(function (id) { delete cart[id]; });
     save(STORE_CART, cart);
     promoCode = null;
+    promoDef = null;
     form.elements.promo.value = "";
     form.elements.notes.value = "";
     step = "order";
@@ -975,6 +979,17 @@
     var v = form.elements.promo.value.trim().toUpperCase();
     form.elements.promo.value = v;
     promoCode = v || null;
+    promoDef = null;
+    if (promoCode && CHANNEL === "website") {
+      promoDef = "checking";
+      renderCart();
+      var done = function (def) { if (promoCode !== v) return; promoDef = def; renderCart(); };
+      fetch("api/promo.php?code=" + encodeURIComponent(v), { cache: "no-store" })
+        .then(function (r) { return r.json(); })
+        .then(function (j) { done(j && j.ok ? j.promo : null); })
+        .catch(function () { done(null); });
+      return;
+    }
     renderCart();
   }
   $("[data-promo-apply]").addEventListener("click", applyPromo);
@@ -1050,8 +1065,9 @@
     if (CHANNEL !== "website") return;
     fetch("api/state.php", { cache: "no-store" }).then(function (r) { return r.json(); }).then(function (st) {
       if (!st || !st.ok) return;
-      var changed = st.paused !== REMOTE.paused || st.maintenance !== REMOTE.maintenance;
-      REMOTE = { maintenance: !!st.maintenance, paused: !!st.paused, message: st.message || "" };
+      var busy = typeof st.busy === "number" ? st.busy : null;
+      var changed = st.paused !== REMOTE.paused || st.maintenance !== REMOTE.maintenance || busy !== REMOTE.busy;
+      REMOTE = { maintenance: !!st.maintenance, paused: !!st.paused, message: st.message || "", busy: busy };
       showMaintenance(REMOTE.maintenance);
       if (changed) { renderOrdering(); renderMenu(); renderCart(); renderStatus(); }
     }).catch(function () { /* no order server (e.g. opened as files): ignore */ });

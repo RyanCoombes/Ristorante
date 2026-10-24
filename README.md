@@ -3,26 +3,28 @@
 Sito web della pizzeria **Vizi Capitali**, in italiano e inglese, con menu, contatti, orari, mappa e ordini via WhatsApp.
 Website for the **Vizi Capitali** pizzeria, in Italian and English, with menu, contacts, opening hours, map and WhatsApp ordering.
 
-È un sito statico: niente database, niente server, niente installazioni.
-It is a static site: no database, no server, nothing to install.
+Gira su un normale hosting PHP (un solo abbonamento): ordini dal sito, bacheca ordini e pagina di gestione per lo staff.
+It runs on ordinary PHP hosting (one bill): website orders, an orders board and a management page for the staff.
 
 ---
 
 ## 🇮🇹 Come aggiornare il sito
 
-### La pagina di gestione: `admin.html` (consigliato)
+### La pagina di gestione (consigliato)
 
-Aprite `tuosito/admin.html` dal telefono e inserite il PIN (iniziale: **000000**, cambiatelo subito da "Pubblica"). Lì si cambia tutto senza toccare file: ordini aperti/chiusi, serata piena, orari, menu (prezzi, descrizioni, foto, allergeni, esaurito), consegna, codici sconto, contatti e squadra.
+Aprite `tuosito/ordini.html` → **Gestione** (o direttamente `admin.html`) con lo stesso PIN dello staff. Lì si cambia tutto senza toccare file: menu (prezzi, descrizioni, foto, allergeni, esaurito), orari e tempi, consegna, codici sconto, contatti e squadra.
 
-Le modifiche restano salvate sul telefono finché non le pubblicate:
-1. **Anteprima:** "Vedi anteprima sul sito" mostra il sito con le modifiche, solo su quel telefono.
-2. **Pubblica:** "Scarica config.js e menu.js", poi caricateli su GitHub nella cartella `data` (pulsante "Apri la pagina di caricamento su GitHub" → trascinate i due file → "Commit changes"). Dopo 1–2 minuti il sito è aggiornato.
-
-⚠️ Per ora il PIN è controllato nel browser: protegge la pagina ma non è una vera sicurezza. Non è un rischio perché il sito cambia solo con il caricamento su GitHub. Quando aggiungeremo un server, il PIN sarà verificato lì e le modifiche andranno online subito, senza caricare file.
+- Appena modificate qualcosa compare in basso la barra **Modifiche non salvate**:
+  - **Anteprima** mostra il sito con le modifiche, solo su quel dispositivo;
+  - **Salva e pubblica** le mette online subito;
+  - **Annulla modifiche** torna alla versione online.
+- **Versioni e PIN:** ogni salvataggio conserva la versione precedente (le ultime 15), ripristinabile con un tocco. Qui si cambia anche il PIN dello staff.
+- Le modifiche vengono salvate sul server in `data/live.js` (non su GitHub), quindi un nuovo caricamento del sito da GitHub non le cancella.
+- Pausa degli ordini online, attesa extra e manutenzione si cambiano dalla pagina **Ordini**, dal pulsante di stato in alto.
 
 ### Modificare i file a mano
 
-Tutto quello che cambia di solito si trova nella cartella `data/`. Si apre il file con un editor di testo qualsiasi (anche direttamente su GitHub, con l'icona della matita ✏️) e si salva.
+Serve solo prima di mettere online il sito, o senza hosting PHP: sul sito online vince quello che è salvato dalla Gestione. Tutto quello che cambia di solito si trova nella cartella `data/`. Si apre il file con un editor di testo qualsiasi (anche direttamente su GitHub, con l'icona della matita ✏️) e si salva.
 
 | Cosa vuoi cambiare | File |
 | --- | --- |
@@ -63,7 +65,7 @@ Quando un cliente invia l'ordine, si apre WhatsApp con un messaggio già pronto 
 
 - `open: false` chiude gli ordini online subito (forno pieno, serata privata). `true` per riaprire.
 - Fuori orario gli ordini si chiudono da soli. `startBeforeOpenMin` = quanti minuti prima dell'apertura si accettano già ordini; `stopBeforeCloseMin` = quanti minuti prima della chiusura si smette.
-- `prepMinutes` = tempo medio di preparazione. `busyExtraMinutes` = minuti in più nelle serate piene (es. 15). Il cliente vede "attesa ~20 min" e sceglie un orario tra quelli possibili.
+- `prepMinutes` = tempo medio di preparazione. I minuti in più nelle serate piene si impostano dalla pagina Ordini (pulsante di stato → Attesa extra). Il cliente vede "attesa ~20 min" e sceglie un orario tra quelli possibili.
 
 ### Consegna (`delivery`)
 
@@ -73,7 +75,7 @@ Il cliente preme "Verifica indirizzo" (ricerca gratuita OpenStreetMap) oppure "U
 
 ### Codici sconto (`promoCodes`)
 
-`type`: `"percent"` (percentuale), `"fixed"` (euro), `"freeDelivery"` (consegna gratis). `minOrder` = spesa minima, `validUntil` = ultimo giorno ("" = senza scadenza). I codici sono visibili a chi legge il codice del sito: usateli per promozioni pubbliche e controllate lo sconto sull'ordine.
+`type`: `"percent"` (percentuale), `"fixed"` (euro), `"freeDelivery"` (consegna gratis). `minOrder` = spesa minima, `validUntil` = ultimo giorno ("" = senza scadenza). Con l'hosting PHP si gestiscono dalla pagina Gestione → Sconti e restano sul server (`api/private/promos.json`): il sito controlla solo il codice scritto dal cliente, quindi l'elenco non è pubblico.
 
 ### Allergeni, icone e foto (`data/menu.js`)
 
@@ -91,7 +93,9 @@ Dopo aver salvato, apri `index.html` nel browser (doppio clic) e ricarica la pag
 
 ## 🇬🇧 How to update the site
 
-**Easiest: `admin.html`.** Open it on a phone and enter the PIN (starting PIN **000000** — change it under "Publish"). Edit orders, busy-night delays, hours, menu (prices, photos, allergens, sold out), delivery, promo codes, contacts and team. Changes are a draft on that device: preview them on the site, then "Download config.js and menu.js" and upload both into the `data` folder on GitHub. The PIN is checked in the browser for now (a screen lock, not real security); once a backend is added it will be checked on the server and changes will go live instantly.
+**Easiest: the management page.** Open `ordini.html` → **Gestione** (or `admin.html`) with the staff PIN. Edit the menu (prices, photos, allergens, sold out), hours and timing, delivery, promo codes, contacts and team. A bar appears at the bottom while there are unsaved changes: **Anteprima** previews them on that device only, **Salva e pubblica** puts them live straight away. Every save keeps the previous version (the last 15) under *Versioni e PIN*, where the staff PIN can also be changed. Changes are stored on the server in `data/live.js`, not in git, so redeploying from GitHub doesn't overwrite them. Pausing online orders, extra waiting time and maintenance mode are on the **Ordini** page.
+
+**By hand** (only before going live, or without PHP hosting; on the live site whatever the management page saved wins):
 
 **By hand:**
 
@@ -108,9 +112,9 @@ Everything you normally change lives in the `data/` folder. Open the file in any
 - **Prices:** use a dot for decimals (`7.50`).
 - **WhatsApp number:** digits only, with country code, no `+` or spaces.
 - **Stop orders now:** `ordering.open: false` in `data/config.js`. Outside opening hours orders close on their own; `startBeforeOpenMin` / `stopBeforeCloseMin` set the cut-offs.
-- **Waiting times:** `prepMinutes`, plus `busyExtraMinutes` on busy nights. Customers pick from the times that are actually possible.
+- **Waiting times:** `prepMinutes`; extra minutes on busy nights are set on the Ordini page (status button → Attesa extra). Customers pick from the times that are actually possible.
 - **Delivery area:** distance rings from `shopLocation` (straight-line km), each with fee, minimum order and extra minutes. Address check uses OpenStreetMap (free) or the phone's location.
-- **Promo codes:** `promoCodes` — percent, fixed amount or free delivery, with minimum spend and expiry. Codes are readable in the site source, so use them for public promotions.
+- **Promo codes:** `promoCodes` — percent, fixed amount or free delivery, with minimum spend and expiry. On PHP hosting codes are kept on the server (`api/private/promos.json`) and checked one at a time, so the list isn't public; manage them from the management page.
 - **Allergens, veg/vegan icons, photos:** `allergens`, `tags`, `image` on each dish in `data/menu.js`. The allergens filled in now are examples and must be checked.
 - **Team:** name, role, one line and an optional portrait photo (4:5) per person in `data/config.js` → `team`.
 
@@ -141,14 +145,18 @@ Con un hosting PHP i clienti ordinano direttamente dal sito: niente WhatsApp a p
 Aprite `ordini.html` su tablet o PC in cucina e inserite il PIN.
 
 - **Attiva suono** a inizio turno (i browser lo richiedono): suona finché c'è un ordine nuovo. Arriva anche un messaggio su Telegram, con i pulsanti *Accetta* / *Rifiuta*.
-- **Accetta** → scegliete l'orario (proposto in automatico). Il cliente lo vede sulla sua pagina dell'ordine.
-- **Rifiuta** → scegliete il motivo; il cliente lo vede subito.
-- **Stampa** → scontrino 80 mm con codice, piatti, indirizzo, resto e QR per la mappa.
+- **Da accettare** (riquadro rosso in alto): gli ordini nuovi.
+  - **Accetta** → scegliete l'orario (proposto in automatico). Il cliente lo vede sulla sua pagina dell'ordine.
+  - **Rifiuta** → scegliete il motivo; il cliente lo vede subito.
+- **Da preparare:** il totale dei piatti da fare in questo momento.
+- **Elenco ordini:** una riga per ordine, in ordine di orario. Bordo giallo = manca poco, bordo rosso = in ritardo. Il pulsante verde fa il passo successivo (*Pronto*, *In consegna*, *Ritirato*, *Consegnato*). I filtri sopra l'elenco mostrano In cucina, Pronti / in consegna, Completati, Annullati.
+- **Toccate una riga** per vedere l'ordine completo: piatti, note, cliente, indirizzo (con mappa), **Stampa** (scontrino 80 mm con QR per la mappa), **Scrivi al cliente**, **Annulla ordine**.
 - **In consegna** → scegliete il rider: riceve su Telegram indirizzo, *Naviga* e *WhatsApp cliente*.
 - **+ Ordine telefono / app** → aggiungete gli ordini di telefono, Just Eat, Glovo, Deliveroo, così la cucina ha tutto in un posto.
 - **Archivio** → ordini dei giorni passati.
-- Interruttori in alto:
+- **Pulsante di stato** in alto (es. "🟢 Ordini aperti"):
   - **Ordini online** — spegnetelo per mettere in pausa gli ordini (il menu resta visibile).
+  - **Attesa extra** — +15/+30/+45 minuti nelle serate piene.
   - **Modalità manutenzione** — copre il sito con "Torniamo presto" e i pulsanti per chiamare/WhatsApp.
 
 Il pagamento resta alla consegna/al ritiro (SumUp o contanti): gli ordini vanno battuti in cassa come sempre.
@@ -182,8 +190,11 @@ data/i18n.js          IT / EN text       ← edit
 assets/css/style.css  styles (brand colours: #EE1A37 red, #F0E3CC cream)
 assets/js/app.js      menu, language switch, basket, checkout
 ordine.html           customer's live order page (status, cancel)
-ordini.html           staff board (PIN) ← orders, switches, archive
-api/                  PHP + SQLite backend (orders, Telegram, staff)
+ordini.html           staff: orders board (PIN), status menu, archive
+admin.html            staff: management (menu, hours, delivery, promos, versions, PIN)
+api/                  PHP + SQLite backend (orders, Telegram, staff, admin saves)
+data/live.js          what the management page saved (server only, not in git)
+assets/img/uploads/   photos uploaded from the management page (server only)
 api/setup.php         one-time setup: PIN, Telegram
 api/private/          secrets + database (never uploaded to GitHub)
 assets/vendor/        qrcode-generator (MIT) for printed slips

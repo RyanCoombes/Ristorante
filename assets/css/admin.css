@@ -32,7 +32,6 @@ body.admin { background: var(--cream); color: var(--black); font-size: 16px; }
   background: var(--red-ui); color: var(--cream);
 }
 .admin-head img { height: 34px; width: auto; }
-.admin-dirty { font-size: 12px; font-weight: 800; background: #f5c400; color: var(--black); padding: 4px 10px; border-radius: 999px; }
 .admin-head-actions { margin-left: auto; display: flex; align-items: center; gap: 10px; }
 .admin-logout { background: none; border: 2px solid var(--cream); color: var(--cream); border-radius: 999px; padding: 6px 12px; font-weight: 800; cursor: pointer; min-height: 36px; }
 
@@ -76,8 +75,8 @@ body.admin { background: var(--cream); color: var(--black); font-size: 16px; }
 .chk { display: inline-flex; align-items: center; gap: 8px; font-weight: 700; cursor: pointer; }
 .chk input { width: 20px; height: 20px; accent-color: var(--red); }
 .chips { display: flex; flex-wrap: wrap; gap: 6px; }
-.chip { cursor: pointer; }
-.chip input { position: absolute; opacity: 0; pointer-events: none; }
+.chip { cursor: pointer; position: relative; }
+.chip input { position: absolute; left: 0; top: 0; width: 1px; height: 1px; opacity: 0; pointer-events: none; }
 .chip span {
   display: inline-block; padding: 7px 12px; border-radius: 999px; border: 2px solid var(--cream-2);
   background: #fff; font-size: 13px; font-weight: 700; color: var(--black);
@@ -151,11 +150,29 @@ body.admin { background: var(--cream); color: var(--black); font-size: 16px; }
 .photo-tools { display: flex; flex-wrap: wrap; gap: 6px; }
 .photo-tools label.mini { cursor: pointer; }
 
-/* ---------- publish ---------- */
-.pub-state { font-weight: 800; padding: 10px 14px; border-radius: 12px; background: #dbe8c8; color: #2f5410; }
-.pub-state.is-dirty { background: #fff1b8; color: #6b5300; }
-.pub-steps { margin: 0; padding-left: 22px; display: grid; gap: 14px; }
-.pub-steps .btn { margin-top: 8px; }
+/* ---------- versions ---------- */
+.hist { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; }
+.hist li { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 8px 0; border-bottom: 1px dashed var(--cream-2); font-size: 14px; }
+
+/* ---------- save bar (shown while there are unsaved changes) ---------- */
+.savebar {
+  position: fixed; left: 0; right: 0; bottom: 0; z-index: 30;
+  display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 10px;
+  padding: 10px 16px calc(10px + env(safe-area-inset-bottom)); background: #fff1b8; border-top: 3px solid #f5c400;
+  box-shadow: 0 -6px 20px rgba(0, 0, 0, .12);
+}
+.savebar[hidden] { display: none; }
+.savebar p { margin: 0; display: grid; font-size: 14px; color: #4a3a00; }
+.savebar small { font-size: 12px; }
+.savebar-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+.savebar .btn[disabled] { opacity: .6; cursor: wait; }
+body.has-savebar .admin-main { padding-bottom: 140px; }
+body.has-savebar .toast { bottom: 110px; }
+
+/* ---------- Ordini / Gestione switch (shared with ordini.css) ---------- */
+.staff-nav { display: flex; gap: 4px; padding: 3px; border-radius: 999px; background: rgba(0, 0, 0, .18); }
+.staff-nav a { min-height: 36px; display: inline-flex; align-items: center; padding: 0 14px; border-radius: 999px; color: var(--cream); font-weight: 800; font-size: 14px; text-decoration: none; }
+.staff-nav a[aria-current="page"] { background: var(--cream); color: var(--red-ui); }
 
 .toast {
   position: fixed; left: 50%; bottom: 20px; transform: translateX(-50%); z-index: 50;
@@ -173,3 +190,15 @@ body.admin { background: var(--cream); color: var(--black); font-size: 16px; }
 .admin-tabs button, .seg button { border-color: var(--red-ui); }
 .admin-tabs button[aria-current="true"], .seg button[aria-pressed="true"] { background: var(--red-ui); color: var(--cream); }
 .pin-screen { background: var(--red-ui); }
+
+/* phones: header wraps onto two lines, so only the tabs stay pinned */
+.admin-head { flex-wrap: wrap; }
+@media (max-width: 560px) {
+  .admin-head { position: static; padding: 8px 12px; gap: 8px; }
+  .admin-head img { height: 28px; }
+  .admin-head-actions { gap: 6px; }
+  .admin-tabs { top: 0; }
+}
+.admin-main > * { min-width: 0; }
+.shift .f, .shift input { min-width: 0; }
+.shift input { width: 100%; }

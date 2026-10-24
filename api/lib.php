@@ -27,9 +27,9 @@ function json_out(array $data, int $code = 200): never {
 function fail(string $error, int $code = 400, array $extra = []): never {
     json_out(['ok' => false, 'error' => $error] + $extra, $code);
 }
-function body(): array {
+function body(int $max = 100000): array {
     $raw = file_get_contents('php://input') ?: '';
-    if (strlen($raw) > 100000) fail('too_large', 413);
+    if (strlen($raw) > $max) fail('too_large', 413);
     $data = json_decode($raw, true);
     return is_array($data) ? $data : [];
 }
@@ -67,10 +67,48 @@ function site_data(string $file): array {
     }
     return $cache[$file];
 }
-function site_config(): array { return site_data('config.js'); }
+/** data/live.js: what the Gestione page saved. Not in git, so a redeploy never overwrites staff edits. */
+const LIVE_FILE = ROOT . '/data/live.js';
+function live_data(bool $fresh = false): ?array {
+    static $live = false;
+    if ($live === false || $fresh) {
+        $live = null;
+        $s = (string) @file_get_contents(LIVE_FILE);
+        if (preg_match('#^window\.VC_LIVE = (\{.*\});$#m', $s, $m)) $live = json_decode($m[1], true) ?: null;
+    }
+    return $live;
+}
+function site_config(): array { return live_data()['config'] ?? site_data('config.js'); }
+function site_menu(): array { return live_data()['menu'] ?? site_data('menu.js'); }
+/** Version stamp of the live content, so two people saving at once can't overwrite each other. */
+function live_version(): string { return is_file(LIVE_FILE) ? sha1_file(LIVE_FILE) : 'defaults'; }
+function write_live(array $config, array $menu): void {
+    $json = json_encode(['config' => $config, 'menu' => $menu], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+    $text = "/* Vizi Capitali · contenuti salvati dalla pagina Gestione il " . date('d/m/Y H:i') . ".\n" .
+        "   Non modificare a mano: usa ordini.html → Gestione. */\n" .
+        "window.VC_LIVE = {$json};\n" .
+        "window.SITE_CONFIG = window.VC_LIVE.config; window.MENU = window.VC_LIVE.menu;\n";
+    $tmp = LIVE_FILE . '.' . bin2hex(random_bytes(4)) . '.tmp';
+    if (file_put_contents($tmp, $text) === false || !rename($tmp, LIVE_FILE)) { @unlink($tmp); fail('write_failed', 500); }
+    live_data(true);
+}
+/** Promo codes are kept on the server only (api/private/promos.json), so customers can't read the list. */
+function promo_codes(): array {
+    $f = PRIVATE_DIR . '/promos.json';
+    if (is_file($f)) return json_decode((string) file_get_contents($f), true) ?: [];
+    return site_data('config.js')['promoCodes'] ?? [];
+}
+function find_promo(string $code): ?array {
+    foreach (promo_codes() as $p) {
+        if (strtoupper((string) ($p['code'] ?? '')) !== strtoupper($code)) continue;
+        if (!empty($p['validUntil']) && date('Y-m-d') > $p['validUntil']) return null;
+        return $p;
+    }
+    return null;
+}
 function menu_items(): array {
     $items = [];
-    foreach (site_data('menu.js') as $cat) {
+    foreach (site_menu() as $cat) {
         foreach ($cat['items'] ?? [] as $it) $items[$it['id']] = $it;
     }
     return $items;
@@ -134,7 +172,13 @@ function set_flag(string $k, string $v): void {
 }
 /** maintenance: the public site shows "back soon"; paused: no new online orders. */
 function site_state(): array {
-    return ['maintenance' => flag('maintenance') === '1', 'paused' => flag('paused') === '1', 'message' => flag('message')];
+    return ['maintenance' => flag('maintenance') === '1', 'paused' => flag('paused') === '1', 'message' => flag('message'),
+        'busy' => busy_minutes()];
+}
+/** Extra waiting time set on the board when the kitchen is busy (0, 15, 30…). */
+function busy_minutes(): int {
+    $f = flag('busy');
+    return $f === '' ? (int) (site_config()['ordering']['busyExtraMinutes'] ?? 0) : (int) $f;
 }
 
 // ---------- opening hours (mirrors assets/js/app.js) ----------
@@ -181,19 +225,14 @@ function zones(): array {
     return $z;
 }
 function eval_promo(string $code, float $sub): ?array {
-    if ($code === '') return null;
-    foreach (site_config()['promoCodes'] ?? [] as $p) {
-        if (strtoupper((string) $p['code']) !== strtoupper($code)) continue;
-        if (!empty($p['validUntil']) && date('Y-m-d') > $p['validUntil']) return null;
-        if (!empty($p['minOrder']) && $sub < $p['minOrder']) return null;
-        $disc = match ($p['type']) {
-            'percent' => round($sub * $p['value'] / 100, 2),
-            'fixed' => min((float) $p['value'], $sub),
-            default => 0.0,
-        };
-        return ['code' => $p['code'], 'discount' => $disc, 'freeDelivery' => $p['type'] === 'freeDelivery'];
-    }
-    return null;
+    if ($code === '' || !($p = find_promo($code))) return null;
+    if (!empty($p['minOrder']) && $sub < $p['minOrder']) return null;
+    $disc = match ($p['type']) {
+        'percent' => round($sub * $p['value'] / 100, 2),
+        'fixed' => min((float) $p['value'], $sub),
+        default => 0.0,
+    };
+    return ['code' => $p['code'], 'discount' => $disc, 'freeDelivery' => $p['type'] === 'freeDelivery'];
 }
 /** Builds the priced order lines from {id: qty}; drops unknown or sold-out items. */
 function price_lines(array $wanted, array $notes = []): array {
@@ -263,7 +302,7 @@ function public_order(array $o, bool $staff = false): array {
 function suggested_time(array $o): string {
     if ($o['slot'] && $o['slot'] !== 'asap') return $o['slot'];
     $ord = site_config()['ordering'] ?? [];
-    $mins = (int) ($ord['prepMinutes'] ?? 20) + (int) ($ord['busyExtraMinutes'] ?? 0);
+    $mins = (int) ($ord['prepMinutes'] ?? 20) + busy_minutes();
     if ($o['mode'] === 'delivery') {
         $extra = (int) (zones()[0]['extraMinutes'] ?? 0);
         if ($o['km'] !== null) foreach (zones() as $z) { if ($o['km'] <= $z['upToKm']) { $extra = (int) ($z['extraMinutes'] ?? 0); break; } }

@@ -18,7 +18,7 @@
   <main class="pin-wrap" data-login hidden>
     <form class="pin-box" data-login-form>
       <img src="assets/img/logo.png" alt="Vizi Capitali" width="1000" height="438">
-      <h1>Ordini</h1>
+      <h1>Area staff</h1>
       <label for="pin">PIN dello staff</label>
       <input id="pin" name="pin" type="password" inputmode="numeric" maxlength="6" autocomplete="current-password" required>
       <p class="pin-err" data-login-err hidden></p>
@@ -33,12 +33,35 @@
       <img src="assets/img/logo-cream.png" alt="Vizi Capitali" width="1000" height="438">
       <h1 class="visually-hidden">Ordini</h1>
       <span class="board-clock" data-clock></span>
+      <nav class="staff-nav" aria-label="Area staff">
+        <a href="ordini.html" aria-current="page">Ordini</a>
+        <a href="admin.html">Gestione</a>
+      </nav>
       <span class="board-online" data-online></span>
       <div class="board-head-actions">
+        <button type="button" class="state-pill" data-state-btn aria-expanded="false" aria-controls="state-panel">
+          <span class="state-dot" data-state-dot aria-hidden="true"></span><span data-state-text>Ordini aperti</span>
+        </button>
         <button type="button" class="head-btn" data-sound aria-pressed="false">Attiva suono</button>
         <button type="button" class="head-btn" data-logout>Esci</button>
       </div>
     </header>
+
+    <section class="state-panel" id="state-panel" data-state-panel aria-label="Stato del sito" hidden>
+      <button type="button" class="sw" data-flag="paused" aria-pressed="true">
+        <span class="sw-knob" aria-hidden="true"></span>
+        <span class="sw-text"><strong>Ordini online</strong><span data-flag-label="paused">Aperti</span></span>
+      </button>
+      <div class="busy" role="group" aria-labelledby="busy-label">
+        <p id="busy-label"><strong>Attesa extra</strong><span>Aggiunta ai tempi mostrati ai clienti</span></p>
+        <div class="busy-chips" data-busy></div>
+      </div>
+      <button type="button" class="sw sw--maint" data-flag="maintenance" aria-pressed="false">
+        <span class="sw-knob" aria-hidden="true"></span>
+        <span class="sw-text"><strong>Modalità manutenzione</strong><span data-flag-label="maintenance">Spenta</span></span>
+      </button>
+    </section>
+
     <nav class="board-tabs" aria-label="Sezioni">
       <button type="button" data-tab="live" aria-current="true">In corso <span class="tab-count" data-count-new></span></button>
       <button type="button" data-tab="add" aria-current="false">+ Ordine telefono / app</button>
@@ -46,74 +69,80 @@
     </nav>
 
     <main>
-    <div class="switches" role="group" aria-label="Interruttori del sito">
-      <button type="button" class="sw" data-flag="paused" aria-pressed="false">
-        <span class="sw-knob" aria-hidden="true"></span><span class="sw-text"><strong>Ordini online</strong><span data-flag-label="paused">Aperti</span></span>
-      </button>
-      <button type="button" class="sw sw--maint" data-flag="maintenance" aria-pressed="false">
-        <span class="sw-knob" aria-hidden="true"></span><span class="sw-text"><strong>Modalità manutenzione</strong><span data-flag-label="maintenance">Spenta</span></span>
-      </button>
-    </div>
-    <p class="board-banner" data-banner hidden></p>
+      <p class="board-banner" data-banner hidden></p>
 
-    <section data-view="live" class="cols">
-      <div class="col col--new"><h2>Nuovi <span data-n="new"></span></h2><div data-col="new"></div></div>
-      <div class="col col--prep"><h2>In preparazione <span data-n="accepted"></span></h2><div data-col="accepted"></div></div>
-      <div class="col col--go"><h2>Pronti / in consegna <span data-n="go"></span></h2><div data-col="go"></div></div>
-      <div class="col col--done">
-        <details><summary><h2>Completati oggi <span data-n="done"></span></h2></summary><div data-col="done"></div></details>
-        <details><summary><h2>Rifiutati / annullati <span data-n="off"></span></h2></summary><div data-col="off"></div></details>
-      </div>
-    </section>
-
-    <section data-view="add" class="add-wrap" hidden>
-      <form class="add-form" data-add-form autocomplete="off">
-        <h2>Nuovo ordine da telefono o app</h2>
-        <fieldset class="chips"><legend>Da dove arriva</legend>
-          <label><input type="radio" name="source" value="phone" checked><span>Telefono</span></label>
-          <label><input type="radio" name="source" value="justeat"><span>Just Eat</span></label>
-          <label><input type="radio" name="source" value="glovo"><span>Glovo</span></label>
-          <label><input type="radio" name="source" value="deliveroo"><span>Deliveroo</span></label>
-          <label><input type="radio" name="source" value="other"><span>Altro</span></label>
-        </fieldset>
-        <fieldset class="chips"><legend>Modalità</legend>
-          <label><input type="radio" name="mode" value="delivery" checked><span>Consegna</span></label>
-          <label><input type="radio" name="mode" value="pickup"><span>Ritiro</span></label>
-        </fieldset>
-        <div class="add-grid">
-          <label>Nome<input name="name" maxlength="60"></label>
-          <label>Telefono<input name="phone" type="tel" maxlength="25"></label>
-          <label class="span2" data-addr>Via / piazza<input name="street" maxlength="120"></label>
-          <label data-addr>N. civico<input name="civico" maxlength="12"></label>
-          <label data-addr>CAP<input name="cap" maxlength="5" inputmode="numeric"></label>
-          <label class="span2" data-addr>Citofono / interno<input name="buzzer" maxlength="120"></label>
-          <label>Pronto alle<input name="time" type="time"></label>
-          <label>Totale (se diverso dal menu)<input name="total" inputmode="decimal" placeholder="es. 24,50"></label>
+      <section data-view="live" class="live">
+        <div class="new-strip" data-new-wrap hidden>
+          <h2>Da accettare <span data-n-new></span></h2>
+          <div class="new-list" data-new></div>
         </div>
-        <fieldset class="chips"><legend>Pagamento</legend>
-          <label><input type="radio" name="payment" value="card" checked><span>Carta</span></label>
-          <label><input type="radio" name="payment" value="cash"><span>Contanti</span></label>
-        </fieldset>
-        <h3>Piatti</h3>
-        <div class="picker" data-picker></div>
-        <label>Altro / note (es. "2 birre", "senza basilico")<input name="extra" maxlength="300"></label>
-        <p class="add-total" data-add-total></p>
-        <button type="submit" class="btn btn--red btn--block">Aggiungi alla bacheca</button>
-      </form>
-    </section>
 
-    <section data-view="archive" class="archive" hidden>
-      <div class="archive-days" data-days></div>
-      <div class="archive-day" data-day-orders></div>
-    </section>
+        <p class="kitchen" data-kitchen hidden></p>
+
+        <div class="filters" role="group" aria-label="Mostra">
+          <button type="button" data-filter="active" aria-pressed="true">In corso <b data-fn="active"></b></button>
+          <button type="button" data-filter="kitchen" aria-pressed="false">In cucina <b data-fn="kitchen"></b></button>
+          <button type="button" data-filter="go" aria-pressed="false">Pronti / in consegna <b data-fn="go"></b></button>
+          <button type="button" data-filter="done" aria-pressed="false">Completati <b data-fn="done"></b></button>
+          <button type="button" data-filter="off" aria-pressed="false">Annullati <b data-fn="off"></b></button>
+        </div>
+        <div class="olist" data-list></div>
+      </section>
+
+      <section data-view="add" class="add-wrap" hidden>
+        <form class="add-form" data-add-form autocomplete="off">
+          <h2>Nuovo ordine da telefono o app</h2>
+          <fieldset class="chips"><legend>Da dove arriva</legend>
+            <label><input type="radio" name="source" value="phone" checked><span>Telefono</span></label>
+            <label><input type="radio" name="source" value="justeat"><span>Just Eat</span></label>
+            <label><input type="radio" name="source" value="glovo"><span>Glovo</span></label>
+            <label><input type="radio" name="source" value="deliveroo"><span>Deliveroo</span></label>
+            <label><input type="radio" name="source" value="other"><span>Altro</span></label>
+          </fieldset>
+          <fieldset class="chips"><legend>Modalità</legend>
+            <label><input type="radio" name="mode" value="delivery" checked><span>Consegna</span></label>
+            <label><input type="radio" name="mode" value="pickup"><span>Ritiro</span></label>
+          </fieldset>
+          <div class="add-grid">
+            <label>Nome<input name="name" maxlength="60"></label>
+            <label>Telefono<input name="phone" type="tel" maxlength="25"></label>
+            <label class="span2" data-addr>Via / piazza<input name="street" maxlength="120"></label>
+            <label data-addr>N. civico<input name="civico" maxlength="12"></label>
+            <label data-addr>CAP<input name="cap" maxlength="5" inputmode="numeric"></label>
+            <label class="span2" data-addr>Citofono / interno<input name="buzzer" maxlength="120"></label>
+            <label>Pronto alle<input name="time" type="time"></label>
+            <label>Totale (se diverso dal menu)<input name="total" inputmode="decimal" placeholder="es. 24,50"></label>
+          </div>
+          <fieldset class="chips"><legend>Pagamento</legend>
+            <label><input type="radio" name="payment" value="card" checked><span>Carta</span></label>
+            <label><input type="radio" name="payment" value="cash"><span>Contanti</span></label>
+          </fieldset>
+          <h3>Piatti</h3>
+          <div class="picker" data-picker></div>
+          <label>Altro / note (es. "2 birre", "senza basilico")<input name="extra" maxlength="300"></label>
+          <p class="add-total" data-add-total></p>
+          <button type="submit" class="btn btn--red btn--block">Aggiungi agli ordini</button>
+        </form>
+      </section>
+
+      <section data-view="archive" class="archive" hidden>
+        <div class="archive-days" data-days></div>
+        <div class="archive-day" data-day-orders></div>
+      </section>
     </main>
   </div>
+
+  <!-- one order in full -->
+  <dialog class="drawer" data-drawer aria-labelledby="drawer-title">
+    <div class="drawer-box" data-drawer-box></div>
+  </dialog>
 
   <iframe class="print-frame" data-print title="Stampa" aria-hidden="true" tabindex="-1"></iframe>
 
   <script src="assets/vendor/qrcode.js"></script>
   <script src="data/config.js"></script>
   <script src="data/menu.js"></script>
+  <script src="data/live.js"></script>
   <script src="assets/js/ordini.js"></script>
 </body>
 </html>

@@ -42,6 +42,13 @@ if (!$done && $_SERVER['REQUEST_METHOD'] === 'POST') {
             if (!is_dir(PRIVATE_DIR)) mkdir(PRIVATE_DIR, 0750, true);
             file_put_contents(PRIVATE_DIR . '/config.php', "<?php\n// Created by api/setup.php. Delete this file to run setup again.\nreturn " . var_export($cfg, true) . ";\n");
             @chmod(PRIVATE_DIR . '/config.php', 0640);
+            // starting point for the Gestione page: today's menu and settings, promo codes moved out of public view
+            if (!is_file(LIVE_FILE)) {
+                $start = site_data('config.js');
+                if (!is_file(PRIVATE_DIR . '/promos.json')) file_put_contents(PRIVATE_DIR . '/promos.json', json_encode($start['promoCodes'] ?? [], JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE));
+                unset($start['promoCodes'], $start['admin']);
+                write_live($start, site_data('menu.js'));
+            }
             if ($token !== '' && str_starts_with($cfg['site_url'], 'https://')) {
                 $ch = curl_init("https://api.telegram.org/bot{$token}/setWebhook");
                 curl_setopt_array($ch, [CURLOPT_RETURNTRANSFER => true, CURLOPT_TIMEOUT => 8, CURLOPT_POST => true,

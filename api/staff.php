@@ -111,6 +111,7 @@ switch ($action) {
         if (array_key_exists('paused', $in)) set_flag('paused', $in['paused'] ? '1' : '');
         if (array_key_exists('maintenance', $in)) set_flag('maintenance', $in['maintenance'] ? '1' : '');
         if (array_key_exists('message', $in)) set_flag('message', str($in['message'], 200));
+        if (array_key_exists('busy', $in)) set_flag('busy', (string) max(0, min(90, (int) $in['busy'])));
         json_out(['ok' => true, 'state' => site_state()]);
     }
 

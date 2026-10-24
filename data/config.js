@@ -1,6 +1,8 @@
 /* Vizi Capitali · impostazioni / settings
-   Formato JSON: modificare dalla pagina di gestione (admin.html) oppure con attenzione a virgole e virgolette.
-   JSON format: edit from admin.html, or carefully by hand (mind commas and quotes).
+   Valori di partenza. Sul sito online si modifica tutto da ordini.html → Gestione
+   (salvato in data/live.js, che ha la precedenza su questo file).
+   Starting values. On the live site everything is edited from ordini.html → Gestione
+   (saved to data/live.js, which takes priority over this file).
    Istruzioni / instructions: README.md */
 window.SITE_CONFIG = {
   "whatsapp": "390000000000",
@@ -95,33 +97,6 @@ window.SITE_CONFIG = {
         "extraMinutes": 20
       }
     ]
-  },
-  "promoCodes": [
-    {
-      "code": "BENVENUTO10",
-      "type": "percent",
-      "value": 10,
-      "minOrder": 20,
-      "validUntil": ""
-    },
-    {
-      "code": "VIZIO2",
-      "type": "fixed",
-      "value": 2,
-      "minOrder": 15,
-      "validUntil": "2026-12-31"
-    },
-    {
-      "code": "CONSEGNAGRATIS",
-      "type": "freeDelivery",
-      "value": 0,
-      "minOrder": 25,
-      "validUntil": ""
-    }
-  ],
-  "admin": {
-    "pinHash": "91b4d142823f7d20c5f08df69122de43f35f057a988d9619f6d3138485c9a203",
-    "uploadUrl": "https://github.com/RyanCoombes/Ristorante/upload/claude/busy-einstein-cfn7dv/data"
   },
   "team": [
     {

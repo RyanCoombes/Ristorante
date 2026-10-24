@@ -1,18 +1,17 @@
 /* =====================================================================
-   Vizi Capitali · admin page
-   Edits a copy of data/config.js and data/menu.js in the browser.
-   Changes are kept as a draft on this device, can be previewed on the
-   site, and are published by downloading the two files and uploading
-   them to the repository (until a real backend replaces this step).
+   Vizi Capitali · "Gestione" page (admin.html)
+   Edits the menu and settings and saves them straight to the server
+   (api/admin.php → data/live.js). Unsaved changes are kept as a draft
+   on this device and can be previewed on the site before saving.
+   Same staff login (PIN) as the Ordini board.
    ===================================================================== */
 (function () {
   "use strict";
 
   var DRAFT = "vc-admin-draft";
   var PREVIEW = "vc-preview";
-  var SESSION = "vc-admin-ok";
-  var ATTEMPTS = "vc-admin-attempts";
   var LANG = "vc-admin-lang";
+  var TZ = (window.SITE_CONFIG && window.SITE_CONFIG.timeZone) || "Europe/Rome";
 
   var $ = function (s, r) { return (r || document).querySelector(s); };
   var $$ = function (s, r) { return Array.prototype.slice.call((r || document).querySelectorAll(s)); };
@@ -28,14 +27,34 @@
   // ---------- text ----------
   var T = {
     it: {
-      "pin.title": "Area gestione", "pin.label": "Inserisci il PIN", "pin.enter": "Entra",
-      "pin.wrong": "PIN sbagliato.", "pin.wait": "Troppi tentativi. Riprova tra {s} secondi.",
-      "app.logout": "Esci", "app.dirty": "Modifiche non pubblicate", "app.saved": "Salvato",
-      "tab.orders": "Ordini", "tab.hours": "Orari", "tab.menu": "Menu", "tab.delivery": "Consegna",
-      "tab.promo": "Sconti", "tab.info": "Contatti", "tab.team": "Squadra", "tab.publish": "Pubblica",
-      "orders.title": "Ordini online", "orders.open": "Aperti", "orders.closed": "Chiusi",
-      "orders.switchHelp": "Chiudi subito se il forno è pieno o per una serata privata. Fuori orario si chiudono da soli.",
-      "orders.busy": "Serata piena? Aggiungi attesa", "orders.normal": "Normale",
+      "pin.title": "Area staff", "pin.label": "PIN dello staff", "pin.enter": "Entra",
+      "pin.wrong": "PIN sbagliato.", "pin.wait": "Troppi tentativi. Riprova tra 15 minuti.",
+      "pin.server": "Server non raggiungibile. Questa pagina funziona solo sul sito online.",
+      "pin.setup": "Il sistema non è ancora configurato: apri api/setup.php.",
+      "app.logout": "Esci", "app.dirty": "Modifiche non salvate", "app.saved": "Salvato: il sito è aggiornato.",
+      "app.save": "Salva e pubblica", "app.saving": "Salvo…", "app.preview": "Anteprima",
+      "app.discard": "Annulla modifiche", "app.discardConfirm": "Annullare le modifiche non salvate?",
+      "app.saveFail": "Non salvato ({e}). Riprova.", "app.badPrice": "Controlla il prezzo di \"{name}\".",
+      "app.badMenu": "Due piatti hanno lo stesso codice (\"{name}\"): eliminane uno e ricrealo.",
+      "app.conflict": "Qualcun altro ha salvato delle modifiche nel frattempo. Caricare la versione aggiornata? Le tue modifiche non salvate andranno perse.",
+      "app.draftRestored": "Ho ripreso le modifiche non salvate su questo dispositivo.",
+      "app.draftOld": "Le modifiche non salvate su questo dispositivo erano superate e sono state scartate.",
+      "app.uploading": "Carico la foto…", "app.uploadFail": "Foto non caricata. Riprova.",
+      "app.previewHelp": "L'anteprima mostra le modifiche non salvate, solo su questo dispositivo.",
+      "nav.orders": "Ordini", "nav.admin": "Gestione",
+      "tab.hours": "Orari e tempi", "tab.promo": "Sconti", "tab.history": "Versioni e PIN",
+      "tab.menu": "Menu", "tab.delivery": "Consegna", "tab.info": "Contatti", "tab.team": "Squadra",
+      "orders.timing": "Tempi degli ordini",
+      "orders.boardNote": "Pausa degli ordini online, attesa extra e manutenzione si cambiano dalla pagina Ordini, in alto: valgono subito.",
+      "promo.help": "I codici non sono visibili sul sito: il cliente li scrive nel carrello e il server li controlla.",
+      "hist.title": "Versioni precedenti", "hist.help": "A ogni salvataggio viene conservata la versione precedente (le ultime 15). Se qualcosa non va, ripristinala: il sito cambia subito.",
+      "hist.none": "Ancora nessun salvataggio.", "hist.item": "Versione in uso fino al {when}", "hist.itemRestore": "Versione in uso fino al {when} (prima di un ripristino)",
+      "hist.restore": "Ripristina", "hist.confirm": "Ripristinare la versione in uso fino al {when}? Il sito cambia subito.",
+      "hist.done": "Versione ripristinata.", "hist.dirtyFirst": "Prima salva o annulla le modifiche in corso.",
+      "pinc.title": "Cambia il PIN dello staff", "pinc.current": "PIN attuale", "pinc.new": "Nuovo PIN (6 cifre)", "pinc.new2": "Ripeti il nuovo PIN",
+      "pinc.set": "Cambia PIN", "pinc.ok": "PIN cambiato. Sugli altri tablet e telefoni bisogna rientrare con il nuovo PIN.",
+      "pinc.bad": "Il nuovo PIN deve avere 6 cifre e coincidere.", "pinc.wrong": "Il PIN attuale non è corretto.",
+      "pinc.help": "Lo stesso PIN vale per Ordini e Gestione.",
       "orders.prep": "Tempo di preparazione (minuti)",
       "orders.start": "Accetta ordini prima dell'apertura (minuti)",
       "orders.stop": "Smetti di accettare ordini prima della chiusura (minuti)",
@@ -65,18 +84,6 @@
       "info.search": "Città per la ricerca indirizzi",
       "team.title": "La squadra", "team.name": "Nome", "team.role": "Ruolo", "team.bio": "Una frase",
       "team.photo": "Foto (verticale)", "team.add": "+ Aggiungi persona",
-      "pub.title": "Pubblica le modifiche", "pub.none": "Nessuna modifica da pubblicare.",
-      "pub.some": "Hai modifiche salvate su questo dispositivo ma non ancora sul sito.",
-      "pub.preview": "Vedi anteprima sul sito", "pub.previewHelp": "L'anteprima si vede solo su questo dispositivo.",
-      "pub.step1": "Scarica i due file", "pub.download": "Scarica config.js e menu.js",
-      "pub.step2": "Caricali su GitHub nella cartella data (sostituiscono quelli vecchi) e premi \"Commit changes\"",
-      "pub.openGithub": "Apri la pagina di caricamento su GitHub",
-      "pub.step3": "Dopo 1-2 minuti il sito è aggiornato.",
-      "pub.discard": "Annulla tutte le modifiche", "pub.discardConfirm": "Annullare tutte le modifiche non pubblicate?",
-      "pub.pin": "Cambia PIN", "pub.newPin": "Nuovo PIN (6 cifre)", "pub.newPin2": "Ripeti il nuovo PIN",
-      "pub.setPin": "Imposta nuovo PIN", "pub.pinOk": "PIN cambiato: vale dopo la pubblicazione.",
-      "pub.pinBad": "Il PIN deve avere 6 cifre e coincidere.",
-      "pub.note": "Nota: finché non c'è un server, il PIN protegge solo questa pagina. Il sito cambia solo quando i file vengono caricati su GitHub.",
       "common.remove": "Elimina", "common.up": "Su", "common.down": "Giù", "common.it": "Italiano", "common.en": "Inglese",
       "common.removeConfirm": "Eliminare \"{name}\"?", "common.upload": "Scegli foto", "common.noPhoto": "Nessuna foto",
       "common.removePhoto": "Togli foto", "common.locFail": "Posizione non disponibile.",
@@ -87,14 +94,34 @@
       "allergen.lupini": "Lupini", "allergen.molluschi": "Molluschi"
     },
     en: {
-      "pin.title": "Management area", "pin.label": "Enter your PIN", "pin.enter": "Enter",
-      "pin.wrong": "Wrong PIN.", "pin.wait": "Too many attempts. Try again in {s} seconds.",
-      "app.logout": "Log out", "app.dirty": "Unpublished changes", "app.saved": "Saved",
-      "tab.orders": "Orders", "tab.hours": "Hours", "tab.menu": "Menu", "tab.delivery": "Delivery",
-      "tab.promo": "Promos", "tab.info": "Contact", "tab.team": "Team", "tab.publish": "Publish",
-      "orders.title": "Online orders", "orders.open": "Open", "orders.closed": "Closed",
-      "orders.switchHelp": "Close straight away if the oven is full or for a private event. Outside opening hours they close by themselves.",
-      "orders.busy": "Busy night? Add waiting time", "orders.normal": "Normal",
+      "pin.title": "Staff area", "pin.label": "Staff PIN", "pin.enter": "Enter",
+      "pin.wrong": "Wrong PIN.", "pin.wait": "Too many attempts. Try again in 15 minutes.",
+      "pin.server": "Can't reach the server. This page only works on the live site.",
+      "pin.setup": "The system isn't set up yet: open api/setup.php.",
+      "app.logout": "Log out", "app.dirty": "Unsaved changes", "app.saved": "Saved: the site is updated.",
+      "app.save": "Save and publish", "app.saving": "Saving…", "app.preview": "Preview",
+      "app.discard": "Discard changes", "app.discardConfirm": "Discard your unsaved changes?",
+      "app.saveFail": "Not saved ({e}). Please try again.", "app.badPrice": "Check the price of \"{name}\".",
+      "app.badMenu": "Two dishes share the same code (\"{name}\"): delete one and add it again.",
+      "app.conflict": "Someone else saved changes in the meantime. Load the updated version? Your unsaved changes will be lost.",
+      "app.draftRestored": "Your unsaved changes on this device have been restored.",
+      "app.draftOld": "The unsaved changes on this device were out of date and have been discarded.",
+      "app.uploading": "Uploading photo…", "app.uploadFail": "Photo not uploaded. Please try again.",
+      "app.previewHelp": "The preview shows your unsaved changes, on this device only.",
+      "nav.orders": "Orders", "nav.admin": "Management",
+      "tab.hours": "Hours & timing", "tab.promo": "Promos", "tab.history": "Versions & PIN",
+      "tab.menu": "Menu", "tab.delivery": "Delivery", "tab.info": "Contact", "tab.team": "Team",
+      "orders.timing": "Order timing",
+      "orders.boardNote": "Pausing online orders, extra waiting time and maintenance mode are on the Orders page, at the top: they apply straight away.",
+      "promo.help": "Codes aren't visible on the site: customers type them in the basket and the server checks them.",
+      "hist.title": "Previous versions", "hist.help": "Every save keeps the version before it (the last 15). If something goes wrong, restore it: the site changes straight away.",
+      "hist.none": "Nothing saved yet.", "hist.item": "Version in use until {when}", "hist.itemRestore": "Version in use until {when} (before a restore)",
+      "hist.restore": "Restore", "hist.confirm": "Restore the version in use until {when}? The site changes straight away.",
+      "hist.done": "Version restored.", "hist.dirtyFirst": "Save or discard your current changes first.",
+      "pinc.title": "Change the staff PIN", "pinc.current": "Current PIN", "pinc.new": "New PIN (6 digits)", "pinc.new2": "Repeat the new PIN",
+      "pinc.set": "Change PIN", "pinc.ok": "PIN changed. Other tablets and phones need to log in again with the new PIN.",
+      "pinc.bad": "The new PIN must be 6 digits and both must match.", "pinc.wrong": "The current PIN is wrong.",
+      "pinc.help": "The same PIN works for Orders and Management.",
       "orders.prep": "Preparation time (minutes)",
       "orders.start": "Accept orders before opening (minutes)",
       "orders.stop": "Stop accepting orders before closing (minutes)",
@@ -124,18 +151,6 @@
       "info.search": "City used for address lookups",
       "team.title": "The team", "team.name": "Name", "team.role": "Role", "team.bio": "One line",
       "team.photo": "Photo (portrait)", "team.add": "+ Add person",
-      "pub.title": "Publish your changes", "pub.none": "Nothing to publish.",
-      "pub.some": "You have changes saved on this device that aren't on the site yet.",
-      "pub.preview": "Preview on the site", "pub.previewHelp": "The preview only shows on this device.",
-      "pub.step1": "Download the two files", "pub.download": "Download config.js and menu.js",
-      "pub.step2": "Upload them on GitHub into the data folder (they replace the old ones) and press \"Commit changes\"",
-      "pub.openGithub": "Open the GitHub upload page",
-      "pub.step3": "After 1–2 minutes the site is updated.",
-      "pub.discard": "Discard all changes", "pub.discardConfirm": "Discard all unpublished changes?",
-      "pub.pin": "Change PIN", "pub.newPin": "New PIN (6 digits)", "pub.newPin2": "Repeat the new PIN",
-      "pub.setPin": "Set new PIN", "pub.pinOk": "PIN changed: it applies once published.",
-      "pub.pinBad": "The PIN must be 6 digits and both must match.",
-      "pub.note": "Note: until there's a server, the PIN only protects this page. The site only changes when the files are uploaded to GitHub.",
       "common.remove": "Delete", "common.up": "Up", "common.down": "Down", "common.it": "Italian", "common.en": "English",
       "common.removeConfirm": "Delete \"{name}\"?", "common.upload": "Choose photo", "common.noPhoto": "No photo",
       "common.removePhoto": "Remove photo", "common.locFail": "Location unavailable.",
@@ -157,49 +172,36 @@
     "sedano", "senape", "sesamo", "solfiti", "lupini", "molluschi"];
   var TAGS = ["veg", "vegan", "piccante", "novita", "top"];
 
-  // ---------- SHA-256 (works without a secure context, e.g. when opened as a file) ----------
-  function sha256(ascii) {
-    function rr(v, a) { return (v >>> a) | (v << (32 - a)); }
-    var mp = Math.pow, max = mp(2, 32), result = "", words = [], bitLen = ascii.length * 8;
-    var hash = [], k = [], primeCounter = 0, isComposite = {}, i, j;
-    for (var c = 2; primeCounter < 64; c++) {
-      if (!isComposite[c]) {
-        for (i = 0; i < 313; i += c) isComposite[i] = c;
-        hash[primeCounter] = (mp(c, 0.5) * max) | 0;
-        k[primeCounter++] = (mp(c, 1 / 3) * max) | 0;
-      }
-    }
-    ascii += "\x80";
-    while (ascii.length % 64 - 56) ascii += "\x00";
-    for (i = 0; i < ascii.length; i++) { j = ascii.charCodeAt(i); words[i >> 2] |= j << ((3 - i) % 4) * 8; }
-    words[words.length] = (bitLen / max) | 0;
-    words[words.length] = bitLen;
-    for (j = 0; j < words.length;) {
-      var w = words.slice(j, j += 16), oldHash = hash;
-      hash = hash.slice(0, 8);
-      for (i = 0; i < 64; i++) {
-        var w15 = w[i - 15], w2 = w[i - 2], a = hash[0], e = hash[4];
-        var temp1 = hash[7] + (rr(e, 6) ^ rr(e, 11) ^ rr(e, 25)) + ((e & hash[5]) ^ ((~e) & hash[6])) + k[i] +
-          (w[i] = (i < 16) ? w[i] : (w[i - 16] + (rr(w15, 7) ^ rr(w15, 18) ^ (w15 >>> 3)) + w[i - 7] +
-            (rr(w2, 17) ^ rr(w2, 19) ^ (w2 >>> 10))) | 0);
-        var temp2 = (rr(a, 2) ^ rr(a, 13) ^ rr(a, 22)) + ((a & hash[1]) ^ (a & hash[2]) ^ (hash[1] & hash[2]));
-        hash = [(temp1 + temp2) | 0].concat(hash);
-        hash[4] = (hash[4] + temp1) | 0;
-      }
-      for (i = 0; i < 8; i++) hash[i] = (hash[i] + oldHash[i]) | 0;
-    }
-    for (i = 0; i < 8; i++) {
-      for (j = 3; j + 1; j--) { var b = (hash[i] >> (j * 8)) & 255; result += ((b < 16) ? 0 : "") + b.toString(16); }
-    }
-    return result;
+  // ---------- server ----------
+  function api(action, data) {
+    var url = action === "login" || action === "logout" ? "api/staff.php" : "api/admin.php";
+    return fetch(url, {
+      method: "POST", credentials: "same-origin",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(Object.assign({ action: action }, data || {}))
+    }).then(function (r) {
+      return r.json().catch(function () { return { ok: false, error: "server" }; }).then(function (j) { j.httpStatus = r.status; return j; });
+    });
   }
 
   // ---------- state ----------
-  var published = { config: clone(window.SITE_CONFIG || {}), menu: clone(window.MENU || []) };
-  var draft = load(DRAFT, null);
-  var state = draft && draft.config && draft.menu ? { config: draft.config, menu: draft.menu } : clone(published);
-  var tab = "orders";
+  // published = what the server has now; state = what is being edited
+  var published = { config: {}, menu: [], promos: [] };
+  var state = clone(published);
+  var version = "";
+  var history = [];
+  var tab = "menu";
   var openKeys = {};
+  var saving = false;
+
+  function takeServer(r) {
+    published = { config: r.config || {}, menu: r.menu || [], promos: r.promos || [] };
+    version = r.version;
+    history = r.history || [];
+  }
+  function writeDraft() {
+    return save(DRAFT, { config: state.config, menu: state.menu, promos: state.promos, version: version, savedAt: new Date().toISOString() });
+  }
 
   function isDirty() { return JSON.stringify(state) !== JSON.stringify(published); }
 
@@ -208,7 +210,7 @@
     clearTimeout(saveTimer);
     saveTimer = setTimeout(function () {
       if (isDirty()) {
-        if (!save(DRAFT, { config: state.config, menu: state.menu, savedAt: new Date().toISOString() })) {
+        if (!writeDraft()) {
           toast("⚠️ Storage full — remove some photos");
         }
       } else {
@@ -278,28 +280,9 @@
 
   // ---------- panels ----------
   var PANELS = {
-    orders: function () {
-      var o = state.config.ordering = state.config.ordering || {};
-      var isOpen = o.open !== false;
-      var busy = Number(o.busyExtraMinutes || 0);
-      return '<section class="card"><h2>' + esc(t("orders.title")) + "</h2>" +
-        '<button type="button" class="big-switch ' + (isOpen ? "is-on" : "is-off") + '" data-act="toggleOrders" data-path="config.ordering.open" aria-pressed="' + isOpen + '">' +
-        "<span class=\"knob\"></span><strong>" + esc(isOpen ? t("orders.open") : t("orders.closed")) + "</strong></button>" +
-        '<p class="help">' + esc(t("orders.switchHelp")) + "</p></section>" +
-        '<section class="card"><h2>' + esc(t("orders.busy")) + '</h2><div class="seg">' +
-        [0, 15, 30, 45].map(function (m) {
-          return '<button type="button" data-act="busy" data-path="config.ordering.busyExtraMinutes" data-value="' + m + '" aria-pressed="' + (busy === m) + '">' +
-            (m ? "+" + m + " min" : esc(t("orders.normal"))) + "</button>";
-        }).join("") + "</div></section>" +
-        '<section class="card grid2">' +
-        field(t("orders.prep"), "config.ordering.prepMinutes", "int") +
-        field(t("orders.slot"), "config.ordering.slotMinutes", "int") +
-        field(t("orders.start"), "config.ordering.startBeforeOpenMin", "int") +
-        field(t("orders.stop"), "config.ordering.stopBeforeCloseMin", "int") + "</section>";
-    },
-
     hours: function () {
       var h = state.config.hours = state.config.hours || {};
+      state.config.ordering = state.config.ordering || {};
       return '<section class="card"><h2>' + esc(t("hours.title")) + '</h2><p class="help">' + esc(t("hours.help")) + "</p>" +
         [1, 2, 3, 4, 5, 6, 0].map(function (d) {
           var shifts = h[d] = h[d] || [];
@@ -311,7 +294,13 @@
                 '<button type="button" class="mini mini--danger" data-act="removeShift" data-path="config.hours.' + d + '" data-index="' + i + '" aria-label="' + esc(t("common.remove")) + '">×</button></div>';
             }).join("") +
             (shifts.length && shifts.length < 3 ? btn(t("hours.addShift"), "addShift", "config.hours." + d) : "") + "</div>";
-        }).join("") + "</section>";
+        }).join("") + "</section>" +
+        '<section class="card"><h2>' + esc(t("orders.timing")) + '</h2><div class="grid2">' +
+        field(t("orders.prep"), "config.ordering.prepMinutes", "int") +
+        field(t("orders.slot"), "config.ordering.slotMinutes", "int") +
+        field(t("orders.start"), "config.ordering.startBeforeOpenMin", "int") +
+        field(t("orders.stop"), "config.ordering.stopBeforeCloseMin", "int") + "</div>" +
+        '<p class="help">' + esc(t("orders.boardNote")) + ' <a href="ordini.html">' + esc(t("nav.orders")) + " →</a></p></section>";
     },
 
     menu: function () {
@@ -348,10 +337,10 @@
     },
 
     promo: function () {
-      var list = state.config.promoCodes = state.config.promoCodes || [];
-      return '<section class="card"><h2>' + esc(t("promo.title")) + "</h2>" +
+      var list = state.promos = state.promos || [];
+      return '<section class="card"><h2>' + esc(t("promo.title")) + '</h2><p class="help">' + esc(t("promo.help")) + "</p>" +
         list.map(function (p, i) {
-          var pp = "config.promoCodes." + i;
+          var pp = "promos." + i;
           return '<div class="row"><div class="grid2">' + field(t("promo.code"), pp + ".code", "upper") +
             '<label class="f"><span>' + esc(t("promo.type")) + '</span><select data-bind="' + pp + '.type" data-kind="text">' +
             ["percent", "fixed", "freeDelivery"].map(function (ty) {
@@ -360,7 +349,7 @@
             (p.type === "freeDelivery" ? "" : field(t("promo.value"), pp + ".value", "num")) +
             field(t("promo.min"), pp + ".minOrder", "num") + field(t("promo.until"), pp + ".validUntil", "date") + "</div>" +
             rowTools(pp, p.code) + "</div>";
-        }).join("") + btn(t("promo.add"), "addPromo", "config.promoCodes", "btn btn--outline btn--sm") + "</section>";
+        }).join("") + btn(t("promo.add"), "addPromo", "promos", "btn btn--outline btn--sm") + "</section>";
     },
 
     info: function () {
@@ -386,25 +375,22 @@
         }).join("") + btn(t("team.add"), "addPerson", "config.team", "btn btn--outline btn--sm") + "</section>";
     },
 
-    publish: function () {
-      var dirty = isDirty();
-      var up = (state.config.admin && state.config.admin.uploadUrl) || "";
-      return '<section class="card"><h2>' + esc(t("pub.title")) + "</h2>" +
-        '<p class="pub-state ' + (dirty ? "is-dirty" : "") + '">' + esc(dirty ? t("pub.some") : t("pub.none")) + "</p>" +
-        '<a class="btn btn--outline btn--sm" href="index.html" target="_blank" data-act="preview" data-path="">' + esc(t("pub.preview")) + "</a>" +
-        '<p class="help">' + esc(t("pub.previewHelp")) + "</p>" +
-        '<ol class="pub-steps"><li><strong>' + esc(t("pub.step1")) + "</strong><br>" +
-        '<button type="button" class="btn btn--red btn--sm" data-act="download" data-path="">' + esc(t("pub.download")) + "</button></li>" +
-        "<li><strong>" + esc(t("pub.step2")) + "</strong>" +
-        (up ? '<br><a class="btn btn--outline btn--sm" href="' + esc(up) + '" target="_blank" rel="noopener">' + esc(t("pub.openGithub")) + "</a>" : "") + "</li>" +
-        "<li>" + esc(t("pub.step3")) + "</li></ol>" +
-        (dirty ? '<button type="button" class="mini mini--danger" data-act="discard" data-path="">' + esc(t("pub.discard")) + "</button>" : "") +
-        "</section>" +
-        '<section class="card"><h2>' + esc(t("pub.pin")) + '</h2><div class="grid2">' +
-        '<label class="f"><span>' + esc(t("pub.newPin")) + '</span><input type="password" inputmode="numeric" maxlength="6" data-newpin="1"></label>' +
-        '<label class="f"><span>' + esc(t("pub.newPin2")) + '</span><input type="password" inputmode="numeric" maxlength="6" data-newpin="2"></label></div>' +
-        '<button type="button" class="btn btn--outline btn--sm" data-act="setPin" data-path="">' + esc(t("pub.setPin")) + "</button>" +
-        '<p class="help">' + esc(t("pub.note")) + "</p></section>";
+    history: function () {
+      var fmt = function (ts) {
+        return new Date(ts * 1000).toLocaleString(lang === "it" ? "it-IT" : "en-GB",
+          { weekday: "short", day: "numeric", month: "short", hour: "2-digit", minute: "2-digit", timeZone: TZ });
+      };
+      return '<section class="card"><h2>' + esc(t("hist.title")) + '</h2><p class="help">' + esc(t("hist.help")) + "</p>" +
+        (history.length ? '<ul class="hist">' + history.map(function (h) {
+          var when = fmt(h.at);
+          return '<li><span>' + esc(t(h.label === "Prima del ripristino" ? "hist.itemRestore" : "hist.item", { when: when })) + "</span>" +
+            '<button type="button" class="mini" data-act="restore" data-path="' + esc(h.id) + '" data-when="' + esc(when) + '">' + esc(t("hist.restore")) + "</button></li>";
+        }).join("") + "</ul>" : '<p class="help">' + esc(t("hist.none")) + "</p>") + "</section>" +
+        '<section class="card"><h2>' + esc(t("pinc.title")) + '</h2><p class="help">' + esc(t("pinc.help")) + '</p><div class="grid2">' +
+        '<label class="f"><span>' + esc(t("pinc.current")) + '</span><input type="password" inputmode="numeric" maxlength="6" autocomplete="current-password" data-pinc="current"></label><span></span>' +
+        '<label class="f"><span>' + esc(t("pinc.new")) + '</span><input type="password" inputmode="numeric" maxlength="6" autocomplete="new-password" data-pinc="new"></label>' +
+        '<label class="f"><span>' + esc(t("pinc.new2")) + '</span><input type="password" inputmode="numeric" maxlength="6" autocomplete="new-password" data-pinc="new2"></label></div>' +
+        '<button type="button" class="btn btn--outline btn--sm" data-act="changePin" data-path="">' + esc(t("pinc.set")) + "</button></section>";
     }
   };
 
@@ -427,9 +413,16 @@
   }
 
   // ---------- rendering ----------
-  var TABS = ["orders", "hours", "menu", "delivery", "promo", "info", "team", "publish"];
+  var TABS = ["menu", "hours", "delivery", "promo", "info", "team", "history"];
 
+  var rendering = false;
   function render() {
+    // replacing the inputs blurs the focused one, which can fire another change → render; ignore that one
+    if (rendering) return;
+    rendering = true;
+    try { renderNow(); } finally { rendering = false; }
+  }
+  function renderNow() {
     $$("[data-t]").forEach(function (el) { el.textContent = t(el.getAttribute("data-t")); });
     $$("[data-admin-lang]").forEach(function (b) { b.setAttribute("aria-pressed", String(b.getAttribute("data-admin-lang") === lang)); });
     document.documentElement.lang = lang;
@@ -446,12 +439,17 @@
   }
 
   function renderDirty() {
-    var el = $("[data-dirty]");
     var dirty = isDirty();
-    el.hidden = !dirty;
-    el.textContent = t("app.dirty");
-    var pubTab = $('[data-tab="publish"]');
-    if (pubTab) pubTab.classList.toggle("has-dot", dirty);
+    var bar = $("[data-savebar]");
+    bar.hidden = !dirty;
+    document.body.classList.toggle("has-savebar", dirty);
+    $("[data-savebar-text]").textContent = t("app.dirty");
+    $("[data-savebar-hint]").textContent = t("app.previewHelp");
+    var sb = $('[data-act="save"]', bar);
+    sb.textContent = saving ? t("app.saving") : t("app.save");
+    sb.disabled = saving;
+    $('[data-act="preview"]', bar).textContent = t("app.preview");
+    $('[data-act="discard"]', bar).textContent = t("app.discard");
   }
 
   var toastTimer;
@@ -504,10 +502,16 @@
       return;
     }
     if (el.hasAttribute("data-image") && el.files && el.files[0]) {
-      resizeImage(el.files[0], +el.getAttribute("data-w"), +el.getAttribute("data-h"), el.getAttribute("data-fit"), function (url) {
-        setPath(el.getAttribute("data-image"), url);
-        persist();
-        render();
+      var target = el.getAttribute("data-image");
+      toast(t("app.uploading"));
+      resizeImage(el.files[0], +el.getAttribute("data-w"), +el.getAttribute("data-h"), el.getAttribute("data-fit"), function (dataUrl) {
+        api("upload", { data: dataUrl }).then(function (r) {
+          if (r.httpStatus === 401) { showLogin(); return; }
+          if (!r.ok) { toast(t("app.uploadFail")); return; }
+          setPath(target, r.url);
+          persist();
+          render();
+        }).catch(function () { toast(t("app.uploadFail")); });
       });
       return;
     }
@@ -541,8 +545,6 @@
   }
 
   var ACTIONS = {
-    toggleOrders: function (p) { setPath(p, !(getPath(p) !== false)); },
-    busy: function (p, el) { setPath(p, parseInt(el.getAttribute("data-value"), 10)); },
     addShift: function (p) { getPath(p).push(["18:30", "23:00"]); },
     removeShift: function (p, el) { getPath(p).splice(parseInt(el.getAttribute("data-index"), 10), 1); },
     addItem: function (p) {
@@ -586,36 +588,69 @@
       return false;
     },
     preview: function () {
-      save(DRAFT, { config: state.config, menu: state.menu, savedAt: new Date().toISOString() });
+      writeDraft();
       try { localStorage.setItem(PREVIEW, "1"); } catch (e) { /* ignore */ }
       return false;   // let the link open normally
     },
-    download: function () {
-      var stamp = new Date().toLocaleString("it-IT");
-      var head = function (what) {
-        return "/* Vizi Capitali · " + what + "\n   Generato dalla pagina di gestione (admin.html) il " + stamp + ".\n" +
-          "   Generated by the admin page. Edit it from admin.html rather than by hand. */\n\n";
-      };
-      downloadFile("config.js", head("impostazioni / settings") + "window.SITE_CONFIG = " + JSON.stringify(state.config, null, 2) + ";\n");
-      setTimeout(function () {
-        downloadFile("menu.js", head("menu") + "window.MENU = " + JSON.stringify(state.menu, null, 2) + ";\n");
-      }, 400);
+    save: function () {
+      if (saving) return false;
+      saving = true;
+      renderDirty();
+      api("save", { version: version, config: state.config, menu: state.menu, promos: state.promos }).then(function (r) {
+        saving = false;
+        if (r.httpStatus === 401) { showLogin(); return; }
+        if (r.error === "conflict") {
+          if (confirm(t("app.conflict"))) reload(true); else renderDirty();
+          return;
+        }
+        if (!r.ok) {
+          toast(r.error === "bad_price" ? t("app.badPrice", { name: r.item || "" }) :
+            r.error === "bad_menu" && r.item ? t("app.badMenu", { name: r.item }) : t("app.saveFail", { e: r.error }));
+          renderDirty();
+          return;
+        }
+        takeServer(r);
+        state = clone(published);
+        clearDraft();
+        render();
+        toast(t("app.saved"));
+      }).catch(function () { saving = false; renderDirty(); toast(t("app.saveFail", { e: "rete" })); });
       return false;
     },
     discard: function () {
-      if (!confirm(t("pub.discardConfirm"))) return false;
+      if (!confirm(t("app.discardConfirm"))) return false;
       state = clone(published);
-      try { localStorage.removeItem(DRAFT); localStorage.removeItem(PREVIEW); } catch (e) { /* ignore */ }
+      clearDraft();
       openKeys = {};
     },
-    setPin: function () {
-      var a = $('[data-newpin="1"]').value, b = $('[data-newpin="2"]').value;
-      if (!/^\d{6}$/.test(a) || a !== b) { toast(t("pub.pinBad")); return false; }
-      state.config.admin = state.config.admin || {};
-      state.config.admin.pinHash = sha256(a);
-      toast(t("pub.pinOk"));
+    restore: function (id, el) {
+      if (isDirty()) { toast(t("hist.dirtyFirst")); return false; }
+      if (!confirm(t("hist.confirm", { when: el.getAttribute("data-when") }))) return false;
+      api("restore", { id: id }).then(function (r) {
+        if (r.httpStatus === 401) { showLogin(); return; }
+        if (!r.ok) { toast(t("app.saveFail", { e: r.error })); return; }
+        takeServer(r);
+        state = clone(published);
+        clearDraft();
+        render();
+        toast(t("hist.done"));
+      });
+      return false;
+    },
+    changePin: function () {
+      var cur = $('[data-pinc="current"]').value, a = $('[data-pinc="new"]').value, b = $('[data-pinc="new2"]').value;
+      if (!/^\d{6}$/.test(a) || a !== b) { toast(t("pinc.bad")); return false; }
+      api("change_pin", { current: cur, pin: a }).then(function (r) {
+        if (r.ok) { $$("[data-pinc]").forEach(function (i) { i.value = ""; }); toast(t("pinc.ok")); return; }
+        toast(r.error === "wrong_pin" ? t("pinc.wrong") : r.error === "rate_limited" ? t("pin.wait") : t("app.saveFail", { e: r.error }));
+      });
+      return false;
     }
   };
+
+  function clearDraft() {
+    try { localStorage.removeItem(DRAFT); localStorage.removeItem(PREVIEW); } catch (e) { /* ignore */ }
+  }
 
   function move(p, dir) {
     var r = parentAndIndex(p), j = r.index + dir;
@@ -624,16 +659,6 @@
     r.list[r.index] = r.list[j];
     r.list[j] = x;
     openKeys = {};
-  }
-
-  function downloadFile(name, text) {
-    var blob = new Blob([text], { type: "text/javascript;charset=utf-8" });
-    var a = document.createElement("a");
-    a.href = URL.createObjectURL(blob);
-    a.download = name;
-    document.body.appendChild(a);
-    a.click();
-    setTimeout(function () { URL.revokeObjectURL(a.href); a.remove(); }, 1000);
   }
 
   document.addEventListener("click", function (e) {
@@ -679,52 +704,63 @@
     reader.readAsDataURL(file);
   }
 
-  // ---------- PIN ----------
-  function pinHash() { return (published.config.admin && published.config.admin.pinHash) || ""; }
-  function unlocked() { try { return sessionStorage.getItem(SESSION) === pinHash() && !!pinHash(); } catch (e) { return false; } }
+  // ---------- login (same PIN and session as the Ordini board) ----------
+  function showLogin(msg) {
+    $("[data-app]").hidden = true;
+    $("[data-pin-screen]").hidden = false;
+    var err = $("[data-pin-error]");
+    err.hidden = !msg;
+    err.textContent = msg || "";
+    $("#pin").focus();
+  }
 
-  function showApp() {
-    $("[data-pin-screen]").hidden = true;
-    $("[data-app]").hidden = false;
-    render();
+  /** Loads what the server has; keeps this device's unsaved draft if it was made on the same version. */
+  function reload(dropDraft) {
+    return api("load").then(function (r) {
+      if (r.httpStatus === 401) { showLogin(); return; }
+      if (r.error === "not_configured") { showLogin(t("pin.setup")); return; }
+      if (!r.ok) { showLogin(t("pin.server")); return; }
+      takeServer(r);
+      state = clone(published);
+      var draft = dropDraft ? null : load(DRAFT, null);
+      if (draft && draft.config && draft.menu) {
+        if (draft.version === version) {
+          state = { config: draft.config, menu: draft.menu, promos: draft.promos || clone(published.promos) };
+          if (isDirty()) toast(t("app.draftRestored"));
+        } else {
+          clearDraft();
+          toast(t("app.draftOld"));
+        }
+      } else if (dropDraft) clearDraft();
+      $("[data-pin-screen]").hidden = true;
+      $("[data-app]").hidden = false;
+      render();
+    }).catch(function () { showLogin(t("pin.server")); });
   }
 
   $("[data-pin-form]").addEventListener("submit", function (e) {
     e.preventDefault();
-    var err = $("[data-pin-error]");
-    var tries = load(ATTEMPTS, { n: 0, until: 0 });
-    var now = Date.now();
-    if (tries.until > now) {
-      err.hidden = false;
-      err.textContent = t("pin.wait", { s: Math.ceil((tries.until - now) / 1000) });
-      return;
-    }
-    var pin = this.elements.pin.value.trim();
-    if (pinHash() && sha256(pin) === pinHash()) {
-      save(ATTEMPTS, { n: 0, until: 0 });
-      try { sessionStorage.setItem(SESSION, pinHash()); } catch (x) { /* ignore */ }
-      showApp();
-      return;
-    }
-    tries.n += 1;
-    if (tries.n >= 5) { tries.until = now + 60000; tries.n = 0; }
-    save(ATTEMPTS, tries);
-    err.hidden = false;
-    err.textContent = t("pin.wrong");
-    this.elements.pin.select();
+    var form = this;
+    api("login", { pin: form.elements.pin.value.trim() }).then(function (r) {
+      if (r.ok) { form.elements.pin.value = ""; reload(false); return; }
+      showLogin(r.error === "wrong_pin" ? t("pin.wrong") : r.error === "rate_limited" ? t("pin.wait") :
+        r.error === "not_configured" ? t("pin.setup") : t("pin.server"));
+      form.elements.pin.select();
+    }).catch(function () { showLogin(t("pin.server")); });
   });
 
   $("[data-logout]").addEventListener("click", function () {
-    try { sessionStorage.removeItem(SESSION); } catch (e) { /* ignore */ }
-    location.reload();
+    api("logout").then(function () { location.reload(); });
   });
 
-  window.addEventListener("beforeunload", function () {
-    // flush any pending save
-    if (isDirty()) save(DRAFT, { config: state.config, menu: state.menu, savedAt: new Date().toISOString() });
+  window.addEventListener("beforeunload", function (e) {
+    if (!isDirty()) return;
+    writeDraft();          // kept on this device either way
+    e.preventDefault();
+    e.returnValue = "";    // the browser asks "leave the page?"
   });
 
   $$("[data-t]").forEach(function (el) { el.textContent = t(el.getAttribute("data-t")); });
   $$("[data-admin-lang]").forEach(function (b) { b.setAttribute("aria-pressed", String(b.getAttribute("data-admin-lang") === lang)); });
-  if (unlocked()) showApp(); else $("#pin").focus();
+  reload(false);
 })();

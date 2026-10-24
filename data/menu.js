@@ -1,6 +1,6 @@
 /* Vizi Capitali · menu
-   Formato JSON: modificare dalla pagina di gestione (admin.html) oppure con attenzione a virgole e virgolette.
-   JSON format: edit from admin.html, or carefully by hand (mind commas and quotes).
+   Menu di partenza. Sul sito online si modifica da ordini.html → Gestione (salvato in data/live.js, che ha la precedenza).
+   Starting menu. On the live site it's edited from ordini.html → Gestione (saved to data/live.js, which takes priority).
    Istruzioni / instructions: README.md
    ⚠️ Piatti, prezzi e allergeni sono ESEMPI: controllateli. Dishes, prices and allergens are EXAMPLES. */
 window.MENU = [

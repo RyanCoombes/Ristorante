@@ -1,7 +1,9 @@
 /* =====================================================================
    Vizi Capitali · "Ordini" board for the shop (ordini.html)
    Talks to api/staff.php; refreshes every few seconds and rings while
-   there are new orders.
+   there are new orders. Layout: new orders on top, then one list of
+   the orders in progress sorted by the time they are due; tapping a
+   row opens the whole order in a side panel.
    ===================================================================== */
 (function () {
   "use strict";
@@ -14,9 +16,13 @@
   var money = function (n) { return new Intl.NumberFormat("it-IT", { style: "currency", currency: "EUR" }).format(n || 0); };
   var TZ = CONFIG.timeZone || "Europe/Rome";   // the shop always sees Rome time, whatever the device is set to
   var SOURCE = { web: "Sito", phone: "Telefono", justeat: "Just Eat", glovo: "Glovo", deliveroo: "Deliveroo", other: "Altro" };
+  var STATUS = { new: "Nuovo", accepted: "In cucina", ready: "Pronto", out: "In consegna", done: "Completato", rejected: "Rifiutato", cancelled: "Annullato" };
+  var BUSY = [0, 15, 30, 45];
+  var FILTER_KEY = "vc-board-filter";
 
   var state = { orders: [], riders: [], reasons: [], serverOffset: 0, panel: null, riderChat: false, orderingOpen: true,
-    flags: { paused: false, maintenance: false } };
+    flags: { paused: false, maintenance: false, busy: 0 }, open: null, filter: "active" };
+  try { state.filter = localStorage.getItem(FILTER_KEY) || "active"; } catch (e) { /* ignore */ }
 
   // ---------- API ----------
   function api(action, data) {
@@ -48,7 +54,7 @@
   $("[data-logout]").addEventListener("click", function () { api("logout").then(function () { location.reload(); }); });
 
   // ---------- sound + keep the tablet awake ----------
-  var audio = null, soundOn = false, wake = null;
+  var audio = null, soundOn = false;
   function beep(freq, at, len) {
     var o = audio.createOscillator(), g = audio.createGain();
     o.type = "square"; o.frequency.value = freq;
@@ -64,7 +70,7 @@
   }
   function keepAwake() {
     if (!("wakeLock" in navigator)) return;
-    navigator.wakeLock.request("screen").then(function (w) { wake = w; }).catch(function () { /* not allowed: fine */ });
+    navigator.wakeLock.request("screen").catch(function () { /* not allowed: fine */ });
   }
   document.addEventListener("visibilitychange", function () { if (document.visibilityState === "visible" && soundOn) keepAwake(); });
   $("[data-sound]").addEventListener("click", function () {
@@ -77,6 +83,7 @@
     }
     this.setAttribute("aria-pressed", String(soundOn));
     this.textContent = soundOn ? "Suono attivo" : "Attiva suono";
+    renderBanner();
   });
   setInterval(function () {
     if (state.orders.some(function (o) { return o.status === "new"; })) ring();
@@ -84,13 +91,33 @@
 
   // ---------- helpers ----------
   function nowSec() { return Date.now() / 1000 + state.serverOffset; }
+  function romeMinutes() {
+    var p = new Intl.DateTimeFormat("en-GB", { hour: "2-digit", minute: "2-digit", hourCycle: "h23", timeZone: TZ }).format(new Date(nowSec() * 1000)).split(":");
+    return parseInt(p[0], 10) * 60 + parseInt(p[1], 10);
+  }
+  function hhmm(ts) { return new Date(ts * 1000).toLocaleTimeString("it-IT", { hour: "2-digit", minute: "2-digit", timeZone: TZ }); }
   function ago(ts) {
     var m = Math.max(0, Math.round((nowSec() - ts) / 60));
-    return m < 1 ? "adesso" : m < 60 ? m + " min fa" : new Date(ts * 1000).toLocaleTimeString("it-IT", { hour: "2-digit", minute: "2-digit", timeZone: TZ });
+    return m < 1 ? "adesso" : m < 60 ? m + " min fa" : hhmm(ts);
   }
-  function addMin(hhmm, m) {
-    var p = hhmm.split(":"), t = (parseInt(p[0], 10) * 60 + parseInt(p[1], 10) + m + 1440) % 1440;
-    return String(Math.floor(t / 60)).padStart(2, "0") + ":" + String(t % 60).padStart(2, "0");
+  function addMin(t, m) {
+    var p = t.split(":"), x = (parseInt(p[0], 10) * 60 + parseInt(p[1], 10) + m + 1440) % 1440;
+    return String(Math.floor(x / 60)).padStart(2, "0") + ":" + String(x % 60).padStart(2, "0");
+  }
+  /** The time an order is due ("HH:MM"): the accepted time, else the requested slot. */
+  function dueTime(o) { return o.readyAt || (o.slot && o.slot !== "asap" ? o.slot : ""); }
+  /** Minutes until due (negative = late), across midnight. */
+  function minsLeft(o) {
+    var d = dueTime(o);
+    if (!d) return null;
+    var p = d.split(":"), diff = parseInt(p[0], 10) * 60 + parseInt(p[1], 10) - romeMinutes();
+    if (diff < -720) diff += 1440;
+    if (diff > 720) diff -= 1440;
+    return diff;
+  }
+  function sortKey(o) {
+    var m = minsLeft(o);
+    return m == null ? (o.createdAt - nowSec()) / 60 : m;
   }
   function waNumber(p) {
     var d = String(p || "").replace(/\D/g, "");
@@ -107,6 +134,10 @@
     if (o.readyAt) return (o.mode === "delivery" ? "consegna " : "pronto ") + o.readyAt;
     return o.slot && o.slot !== "asap" ? "richiesto per le " + o.slot : "prima possibile";
   }
+  function itemCount(o) { return o.items.reduce(function (n, l) { return n + (l.qty || 0); }, 0); }
+  function itemsShort(o) { return o.items.map(function (l) { return l.qty + "× " + l.name; }).join(", "); }
+  function payText(o) { return o.payment === "cash" ? "Contanti" + (o.cashWith ? " (paga con " + money(o.cashWith) + ")" : "") : "Carta"; }
+  function feePending(o) { return o.fee == null && o.mode === "delivery" && o.source === "web"; }
   function customerMessage(o) {
     var name = o.name ? o.name.split(" ")[0] : "";
     if (o.status === "accepted") {
@@ -116,48 +147,9 @@
     if (o.status === "out") return "Ciao " + name + "! Il tuo ordine #" + o.code + " è in consegna, il rider sta arrivando.";
     return "Ciao " + name + ", ti scriviamo per il tuo ordine #" + o.code + " da Vizi Capitali.";
   }
-
-  // ---------- cards ----------
-  function card(o) {
-    var isPanel = state.panel && state.panel.id === o.id;
-    var items = o.items.map(function (l) {
-      return "<li><strong>" + l.qty + "×</strong> " + esc(l.name) + (l.note ? ' <em>(' + esc(l.note) + ")</em>" : "") + "</li>";
-    }).join("");
-    var pay = o.payment === "cash" ? "Contanti" + (o.cashWith ? " · paga con " + money(o.cashWith) : "") : "Carta";
-    var contact = o.purged ? '<p class="muted">Dati cliente cancellati (privacy)</p>' :
-      '<p class="cust"><strong>' + esc(o.name || "—") + "</strong>" +
-      (o.phone ? ' · <a href="tel:' + esc(o.phone) + '">' + esc(o.phone) + "</a>" : "") + "</p>" +
-      (o.mode === "delivery" && addressText(o) ? '<p class="addr"><a href="' + esc(mapsUrl(o)) + '" target="_blank" rel="noopener">' + esc(addressText(o)) + "</a>" +
-        (o.buzzer ? " · " + esc(o.buzzer) : "") + (o.km != null ? " · " + String(o.km).replace(".", ",") + " km" : "") +
-        (o.geo === "unverified" ? ' <span class="warn">indirizzo da verificare</span>' : "") + "</p>" : "");
-
-    var actions = "";
-    if (o.status === "new") actions = btn("Accetta", "accept-open", o, "go") + btn("Rifiuta", "reject-open", o, "ghost");
-    if (o.status === "accepted") {
-      actions = (o.mode === "delivery" ? btn("In consegna", "out-open", o, "go") : btn("Pronto", "ready", o, "go")) +
-        btn("Stampa", "print", o, "ghost") + btn("Annulla", "cancel-open", o, "ghost");
-    }
-    if (o.status === "ready") actions = btn("Ritirato", "done", o, "go") + btn("Stampa", "print", o, "ghost");
-    if (o.status === "out") actions = btn("Consegnato", "done", o, "go") + btn("Stampa", "print", o, "ghost");
-    if (o.phone && !o.purged && ["accepted", "ready", "out", "new"].indexOf(o.status) !== -1) {
-      actions += '<a class="cbtn cbtn--ghost" target="_blank" rel="noopener" href="https://wa.me/' + waNumber(o.phone) + "?text=" +
-        encodeURIComponent(customerMessage(o)) + '">Scrivi al cliente</a>';
-    }
-
-    return '<article class="ocard ocard--' + o.status + '" data-id="' + o.id + '">' +
-      '<header><span class="code">#' + esc(o.code) + "</span>" +
-      '<span class="badge badge--' + o.mode + '">' + (o.mode === "delivery" ? "Consegna" : "Ritiro") + "</span>" +
-      (o.source !== "web" ? '<span class="badge badge--src">' + esc(SOURCE[o.source] || o.source) + "</span>" : "") +
-      '<span class="ago">' + ago(o.createdAt) + "</span></header>" +
-      '<p class="when">' + esc(whenText(o)) + "</p>" +
-      '<ul class="items">' + items + "</ul>" +
-      (o.notes ? '<p class="notes">Note: ' + esc(o.notes) + "</p>" : "") +
-      '<p class="tot"><strong>' + money(o.total) + "</strong>" + (o.fee == null && o.mode === "delivery" && o.source === "web" ? " + consegna" : "") + " · " + pay + "</p>" +
-      contact +
-      (o.rejectReason ? '<p class="muted">Motivo: ' + esc(o.rejectReason) + "</p>" : "") +
-      (o.rider ? '<p class="muted">Rider: ' + esc(o.rider) + "</p>" : "") +
-      (isPanel ? panel(o) : '<div class="acts">' + actions + "</div>") +
-      "</article>";
+  function modeBadge(o) {
+    return '<span class="badge badge--' + o.mode + '">' + (o.mode === "delivery" ? "Consegna" : "Ritiro") + "</span>" +
+      (o.source !== "web" ? '<span class="badge badge--src">' + esc(SOURCE[o.source] || o.source) + "</span>" : "");
   }
   function btn(label, act, o, kind) {
     return '<button type="button" class="cbtn cbtn--' + kind + '" data-act="' + act + '" data-id="' + o.id + '">' + label + "</button>";
@@ -165,6 +157,15 @@
   function chip(label, value, on, group) {
     return '<button type="button" class="pchip" data-pick="' + group + '" data-value="' + esc(value) + '" aria-pressed="' + on + '">' + esc(label) + "</button>";
   }
+  /** The one next step for an order, as [label, action]. */
+  function nextStep(o) {
+    if (o.status === "accepted") return o.mode === "delivery" ? ["In consegna", "out-open"] : ["Pronto", "ready"];
+    if (o.status === "ready") return o.mode === "delivery" ? ["In consegna", "out-open"] : ["Ritirato", "done"];
+    if (o.status === "out") return ["Consegnato", "done"];
+    return null;
+  }
+
+  // ---------- accept / reject / rider / cancel choices ----------
   function panel(o) {
     var p = state.panel;
     if (p.kind === "accept") {
@@ -174,7 +175,7 @@
       return '<div class="panel"><p class="panel-q">' + (o.mode === "delivery" ? "Arriva verso le…" : "Pronto alle…") + "</p>" +
         '<div class="pchips">' + opts.map(function (x) { return chip(x[1], x[0], p.value === x[0], "time"); }).join("") + "</div>" +
         '<label class="panel-custom">Altro orario <input type="time" data-custom-time value="' + esc(p.value || "") + '"></label>' +
-        '<div class="acts">' + btn("Conferma " + (p.value || ""), "accept", o, "go") + btn("Indietro", "close", o, "ghost") + "</div></div>";
+        '<div class="acts">' + btn("Conferma " + esc(p.value || ""), "accept", o, "go") + btn("Indietro", "close", o, "ghost") + "</div></div>";
     }
     if (p.kind === "reject" || p.kind === "cancel") {
       return '<div class="panel"><p class="panel-q">' + (p.kind === "reject" ? "Perché rifiuti?" : "Perché annulli?") + "</p>" +
@@ -184,41 +185,179 @@
         '<p class="muted">Il cliente vede il motivo sulla pagina del suo ordine.</p></div>';
     }
     if (p.kind === "out") {
-      var riders = state.riders.length ? state.riders : [];
       return '<div class="panel"><p class="panel-q">Chi consegna?</p>' +
-        '<div class="pchips">' + riders.map(function (r) { return chip(r, r, p.value === r, "rider"); }).join("") + chip("Nessuno / altro", "", p.value === "", "rider") + "</div>" +
-        '<div class="acts">' + btn(state.riderChat ? "In consegna · avvisa il rider" : "In consegna", "out", o, "go") + btn("Stampa", "print", o, "ghost") + btn("Indietro", "close", o, "ghost") + "</div></div>";
+        '<div class="pchips">' + state.riders.map(function (r) { return chip(r, r, p.value === r, "rider"); }).join("") + chip("Nessuno / altro", "", p.value === "", "rider") + "</div>" +
+        '<div class="acts">' + btn(state.riderChat ? "In consegna · avvisa il rider" : "In consegna", "out", o, "go") + btn("Indietro", "close", o, "ghost") + "</div></div>";
     }
     return "";
   }
 
-  // ---------- board ----------
+  // ---------- new orders: always on top, can't be missed ----------
+  function newCard(o) {
+    var isPanel = state.panel && state.panel.id === o.id && !state.open;
+    return '<article class="ncard" data-id="' + o.id + '">' +
+      '<header><span class="code">#' + esc(o.code) + "</span>" + modeBadge(o) + '<span class="ago">' + ago(o.createdAt) + "</span></header>" +
+      '<p class="when">' + esc(whenText(o)) + "</p>" +
+      '<ul class="items">' + o.items.map(function (l) {
+        return "<li><b>" + l.qty + "×</b> " + esc(l.name) + (l.note ? " <em>(" + esc(l.note) + ")</em>" : "") + "</li>";
+      }).join("") + "</ul>" +
+      (o.notes ? '<p class="notes">Note: ' + esc(o.notes) + "</p>" : "") +
+      '<p class="meta"><b>' + money(o.total) + "</b>" + (feePending(o) ? " + consegna" : "") + " · " + esc(payText(o)) + "</p>" +
+      '<p class="meta">' + esc(o.name || "") + (o.mode === "delivery" && addressText(o) ? " · " + esc(addressText(o)) +
+        (o.km != null ? " · " + String(o.km).replace(".", ",") + " km" : "") : "") +
+      (o.geo === "unverified" ? ' <span class="warn">indirizzo da verificare</span>' : "") + "</p>" +
+      (isPanel ? panel(o) : '<div class="acts">' + btn("Accetta", "accept-open", o, "go") + btn("Rifiuta", "reject-open", o, "ghost") +
+        btn("Dettagli", "open", o, "ghost") + "</div>") +
+      "</article>";
+  }
+
+  // ---------- the list: one row per order ----------
+  function row(o) {
+    var left = minsLeft(o), active = ["accepted", "ready", "out"].indexOf(o.status) !== -1;
+    var tone = !active || left == null ? "" : left < 0 ? " is-late" : left <= 10 ? " is-soon" : "";
+    var timeNote = !active ? esc(STATUS[o.status]) : left == null ? "" : left < 0 ? "in ritardo " + (-left) + "′" : left === 0 ? "adesso" : "tra " + left + "′";
+    var step = nextStep(o);
+    var status = o.status === "out" ? "In consegna" + (o.rider ? " · " + esc(o.rider) : "") : o.status === "ready" ? "Pronto" : "";
+    return '<article class="orow orow--' + o.status + tone + '" data-id="' + o.id + '">' +
+      '<button type="button" class="orow-main" data-act="open" data-id="' + o.id + '" aria-label="Apri ordine #' + esc(o.code) + '">' +
+        '<span class="orow-time"><b>' + esc(dueTime(o) || hhmm(o.createdAt)) + "</b><small>" + timeNote + "</small></span>" +
+        '<span class="orow-body">' +
+          '<span class="orow-top"><span class="code">#' + esc(o.code) + "</span>" + modeBadge(o) +
+            (status ? '<span class="badge badge--state">' + status + "</span>" : "") +
+            (o.notes ? '<span class="badge badge--note">Note</span>' : "") + "</span>" +
+          '<span class="orow-line">' + esc(o.name || "—") + " · " + itemCount(o) + " pz · <b>" + money(o.total) + "</b>" +
+            (o.payment === "cash" ? " · contanti" : "") + "</span>" +
+          '<span class="orow-items">' + esc(itemsShort(o)) + "</span>" +
+        "</span>" +
+      "</button>" +
+      (step ? '<button type="button" class="cbtn cbtn--go orow-next" data-act="' + step[1] + '" data-id="' + o.id + '">' + step[0] + "</button>" : "") +
+      "</article>";
+  }
+
+  function group(o) {
+    if (o.status === "accepted") return "kitchen";
+    if (o.status === "ready" || o.status === "out") return "go";
+    if (o.status === "done") return "done";
+    if (o.status === "rejected" || o.status === "cancelled") return "off";
+    return "new";
+  }
+
   function renderBoard() {
-    var groups = { new: [], accepted: [], go: [], done: [], off: [] };
-    state.orders.forEach(function (o) {
-      var g = o.status === "ready" || o.status === "out" ? "go" : o.status === "rejected" || o.status === "cancelled" ? "off" : o.status;
-      if (groups[g]) groups[g].push(o);
+    var g = { new: [], kitchen: [], go: [], done: [], off: [] };
+    state.orders.forEach(function (o) { g[group(o)].push(o); });
+    g.active = g.kitchen.concat(g.go);
+    ["active", "kitchen", "go"].forEach(function (k) { g[k].sort(function (a, b) { return sortKey(a) - sortKey(b); }); });
+    ["done", "off"].forEach(function (k) { g[k].sort(function (a, b) { return b.createdAt - a.createdAt; }); });
+
+    // new orders
+    var nw = $("[data-new]");
+    if (!(nw.contains(document.activeElement) && document.activeElement.tagName === "INPUT")) {
+      $("[data-new-wrap]").hidden = !g.new.length;
+      nw.innerHTML = g.new.map(newCard).join("");
+      $("[data-n-new]").textContent = g.new.length ? "(" + g.new.length + ")" : "";
+    }
+
+    // what the oven has to make right now
+    var count = {};
+    g.kitchen.forEach(function (o) { o.items.forEach(function (l) { count[l.name] = (count[l.name] || 0) + l.qty; }); });
+    var names = Object.keys(count).sort(function (a, b) { return count[b] - count[a] || a.localeCompare(b); });
+    var k = $("[data-kitchen]");
+    k.hidden = !names.length;
+    k.innerHTML = "<b>Da preparare:</b> " + names.map(function (n) { return "<span>" + count[n] + "× " + esc(n) + "</span>"; }).join(" ");
+
+    // filters + list
+    $$("[data-filter]").forEach(function (b) {
+      var f = b.getAttribute("data-filter");
+      b.setAttribute("aria-pressed", String(f === state.filter));
+      $('[data-fn="' + f + '"]', b).textContent = g[f].length;
     });
-    groups.done.reverse(); groups.off.reverse();
-    Object.keys(groups).forEach(function (g) {
-      var col = $('[data-col="' + g + '"]');
-      // don't redraw a column while someone is typing in it
-      if (col.contains(document.activeElement) && document.activeElement.tagName === "INPUT") return;
-      col.innerHTML = groups[g].length ? groups[g].map(card).join("") : '<p class="empty">Nessun ordine</p>';
-      $('[data-n="' + g + '"]').textContent = groups[g].length ? "(" + groups[g].length + ")" : "";
-    });
-    var n = groups.new.length;
+    var list = g[state.filter] || [];
+    $("[data-list]").innerHTML = list.length ? list.map(row).join("") :
+      '<p class="empty">' + (state.filter === "active" ? "Nessun ordine in corso." : "Nessun ordine qui.") + "</p>";
+
+    var n = g.new.length;
     $("[data-count-new]").textContent = n ? n : "";
     document.title = (n ? "(" + n + ") NUOVO · " : "") + "Ordini · Vizi Capitali";
-    var banner = $("[data-banner]");
+    renderBanner();
+    renderDrawer();
+  }
+
+  function renderBanner() {
     var msgs = [];
-    if (state.flags.maintenance) msgs.push("MANUTENZIONE ATTIVA: i clienti vedono la pagina \u201CTorniamo presto\u201D.");
-    else if (state.flags.paused) msgs.push("Ordini online IN PAUSA: il sito è visibile ma non accetta ordini.");
-    else if (!state.orderingOpen) msgs.push("Ordini online chiusi in questo momento (fuori orario o chiusi nelle impostazioni).");
-    if (!soundOn) msgs.push("Suono disattivato: premi “Attiva suono” per sentire i nuovi ordini.");
+    if (state.flags.maintenance) msgs.push("Manutenzione attiva: i clienti vedono “Torniamo presto”.");
+    else if (state.flags.paused) msgs.push("Ordini online in pausa: il sito è visibile ma non accetta ordini.");
+    else if (!state.orderingOpen) msgs.push("Ordini online chiusi in questo momento (fuori orario).");
+    if (!soundOn) msgs.push("Suono spento: premi “Attiva suono” per sentire i nuovi ordini.");
+    var banner = $("[data-banner]");
     banner.hidden = !msgs.length;
     banner.textContent = msgs.join(" ");
   }
+
+  // ---------- one order in full (side panel) ----------
+  var drawer = $("[data-drawer]");
+  function renderDrawer() {
+    if (!state.open) return;
+    var o = find(state.open);
+    if (!o) { closeDrawer(); return; }
+    var box = $("[data-drawer-box]");
+    if (box.contains(document.activeElement) && document.activeElement.tagName === "INPUT") return;   // don't redraw while typing
+    var isPanel = state.panel && state.panel.id === o.id;
+    var step = nextStep(o);
+    var actions = "";
+    if (o.status === "new") actions = btn("Accetta", "accept-open", o, "go") + btn("Rifiuta", "reject-open", o, "ghost");
+    else if (step) actions = btn(step[0], step[1], o, "go");
+    if (o.status === "accepted" && o.mode === "delivery") actions += btn("Pronto (aspetta il rider)", "ready", o, "ghost");
+    actions += btn("Stampa", "print", o, "ghost");
+    if (o.phone && !o.purged && ["new", "accepted", "ready", "out"].indexOf(o.status) !== -1) {
+      actions += '<a class="cbtn cbtn--ghost" target="_blank" rel="noopener" href="https://wa.me/' + waNumber(o.phone) + "?text=" +
+        encodeURIComponent(customerMessage(o)) + '">Scrivi al cliente</a>';
+    }
+    if (["accepted", "ready", "out"].indexOf(o.status) !== -1) actions += btn("Annulla ordine", "cancel-open", o, "ghost");
+
+    box.innerHTML =
+      '<header class="drawer-head"><h2 id="drawer-title">#' + esc(o.code) + "</h2>" + modeBadge(o) +
+        '<span class="badge badge--state">' + esc(STATUS[o.status]) + "</span>" +
+        '<button type="button" class="drawer-x" data-act="close-drawer" data-id="' + o.id + '" aria-label="Chiudi">×</button></header>' +
+      '<p class="when">' + esc(whenText(o)) + "</p>" +
+      '<p class="muted">Ricevuto alle ' + hhmm(o.createdAt) + " · " + esc(SOURCE[o.source] || o.source) + "</p>" +
+      '<ul class="items">' + o.items.map(function (l) {
+        return "<li><b>" + l.qty + "×</b> " + esc(l.name) + (l.note ? " <em>(" + esc(l.note) + ")</em>" : "") +
+          (l.price != null ? '<span class="pr">' + money(l.price * l.qty) + "</span>" : "") + "</li>";
+      }).join("") + "</ul>" +
+      (o.notes ? '<p class="notes">Note: ' + esc(o.notes) + "</p>" : "") +
+      '<dl class="facts">' +
+        (o.discount ? "<div><dt>Sconto" + (o.promo ? " " + esc(o.promo) : "") + "</dt><dd>−" + money(o.discount) + "</dd></div>" : "") +
+        (o.mode === "delivery" ? "<div><dt>Consegna</dt><dd>" + (o.fee == null ? (o.source === "web" ? "da confermare" : "—") : money(o.fee)) + "</dd></div>" : "") +
+        '<div class="tot"><dt>Totale</dt><dd>' + money(o.total) + "</dd></div>" +
+        "<div><dt>Pagamento</dt><dd>" + esc(payText(o)) + (o.payment === "cash" && o.cashWith ? " · resto " + money(o.cashWith - o.total) : "") + "</dd></div>" +
+      "</dl>" +
+      (o.purged ? '<p class="muted">Dati del cliente cancellati (privacy).</p>' :
+        '<dl class="facts">' +
+          "<div><dt>Cliente</dt><dd>" + esc(o.name || "—") + "</dd></div>" +
+          (o.phone ? '<div><dt>Telefono</dt><dd><a href="tel:' + esc(o.phone) + '">' + esc(o.phone) + "</a></dd></div>" : "") +
+          (o.mode === "delivery" && addressText(o) ? '<div><dt>Indirizzo</dt><dd><a href="' + esc(mapsUrl(o)) + '" target="_blank" rel="noopener">' + esc(addressText(o)) + "</a>" +
+            (o.km != null ? " · " + String(o.km).replace(".", ",") + " km" : "") +
+            (o.geo === "unverified" ? ' <span class="warn">da verificare</span>' : "") + "</dd></div>" : "") +
+          (o.buzzer ? "<div><dt>Citofono</dt><dd>" + esc(o.buzzer) + "</dd></div>" : "") +
+        "</dl>") +
+      (o.rider ? '<p class="muted">Rider: ' + esc(o.rider) + "</p>" : "") +
+      (o.rejectReason ? '<p class="muted">Motivo: ' + esc(o.rejectReason) + "</p>" : "") +
+      (isPanel ? panel(o) : '<div class="acts">' + actions + "</div>");
+  }
+  function openDrawer(id, panelKind) {
+    state.open = id;
+    var o = find(id);
+    state.panel = panelKind ? { id: id, kind: panelKind, value: panelKind === "out" ? (state.riders[0] || "") : panelKind === "accept" ? o.suggestedTime : "" } : null;
+    renderDrawer();
+    if (!drawer.open) { if (drawer.showModal) drawer.showModal(); else drawer.setAttribute("open", ""); }
+  }
+  function closeDrawer() {
+    state.open = null;
+    state.panel = null;
+    if (drawer.open) { if (drawer.close) drawer.close(); else drawer.removeAttribute("open"); }
+  }
+  drawer.addEventListener("close", function () { state.open = null; state.panel = null; renderBoard(); });
+  drawer.addEventListener("click", function (e) { if (e.target === drawer) closeDrawer(); });   // tap outside the panel
 
   var failures = 0;
   function refresh() {
@@ -232,7 +371,7 @@
       if (r.state) state.flags = r.state;
       renderFlags();
       state.serverOffset = r.now - Date.now() / 1000;
-      if (state.panel && !state.orders.some(function (o) { return o.id === state.panel.id; })) state.panel = null;
+      if (state.panel && !find(state.panel.id)) state.panel = null;
       renderBoard();
     }).catch(function () {
       failures++;
@@ -246,22 +385,28 @@
       if (!r.ok) alert(r.error === "not_new" ? "Questo ordine è già stato gestito." : "Operazione non riuscita (" + r.error + ").");
       if (r.ok && action === "status" && data.to === "out" && state.riderChat && r.riderNotified === false) alert("Ordine in consegna, ma il messaggio al rider non è partito: controlla Telegram.");
       state.panel = null;
+      if (r.ok && (action === "reject" || data.to === "done" || data.to === "out")) closeDrawer();
       return refresh();
     });
   }
 
-  $("[data-view=live]").addEventListener("click", function (e) {
+  document.addEventListener("click", function (e) {
     var pick = e.target.closest("[data-pick]");
     if (pick && state.panel) { state.panel.value = pick.getAttribute("data-value"); renderBoard(); return; }
-    var b = e.target.closest("[data-act]");
+    var b = e.target.closest("[data-act][data-id]");
     if (!b) return;
     var id = parseInt(b.getAttribute("data-id"), 10), o = find(id), a = b.getAttribute("data-act");
     if (!o) return;
+    var inDrawer = !!b.closest("[data-drawer]");
     switch (a) {
+      case "open": openDrawer(id); return;
+      case "close-drawer": closeDrawer(); return;
       case "accept-open": state.panel = { id: id, kind: "accept", value: o.suggestedTime }; break;
       case "reject-open": state.panel = { id: id, kind: "reject", value: "" }; break;
       case "cancel-open": state.panel = { id: id, kind: "cancel", value: "" }; break;
-      case "out-open": state.panel = { id: id, kind: "out", value: state.riders[0] || "" }; break;
+      case "out-open":
+        if (!inDrawer) { openDrawer(id, "out"); return; }
+        state.panel = { id: id, kind: "out", value: state.riders[0] || "" }; break;
       case "close": state.panel = null; break;
       case "accept": act("accept", { id: id, time: state.panel.value }); return;
       case "reject": case "cancel": {
@@ -276,15 +421,28 @@
     }
     renderBoard();
   });
-  $("[data-view=live]").addEventListener("input", function (e) {
+  document.addEventListener("input", function (e) {
     if (!state.panel) return;
-    if (e.target.matches("[data-custom-time]")) { state.panel.value = e.target.value; $('[data-act="accept"]').textContent = "Conferma " + e.target.value; }
+    var host = e.target.closest(".panel");
+    if (e.target.matches("[data-custom-time]")) {
+      state.panel.value = e.target.value;
+      var c = host && $('[data-act="accept"]', host);
+      if (c) c.textContent = "Conferma " + e.target.value;
+    }
     if (e.target.matches("[data-custom-reason]")) state.panel.custom = e.target.value;
   });
+  $$("[data-filter]").forEach(function (b) {
+    b.addEventListener("click", function () {
+      state.filter = b.getAttribute("data-filter");
+      try { localStorage.setItem(FILTER_KEY, state.filter); } catch (e) { /* ignore */ }
+      renderBoard();
+    });
+  });
 
-  // ---------- switches: pause online orders / maintenance mode ----------
+  // ---------- site status: pause online orders, extra waiting time, maintenance ----------
+  var stateBtn = $("[data-state-btn]"), statePanel = $("[data-state-panel]");
   function renderFlags() {
-    var p = state.flags.paused, m = state.flags.maintenance;
+    var f = state.flags, p = f.paused, m = f.maintenance;
     var bp = $('[data-flag="paused"]'), bm = $('[data-flag="maintenance"]');
     bp.setAttribute("aria-pressed", String(!p));             // pressed = orders open
     bp.classList.toggle("is-off", p);
@@ -292,15 +450,38 @@
     bm.setAttribute("aria-pressed", String(m));
     bm.classList.toggle("is-on", m);
     $('[data-flag-label="maintenance"]').textContent = m ? "Attiva" : "Spenta";
+    $("[data-busy]").innerHTML = BUSY.map(function (b) {
+      return '<button type="button" class="pchip" data-busy-value="' + b + '" aria-pressed="' + ((f.busy || 0) === b) + '">' + (b ? "+" + b + "′" : "Normale") + "</button>";
+    }).join("");
+    var tone = m ? "maint" : p ? "paused" : !state.orderingOpen ? "closed" : "open";
+    stateBtn.className = "state-pill state-pill--" + tone;
+    $("[data-state-text]").textContent = (m ? "Manutenzione" : p ? "Ordini in pausa" : !state.orderingOpen ? "Fuori orario" : "Ordini aperti") +
+      (f.busy && !m ? " · +" + f.busy + "′" : "");
   }
+  function setFlags(data) {
+    return api("flags", data).then(function (r) { if (r.ok) { state.flags = r.state; renderFlags(); renderBoard(); } else alert("Non riuscito."); });
+  }
+  function toggleStatePanel(show) {
+    statePanel.hidden = !show;
+    stateBtn.setAttribute("aria-expanded", String(show));
+  }
+  stateBtn.addEventListener("click", function () { toggleStatePanel(statePanel.hidden); });
+  document.addEventListener("click", function (e) {
+    if (!statePanel.hidden && !e.target.closest("[data-state-panel]") && !e.target.closest("[data-state-btn]")) toggleStatePanel(false);
+  });
+  document.addEventListener("keydown", function (e) { if (e.key === "Escape" && !statePanel.hidden) { toggleStatePanel(false); stateBtn.focus(); } });
   $$("[data-flag]").forEach(function (b) {
     b.addEventListener("click", function () {
       var k = b.getAttribute("data-flag"), next = !state.flags[k];
-      if (k === "maintenance" && next && !confirm("Attivare la manutenzione? I clienti vedranno \u201CTorniamo presto\u201D e non potranno ordinare online.")) return;
+      if (k === "maintenance" && next && !confirm("Attivare la manutenzione? I clienti vedranno “Torniamo presto” e non potranno ordinare online.")) return;
       if (k === "paused" && next && !confirm("Mettere in pausa gli ordini online? Il sito resta visibile.")) return;
       var data = {}; data[k] = next;
-      api("flags", data).then(function (r) { if (r.ok) { state.flags = r.state; renderFlags(); renderBoard(); } else alert("Non riuscito."); });
+      setFlags(data);
     });
+  });
+  $("[data-busy]").addEventListener("click", function (e) {
+    var b = e.target.closest("[data-busy-value]");
+    if (b) setFlags({ busy: parseInt(b.getAttribute("data-busy-value"), 10) });
   });
 
   // ---------- printed slip (80 mm receipt printer; any printer works) ----------
