@@ -35,10 +35,8 @@
     <header class="admin-head">
       <h1 class="visually-hidden">Gestione Vizi Capitali</h1>
       <img src="assets/img/logo-cream.png" alt="Vizi Capitali" width="1000" height="438">
-      <nav class="staff-nav" aria-label="Area staff">
-        <a href="ordini.html" data-t="nav.orders">Ordini</a>
-        <a href="admin.html" aria-current="page" data-t="nav.admin">Gestione</a>
-      </nav>
+      <!-- the orders board (ordini.html) is kept for later; link it here again when website orders go live -->
+      <a class="view-site" href="index.html" target="_blank" rel="noopener" data-t="nav.site">Vedi il sito</a>
       <div class="admin-head-actions">
         <div class="lang lang--cream" role="group" aria-label="Lingua / Language">
           <button type="button" data-admin-lang="it" aria-pressed="true">IT</button>
@@ -66,7 +64,8 @@
 
   <script src="data/config.js"></script>
   <script src="data/menu.js"></script>
-  <script src="data/live.js"></script>
+  <!-- saved from Gestione: always fetched fresh, so a save shows straight away (browsers and the host cache .js files) -->
+  <script>document.write('<script src="data/live.js?v=' + Date.now() + '"><\/script>');</script>
   <script src="assets/js/themes.js"></script>
   <script src="assets/js/admin.js"></script>
 </body>

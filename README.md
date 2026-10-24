@@ -12,7 +12,19 @@ It runs on ordinary PHP hosting (one bill): website orders, an orders board and 
 
 ### La pagina di gestione (consigliato)
 
-Aprite `tuosito/ordini.html` → **Gestione** (o direttamente `admin.html`) con lo stesso PIN dello staff. Lì si cambia tutto senza toccare file: menu (prezzi, descrizioni, foto, allergeni, esaurito), orari e tempi, consegna, codici sconto, contatti e squadra.
+### Prima installazione (una volta sola)
+
+1. Hosting con **PHP 8.1+** (con `pdo_sqlite`, quasi tutti ce l'hanno) e **HTTPS** attivo.
+2. Caricate tutta la cartella, poi aprite **subito** `https://vostrosito.it/api/setup.php` e scegliete il **PIN di 6 cifre**. Basta questo: la parte "Ordini dal sito" si lascia vuota.
+
+### La gestione: `admin.html`
+
+Aprite `tuosito/admin.html` e inserite il PIN. Lì si cambia tutto senza toccare file:
+
+- **Stato del sito** (prima scheda, vale subito senza salvare): ordini online aperti / in pausa, attesa extra nelle serate piene, **modalità manutenzione** con un messaggio facoltativo ("Torniamo presto").
+- Menu (prezzi, descrizioni, foto, allergeni, esaurito), orari e tempi, consegna, codici sconto, contatti, squadra, temi e striscia in alto.
+
+Gli ordini per ora arrivano su **WhatsApp**: il cliente prepara l'ordine sul sito e lo invia già scritto.
 
 - Appena modificate qualcosa compare in basso la barra **Modifiche non salvate**:
   - **Anteprima** mostra il sito con le modifiche, solo su quel dispositivo;
@@ -20,7 +32,6 @@ Aprite `tuosito/ordini.html` → **Gestione** (o direttamente `admin.html`) con 
   - **Annulla modifiche** torna alla versione online.
 - **Versioni e PIN:** ogni salvataggio conserva la versione precedente (le ultime 15), ripristinabile con un tocco. Qui si cambia anche il PIN dello staff.
 - Le modifiche vengono salvate sul server in `data/live.js` (non su GitHub), quindi un nuovo caricamento del sito da GitHub non le cancella.
-- Pausa degli ordini online, attesa extra e manutenzione si cambiano dalla pagina **Ordini**, dal pulsante di stato in alto.
 - **Temi:** Halloween, Natale, Capodanno, San Valentino, Pasqua, Ferragosto, oppure *Automatico* (cambia da solo con le date delle feste) o *Nessun tema*. Ogni tema veste tutto il sito in stile elegante: colori della festa, logo in foglia metallica, cornici sottili e decorazioni discrete; carrello e ordini restano identici. Per provarne uno senza salvare: `index.html?tema=natale`.
 - **Striscia in alto** (Temi e avvisi): un messaggio e/o un codice sconto in cima al sito, con date facoltative di inizio e fine. Il cliente tocca *Usa il codice* e lo trova già nel carrello.
 
@@ -95,7 +106,7 @@ Dopo aver salvato, apri `index.html` nel browser (doppio clic) e ricarica la pag
 
 ## 🇬🇧 How to update the site
 
-**Easiest: the management page.** Open `ordini.html` → **Gestione** (or `admin.html`) with the staff PIN. Edit the menu (prices, photos, allergens, sold out), hours and timing, delivery, promo codes, contacts and team. A bar appears at the bottom while there are unsaved changes: **Anteprima** previews them on that device only, **Salva e pubblica** puts them live straight away. Every save keeps the previous version (the last 15) under *Versioni e PIN*, where the staff PIN can also be changed. Changes are stored on the server in `data/live.js`, not in git, so redeploying from GitHub doesn't overwrite them. Pausing online orders, extra waiting time and maintenance mode are on the **Ordini** page. **Temi** (themes): Halloween, Christmas, New Year, Valentine's, Easter, Ferragosto, *Automatico* (follows the calendar) or none. Each dresses the whole site in an elegant holiday palette with a metallic-foil logo, fine frames and discreet decorations; the basket and ordering are unchanged. Try one without saving with `index.html?tema=natale`. **Top strip** (same tab): a message and/or a promo code at the top of the site, with optional start and end dates; *Use code* puts it straight into the basket.
+**First:** upload the folder to PHP hosting with HTTPS and open `api/setup.php` straight away to choose the 6-digit staff PIN (leave "Ordini dal sito" empty). **Then: the management page.** Open `admin.html` with the staff PIN. The first tab, **Stato del sito**, applies instantly: pause online orders, extra waiting time on busy nights, and **maintenance mode** with an optional message. Orders currently arrive on **WhatsApp**. Edit the menu (prices, photos, allergens, sold out), hours and timing, delivery, promo codes, contacts and team. A bar appears at the bottom while there are unsaved changes: **Anteprima** previews them on that device only, **Salva e pubblica** puts them live straight away. Every save keeps the previous version (the last 15) under *Versioni e PIN*, where the staff PIN can also be changed. Changes are stored on the server in `data/live.js`, not in git, so redeploying from GitHub doesn't overwrite them.  **Temi** (themes): Halloween, Christmas, New Year, Valentine's, Easter, Ferragosto, *Automatico* (follows the calendar) or none. Each dresses the whole site in an elegant holiday palette with a metallic-foil logo, fine frames and discreet decorations; the basket and ordering are unchanged. Try one without saving with `index.html?tema=natale`. **Top strip** (same tab): a message and/or a promo code at the top of the site, with optional start and end dates; *Use code* puts it straight into the basket.
 
 **By hand** (only before going live, or without PHP hosting; on the live site whatever the management page saved wins):
 
@@ -124,7 +135,10 @@ Visitors can switch language with the IT / EN buttons; the choice is remembered.
 
 ---
 
-## 🧾 Ordini dal sito / Website orders
+## 🧾 Ordini dal sito / Website orders (pronto, non ancora attivo)
+
+> **Per ora gli ordini arrivano su WhatsApp** (`data/config.js` → `ordering.channel: "whatsapp"`). Il sistema qui sotto (ordini sul sito, bacheca `ordini.html`, avvisi Telegram) è già scritto ma non è collegato dalla gestione. Per attivarlo più avanti: mettete `"channel": "website"`, completate la parte "Ordini dal sito" in `api/setup.php` (cancellando prima `api/private/config.php`) e rimettete il link alla bacheca in `admin.html`.
+> *For now orders go through WhatsApp. The website-order system below is built but not linked from the management page; switch `channel` to `"website"` when you want it.*
 
 Con un hosting PHP i clienti ordinano direttamente dal sito: niente WhatsApp a pagamento, le notifiche arrivano gratis su Telegram e sulla bacheca `ordini.html`.
 *With PHP hosting, customers order straight from the website. Notifications are free, via Telegram and the `ordini.html` board.*

@@ -41,7 +41,18 @@
       "app.draftOld": "Le modifiche non salvate su questo dispositivo erano superate e sono state scartate.",
       "app.uploading": "Carico la foto…", "app.uploadFail": "Foto non caricata. Riprova.",
       "app.previewHelp": "L'anteprima mostra le modifiche non salvate, solo su questo dispositivo.",
-      "nav.orders": "Ordini", "nav.admin": "Gestione",
+      "nav.orders": "Ordini", "nav.admin": "Gestione", "nav.site": "Vedi il sito",
+      "tab.site": "Stato del sito", "site.title": "Stato del sito", "site.help": "Questi interruttori valgono subito, senza bisogno di salvare.",
+      "site.orders": "Ordini online", "site.ordersOn": "Aperti", "site.ordersOff": "In pausa",
+      "site.ordersHelp": "In pausa il menu resta visibile, ma non si possono fare ordini. Fuori orario si chiudono da soli.",
+      "site.pauseConfirm": "Mettere in pausa gli ordini? Il sito resta visibile.",
+      "site.busy": "Serata piena? Attesa extra", "site.busyHelp": "Si aggiunge ai tempi mostrati ai clienti.", "site.normal": "Normale",
+      "site.maint": "Modalità manutenzione", "site.maintOn": "Attiva", "site.maintOff": "Spenta",
+      "site.maintHelp": "Copre tutto il sito con «Torniamo presto» e i pulsanti per chiamare o scrivere su WhatsApp.",
+      "site.maintConfirm": "Attivare la manutenzione? I clienti vedranno solo «Torniamo presto».",
+      "site.msg": "Messaggio della pagina di manutenzione (facoltativo)", "site.msgPh": "Es. Siamo in ferie fino al 25 agosto. A presto!",
+      "site.msgSave": "Salva messaggio", "site.done": "Fatto: il sito è aggiornato.", "site.fail": "Non riuscito. Riprova.",
+      "site.unknown": "Non riesco a leggere lo stato del sito. Ricarica la pagina.",
       "tab.hours": "Orari e tempi", "tab.promo": "Sconti", "tab.history": "Versioni e PIN",
       "tab.menu": "Menu", "tab.delivery": "Consegna", "tab.info": "Contatti", "tab.team": "Squadra",
       "orders.timing": "Tempi degli ordini",
@@ -59,7 +70,7 @@
       "theme.effects": "Decorazioni animate (scintille, petali…)", "theme.effectsHelp": "Non compaiono a chi ha disattivato le animazioni sul telefono.",
       "theme.msg": "Messaggio di auguri · {name}", "theme.msgHelp": "Lasciate vuoto per usare il testo proposto (grigio).",
       "theme.previewHint": "Per vederlo prima di pubblicarlo usate Anteprima nella barra in basso.",
-      "orders.boardNote": "Pausa degli ordini online, attesa extra e manutenzione si cambiano dalla pagina Ordini, in alto: valgono subito.",
+      "orders.boardNote": "Pausa degli ordini, attesa extra e manutenzione sono in «Stato del sito»: valgono subito.",
       "promo.help": "I codici non sono visibili sul sito: il cliente li scrive nel carrello e il server li controlla.",
       "hist.title": "Versioni precedenti", "hist.help": "A ogni salvataggio viene conservata la versione precedente (le ultime 15). Se qualcosa non va, ripristinala: il sito cambia subito.",
       "hist.none": "Ancora nessun salvataggio.", "hist.item": "Versione in uso fino al {when}", "hist.itemRestore": "Versione in uso fino al {when} (prima di un ripristino)",
@@ -122,7 +133,18 @@
       "app.draftOld": "The unsaved changes on this device were out of date and have been discarded.",
       "app.uploading": "Uploading photo…", "app.uploadFail": "Photo not uploaded. Please try again.",
       "app.previewHelp": "The preview shows your unsaved changes, on this device only.",
-      "nav.orders": "Orders", "nav.admin": "Management",
+      "nav.orders": "Orders", "nav.admin": "Management", "nav.site": "View the site",
+      "tab.site": "Site status", "site.title": "Site status", "site.help": "These switches apply straight away, no need to save.",
+      "site.orders": "Online orders", "site.ordersOn": "Open", "site.ordersOff": "Paused",
+      "site.ordersHelp": "When paused the menu stays visible but nobody can order. Outside opening hours they close by themselves.",
+      "site.pauseConfirm": "Pause orders? The site stays visible.",
+      "site.busy": "Busy night? Extra waiting time", "site.busyHelp": "Added to the times customers see.", "site.normal": "Normal",
+      "site.maint": "Maintenance mode", "site.maintOn": "On", "site.maintOff": "Off",
+      "site.maintHelp": "Covers the whole site with “Back soon” and buttons to call or message on WhatsApp.",
+      "site.maintConfirm": "Turn on maintenance? Customers will only see “Back soon”.",
+      "site.msg": "Message on the maintenance page (optional)", "site.msgPh": "E.g. We're on holiday until 25 August. See you soon!",
+      "site.msgSave": "Save message", "site.done": "Done: the site is updated.", "site.fail": "Didn't work. Please try again.",
+      "site.unknown": "Can't read the site status. Reload the page.",
       "tab.hours": "Hours & timing", "tab.promo": "Promos", "tab.history": "Versions & PIN",
       "tab.menu": "Menu", "tab.delivery": "Delivery", "tab.info": "Contact", "tab.team": "Team",
       "orders.timing": "Order timing",
@@ -140,7 +162,7 @@
       "theme.effects": "Animated decorations (sparkles, petals…)", "theme.effectsHelp": "They don't appear for people who have turned off animations on their phone.",
       "theme.msg": "Greeting · {name}", "theme.msgHelp": "Leave empty to use the suggested text (in grey).",
       "theme.previewHint": "To see it before publishing, use Preview in the bar at the bottom.",
-      "orders.boardNote": "Pausing online orders, extra waiting time and maintenance mode are on the Orders page, at the top: they apply straight away.",
+      "orders.boardNote": "Pausing orders, extra waiting time and maintenance mode are under “Site status”: they apply straight away.",
       "promo.help": "Codes aren't visible on the site: customers type them in the basket and the server checks them.",
       "hist.title": "Previous versions", "hist.help": "Every save keeps the version before it (the last 15). If something goes wrong, restore it: the site changes straight away.",
       "hist.none": "Nothing saved yet.", "hist.item": "Version in use until {when}", "hist.itemRestore": "Version in use until {when} (before a restore)",
@@ -202,7 +224,7 @@
 
   // ---------- server ----------
   function api(action, data) {
-    var url = action === "login" || action === "logout" ? "api/staff.php" : "api/admin.php";
+    var url = action === "login" || action === "logout" || action === "flags" ? "api/staff.php" : "api/admin.php";
     return fetch(url, {
       method: "POST", credentials: "same-origin",
       headers: { "Content-Type": "application/json" },
@@ -218,7 +240,8 @@
   var state = clone(published);
   var version = "";
   var history = [];
-  var tab = "menu";
+  var tab = "site";
+  var flags = null;   // pause / busy / maintenance, read from api/state.php; changed straight away, not via Save
   var openKeys = {};
   var saving = false;
 
@@ -328,7 +351,7 @@
         field(t("orders.slot"), "config.ordering.slotMinutes", "int") +
         field(t("orders.start"), "config.ordering.startBeforeOpenMin", "int") +
         field(t("orders.stop"), "config.ordering.stopBeforeCloseMin", "int") + "</div>" +
-        '<p class="help">' + esc(t("orders.boardNote")) + ' <a href="ordini.html">' + esc(t("nav.orders")) + " →</a></p></section>";
+        '<p class="help">' + esc(t("orders.boardNote")) + "</p></section>";
     },
 
     menu: function () {
@@ -401,6 +424,25 @@
             rowTools(p, m.name || "");
           return details("team-" + i, "<strong>" + esc(m.name || (m.role && m.role[lang]) || "—") + "</strong>", body);
         }).join("") + btn(t("team.add"), "addPerson", "config.team", "btn btn--outline btn--sm") + "</section>";
+    },
+
+    site: function () {
+      if (!flags) return '<section class="card"><p class="help">' + esc(t("site.unknown")) + "</p></section>";
+      var open = !flags.paused, busy = flags.busy || 0, m = flags.maintenance;
+      return '<section class="card"><h2>' + esc(t("site.title")) + '</h2><p class="help">' + esc(t("site.help")) + "</p></section>" +
+        '<section class="card"><h2>' + esc(t("site.orders")) + "</h2>" +
+          '<button type="button" class="big-switch ' + (open ? "is-on" : "is-off") + '" data-act="flagPaused" data-path="" aria-pressed="' + open + '">' +
+          '<span class="knob"></span><strong>' + esc(open ? t("site.ordersOn") : t("site.ordersOff")) + "</strong></button>" +
+          '<p class="help">' + esc(t("site.ordersHelp")) + "</p>" +
+          '<h3 class="sub">' + esc(t("site.busy")) + '</h3><div class="seg">' + [0, 15, 30, 45].map(function (b) {
+            return '<button type="button" data-act="flagBusy" data-path="" data-value="' + b + '" aria-pressed="' + (busy === b) + '">' + (b ? "+" + b + " min" : esc(t("site.normal"))) + "</button>";
+          }).join("") + '</div><p class="help">' + esc(t("site.busyHelp")) + "</p></section>" +
+        '<section class="card"><h2>' + esc(t("site.maint")) + "</h2>" +
+          '<button type="button" class="big-switch big-switch--maint ' + (m ? "is-on" : "is-off") + '" data-act="flagMaint" data-path="" aria-pressed="' + m + '">' +
+          '<span class="knob"></span><strong>' + esc(m ? t("site.maintOn") : t("site.maintOff")) + "</strong></button>" +
+          '<p class="help">' + esc(t("site.maintHelp")) + "</p>" +
+          '<label class="f"><span>' + esc(t("site.msg")) + '</span><input type="text" maxlength="200" data-flag-msg value="' + esc(flags.message || "") + '" placeholder="' + esc(t("site.msgPh")) + '"></label>' +
+          '<button type="button" class="btn btn--outline btn--sm" data-act="flagMsg" data-path="">' + esc(t("site.msgSave")) + "</button></section>";
     },
 
     theme: function () {
@@ -485,7 +527,7 @@
   }
 
   // ---------- rendering ----------
-  var TABS = ["menu", "hours", "delivery", "promo", "info", "team", "theme", "history"];
+  var TABS = ["site", "menu", "hours", "delivery", "promo", "info", "team", "theme", "history"];
 
   var rendering = false;
   function render() {
@@ -664,6 +706,16 @@
       try { localStorage.setItem(PREVIEW, "1"); } catch (e) { /* ignore */ }
       return false;   // let the link open normally
     },
+    flagPaused: function () {
+      if (!flags.paused && !confirm(t("site.pauseConfirm"))) return false;
+      setFlags({ paused: !flags.paused }); return false;
+    },
+    flagMaint: function () {
+      if (!flags.maintenance && !confirm(t("site.maintConfirm"))) return false;
+      setFlags({ maintenance: !flags.maintenance }); return false;
+    },
+    flagBusy: function (p, el) { setFlags({ busy: parseInt(el.getAttribute("data-value"), 10) }); return false; },
+    flagMsg: function () { setFlags({ message: $("[data-flag-msg]").value }); return false; },
     save: function () {
       if (saving) return false;
       saving = true;
@@ -719,6 +771,18 @@
       return false;
     }
   };
+
+  function loadFlags() {
+    return fetch("api/state.php", { cache: "no-store" }).then(function (r) { return r.json(); })
+      .then(function (st) { flags = st && st.ok ? st : null; }).catch(function () { flags = null; });
+  }
+  function setFlags(data) {
+    api("flags", data).then(function (r) {
+      if (r.httpStatus === 401) { showLogin(); return; }
+      if (!r.ok) { toast(t("site.fail")); return; }
+      flags = r.state; render(); toast(t("site.done"));
+    }).catch(function () { toast(t("site.fail")); });
+  }
 
   function clearDraft() {
     try { localStorage.removeItem(DRAFT); localStorage.removeItem(PREVIEW); } catch (e) { /* ignore */ }
@@ -804,9 +868,11 @@
           toast(t("app.draftOld"));
         }
       } else if (dropDraft) clearDraft();
-      $("[data-pin-screen]").hidden = true;
-      $("[data-app]").hidden = false;
-      render();
+      return loadFlags().then(function () {
+        $("[data-pin-screen]").hidden = true;
+        $("[data-app]").hidden = false;
+        render();
+      });
     }).catch(function () { showLogin(t("pin.server")); });
   }
 

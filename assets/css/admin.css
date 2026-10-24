@@ -213,3 +213,9 @@ body.has-savebar .toast { bottom: 110px; }
 .theme-sticker-mini { width: 54px; height: 54px; border-radius: 50%; display: grid; place-items: center; font-size: 30px; }
 .theme-opt input:checked + .theme-card { border-color: var(--red-ui); box-shadow: 0 0 0 3px rgba(200, 16, 46, .15); }
 .theme-opt input:focus-visible + .theme-card { outline: 3px solid var(--black); outline-offset: 2px; }
+
+/* ---------- site status ---------- */
+.card h3.sub { font-size: 15px; font-weight: 900; text-transform: uppercase; color: var(--red-ui); margin-top: 6px; }
+.big-switch--maint.is-on { background: #b35c00; }
+.big-switch--maint.is-off { background: #6b5e52; }
+.view-site { color: var(--cream); font-weight: 800; font-size: 14px; text-decoration: underline; text-underline-offset: 3px; }

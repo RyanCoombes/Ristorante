@@ -1,6 +1,8 @@
 <?php
-/* One-time setup: staff PIN, Telegram alerts, email. Works only while api/private/config.php
-   does not exist. To change settings later, delete that file (via FTP / file manager) and run this again. */
+/* One-time setup: the staff PIN for Gestione. Online-order alerts (Telegram, email) are
+   optional and folded away until website orders are switched on.
+   Works only while api/private/config.php does not exist. To redo it, delete that file
+   (via FTP / file manager) and open this page again. The PIN can also be changed in Gestione. */
 
 declare(strict_types=1);
 require __DIR__ . '/lib.php';
@@ -67,7 +69,7 @@ if (!$done && $_SERVER['REQUEST_METHOD'] === 'POST') {
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="robots" content="noindex, nofollow">
-<title>Configurazione ordini · Vizi Capitali</title>
+<title>Prima configurazione · Vizi Capitali</title>
 <link rel="stylesheet" href="../assets/css/style.css">
 <style>
   body { padding: 24px 16px; } main { max-width: 640px; margin: 0 auto; display: grid; gap: 16px; }
@@ -77,24 +79,28 @@ if (!$done && $_SERVER['REQUEST_METHOD'] === 'POST') {
   input { padding: 12px; border: 2px solid var(--cream-2); border-radius: 12px; font: inherit; font-size: 16px; }
   .help { font-size: 14px; color: #4f3d31; } .msg { font-weight: 800; padding: 12px; border-radius: 12px; background: #fff1b8; color: #4a3a00; }
   code { background: #eadbc0; padding: 1px 6px; border-radius: 6px; }
+  details { border-top: 1px dashed var(--cream-2); padding-top: 12px; } summary { cursor: pointer; font-weight: 800; }
+  details > div { display: grid; gap: 12px; margin-top: 12px; }
 </style>
 </head>
 <body>
 <main>
-  <h1>Configurazione ordini</h1>
+  <h1>Prima configurazione</h1>
   <?php if ($msg): ?><p class="msg"><?= htmlspecialchars($msg) ?></p><?php endif; ?>
   <?php if ($done): ?>
     <div class="box">
-      <p><strong>Configurazione completata.</strong> Apri la bacheca ordini: <a href="../ordini.html">ordini.html</a></p>
-      <p class="help">Per modificare PIN o Telegram, elimina <code>api/private/config.php</code> dal pannello dell'hosting e riapri questa pagina.</p>
+      <p><strong>Fatto.</strong> Ora entrate nella gestione del sito con il PIN: <a href="../admin.html">admin.html</a></p>
+      <p class="help">Il PIN si può cambiare da Gestione → Versioni e PIN.</p>
     </div>
   <?php else: ?>
   <form method="post" class="box">
-    <p class="help">Fallo subito dopo aver caricato il sito: finché non è configurato, chiunque apra questa pagina potrebbe impostare il PIN.</p>
+    <p class="help">Scegliete il PIN per entrare nella gestione del sito (menu, orari, temi, manutenzione). Fatelo subito dopo aver caricato il sito: finché non è impostato, chiunque apra questa pagina potrebbe sceglierlo.</p>
     <label>PIN dello staff (6 cifre)<input name="pin" type="password" inputmode="numeric" maxlength="6" required></label>
     <label>Ripeti il PIN<input name="pin2" type="password" inputmode="numeric" maxlength="6" required></label>
 
-    <h2>Avvisi su Telegram (gratis, facoltativo)</h2>
+    <details><summary>Ordini dal sito (per più avanti, facoltativo)</summary><div>
+    <p class="help">Per ora gli ordini arrivano su WhatsApp e questa parte non serve. Lasciatela vuota.</p>
+    <h2>Avvisi su Telegram</h2>
     <ol class="help">
       <li>Su Telegram apri <strong>@BotFather</strong>, scrivi <code>/newbot</code> e copia il <em>token</em> qui sotto.</li>
       <li>Crea un gruppo "Vizi Capitali Ordini" con i gemelli, aggiungi il bot e scrivi un messaggio nel gruppo. Fai lo stesso con un gruppo "Rider" se volete.</li>
@@ -111,6 +117,7 @@ if (!$done && $_SERVER['REQUEST_METHOD'] === 'POST') {
     <label>Indirizzo mittente (es. ordini@vizicapitali.it)<input name="mail_from" type="email" value="<?= $v('mail_from') ?>"></label>
     <label>Indirizzo del sito<input name="site_url" value="<?= $v('site_url', $siteDefault) ?>"></label>
     <label>Giorni dopo cui cancellare i dati dei clienti<input name="retention_days" type="number" min="1" value="<?= $v('retention_days', '30') ?>"></label>
+    </div></details>
 
     <button class="btn btn--red" name="do" value="save">Salva configurazione</button>
   </form>

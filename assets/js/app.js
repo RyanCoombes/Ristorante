@@ -980,14 +980,15 @@
     form.elements.promo.value = v;
     promoCode = v || null;
     promoDef = null;
-    if (promoCode && CHANNEL === "website") {
+    // codes are checked on the server (the list isn't public); without a server, the old list in config.js
+    if (promoCode) {
       promoDef = "checking";
       renderCart();
       var done = function (def) { if (promoCode !== v) return; promoDef = def; renderCart(); };
       fetch("api/promo.php?code=" + encodeURIComponent(v), { cache: "no-store" })
         .then(function (r) { return r.json(); })
         .then(function (j) { done(j && j.ok ? j.promo : null); })
-        .catch(function () { done(null); });
+        .catch(function () { done(undefined); });
       return;
     }
     renderCart();
@@ -1071,8 +1072,8 @@
     }
     if (!on && el) { el.remove(); document.body.style.overflow = ""; }
   }
+  // works with either ordering channel: maintenance and pause are set from Gestione
   function checkRemote() {
-    if (CHANNEL !== "website") return;
     fetch("api/state.php", { cache: "no-store" }).then(function (r) { return r.json(); }).then(function (st) {
       if (!st || !st.ok) return;
       var busy = typeof st.busy === "number" ? st.busy : null;

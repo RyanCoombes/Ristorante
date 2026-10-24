@@ -74,7 +74,7 @@ window.SITE_CONFIG = {
     "prepMinutes": 20,
     "busyExtraMinutes": 0,
     "slotMinutes": 15,
-    "channel": "website",
+    "channel": "whatsapp",
     "alertAfterMin": 5,
     "cashOptions": [
       20,
