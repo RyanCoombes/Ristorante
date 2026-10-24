@@ -10,8 +10,50 @@
 (function () {
   "use strict";
 
-  // dates are "MM-DD"; Easter moves every year, so it's worked out below
+  // dates are "MM-DD"; Easter-based holidays use days relative to Easter Sunday ("easter": [from, to]).
+  // When two overlap, the higher "priority" wins: short local days beat longer seasons.
+  // In the order of the year, which is also the order Gestione lists them in.
   var THEMES = {
+    capodanno: {
+      name: { it: "Capodanno", en: "New Year" }, title: { it: "Buon Anno", en: "Happy New Year" }, eyebrow: { it: "Edizione di mezzanotte", en: "Midnight edition" },
+      swatch: "#1b1916", from: "12-28", to: "01-06", sticker: "🥂", check: "#1b1916", particles: "glitter",
+      msg: { it: "Capodanno · Brindiamo a un nuovo anno di vizi", en: "New Year · A toast to a new year of vices" }
+    },
+    carnevale: {
+      name: { it: "Carnevale", en: "Carnival" }, title: { it: "Carnevale", en: "Carnival" }, eyebrow: { it: "A Carnevale ogni vizio vale", en: "At Carnival every vice goes" },
+      swatch: "#1c1424", easter: [-58, -47], sticker: "🎭", check: "#1c1424", particles: "glitter",
+      msg: { it: "Carnevale · A Carnevale ogni vizio vale", en: "Carnival · At Carnival every vice goes" }
+    },
+    sanvalentino: {
+      name: { it: "San Valentino", en: "Valentine's" }, title: { it: "San Valentino", en: "Valentine's Day" }, eyebrow: { it: "Edizione per due", en: "For two" },
+      swatch: "#3a0f1b", from: "02-07", to: "02-14", priority: 2, sticker: "💘", check: "#2a0e15", particles: "petals",
+      msg: { it: "San Valentino · Un vizio da condividere", en: "Valentine's Day · A vice to share" }
+    },
+    pasqua: {
+      name: { it: "Pasqua", en: "Easter" }, title: { it: "Buona Pasqua", en: "Happy Easter" }, eyebrow: { it: "Edizione di primavera", en: "Spring edition" },
+      swatch: "#3d5a40", easter: [-7, 1], sticker: "🐣", check: "#dfe7d4", particles: "blossom",   // Palm Sunday → Pasquetta
+      msg: { it: "Pasqua · Buone feste da Vizi Capitali", en: "Easter · Happy holidays from Vizi Capitali" }
+    },
+    nataleroma: {
+      name: { it: "Natale di Roma", en: "Rome's Birthday" }, title: { it: "Natale di Roma", en: "Rome's Birthday" }, eyebrow: { it: "{roman} · {age} anni", en: "{roman} · {age} years" },
+      swatch: "#7a1420", from: "04-19", to: "04-21", priority: 3, sticker: "🏛️", check: "#e6d9c2", particles: "glints",
+      msg: { it: "Natale di Roma · Tanti auguri, Roma: {age} anni", en: "Rome's Birthday · Happy {age}th birthday, Rome" }
+    },
+    repubblica: {
+      name: { it: "Festa della Repubblica", en: "Republic Day" }, title: { it: "Festa della Repubblica", en: "Republic Day" }, eyebrow: { it: "2 giugno", en: "2 June" },
+      swatch: "#1f5a3c", from: "05-30", to: "06-02", priority: 3, sticker: "🇮🇹", check: "#e3e8dc", particles: "",
+      msg: { it: "Festa della Repubblica · Buon 2 giugno da Vizi Capitali", en: "Republic Day · Happy 2 June from Vizi Capitali" }
+    },
+    pietropaolo: {
+      name: { it: "Santi Pietro e Paolo", en: "Saints Peter and Paul" }, title: { it: "Santi Pietro e Paolo", en: "Saints Peter and Paul" }, eyebrow: { it: "Festa di Roma", en: "Rome's feast day" },
+      swatch: "#8c3b1f", from: "06-27", to: "06-29", priority: 3, sticker: "🗝️", check: "#ead8c2", particles: "glints",
+      msg: { it: "Santi Pietro e Paolo · Buona festa, Roma", en: "Saints Peter and Paul · Happy feast day, Rome" }
+    },
+    ferragosto: {
+      name: { it: "Ferragosto", en: "Ferragosto" }, title: { it: "Ferragosto", en: "Ferragosto" }, eyebrow: { it: "Edizione d'estate", en: "Summer edition" },
+      swatch: "#123b63", from: "08-08", to: "08-16", sticker: "🏖️", check: "#dde7ee", particles: "",
+      msg: { it: "Ferragosto · L'estate romana ha un nuovo vizio", en: "Ferragosto · Roman summer has a new vice" }
+    },
     halloween: {
       name: { it: "Halloween", en: "Halloween" }, title: { it: "Halloween", en: "Halloween" }, eyebrow: { it: "Edizione notturna", en: "Night edition" },
       swatch: "#0b0908", from: "10-20", to: "11-01", sticker: "🎃", check: "#1d1714", particles: "embers",
@@ -21,26 +63,6 @@
       name: { it: "Natale", en: "Christmas" }, title: { it: "Buon Natale", en: "Merry Christmas" }, eyebrow: { it: "Edizione delle feste", en: "Holiday edition" },
       swatch: "#0e1f18", from: "12-01", to: "12-27", sticker: "🎄", check: "#12261d", particles: "glints",
       msg: { it: "Natale · Il vizio più prezioso è stare insieme", en: "Christmas · The most precious vice is being together" }
-    },
-    capodanno: {
-      name: { it: "Capodanno", en: "New Year" }, title: { it: "Buon Anno", en: "Happy New Year" }, eyebrow: { it: "Edizione di mezzanotte", en: "Midnight edition" },
-      swatch: "#1b1916", from: "12-28", to: "01-06", sticker: "🥂", check: "#1b1916", particles: "glitter",
-      msg: { it: "Capodanno · Brindiamo a un nuovo anno di vizi", en: "New Year · A toast to a new year of vices" }
-    },
-    sanvalentino: {
-      name: { it: "San Valentino", en: "Valentine's" }, title: { it: "San Valentino", en: "Valentine's Day" }, eyebrow: { it: "Edizione per due", en: "For two" },
-      swatch: "#3a0f1b", from: "02-07", to: "02-14", sticker: "💘", check: "#2a0e15", particles: "petals",
-      msg: { it: "San Valentino · Un vizio da condividere", en: "Valentine's Day · A vice to share" }
-    },
-    pasqua: {
-      name: { it: "Pasqua", en: "Easter" }, title: { it: "Buona Pasqua", en: "Happy Easter" }, eyebrow: { it: "Edizione di primavera", en: "Spring edition" },
-      swatch: "#3d5a40", easter: true, sticker: "🐣", check: "#dfe7d4", particles: "blossom",
-      msg: { it: "Pasqua · Buone feste da Vizi Capitali", en: "Easter · Happy holidays from Vizi Capitali" }
-    },
-    ferragosto: {
-      name: { it: "Ferragosto", en: "Ferragosto" }, title: { it: "Ferragosto", en: "Ferragosto" }, eyebrow: { it: "Edizione d'estate", en: "Summer edition" },
-      swatch: "#123b63", from: "08-08", to: "08-16", sticker: "🏖️", check: "#dde7ee", particles: "",
-      msg: { it: "Ferragosto · L'estate romana ha un nuovo vizio", en: "Ferragosto · Roman summer has a new vice" }
     }
   };
   window.VC_THEMES = THEMES;   // the Gestione page lists these
@@ -73,20 +95,37 @@
   function inRange(today, from, to) {
     return from <= to ? today >= from && today <= to : today >= from || today <= to;   // ranges can cross New Year
   }
-  /** Which theme the calendar suggests for a date (used by "Automatico"). */
+  /** This year's "MM-DD" range for a theme (Easter-based ones move). */
+  function rangeFor(id, date) {
+    var th = THEMES[id];
+    if (!th.easter) return { from: th.from, to: th.to };
+    var e = easter(Number(parts(date).year)), DAY = 864e5;
+    return { from: mmdd(new Date(e.getTime() + th.easter[0] * DAY)), to: mmdd(new Date(e.getTime() + th.easter[1] * DAY)) };
+  }
+  window.VC_themeRange = rangeFor;
+  /** Which theme the calendar suggests for a date (used by "Automatico"); on overlaps the higher priority wins. */
   function themeFor(date) {
-    var today = mmdd(date), y = Number(parts(date).year);
-    var e = easter(y), DAY = 864e5;
-    var ids = Object.keys(THEMES);
-    for (var i = 0; i < ids.length; i++) {
-      var th = THEMES[ids[i]];
-      if (th.easter) {
-        if (inRange(today, mmdd(new Date(e.getTime() - 7 * DAY)), mmdd(new Date(e.getTime() + DAY)))) return ids[i];   // Palm Sunday → Pasquetta
-      } else if (inRange(today, th.from, th.to)) return ids[i];
-    }
-    return "";
+    var today = mmdd(date), best = "", bestP = -1;
+    Object.keys(THEMES).forEach(function (id) {
+      var r = rangeFor(id, date), p = THEMES[id].priority || 0;
+      if (inRange(today, r.from, r.to) && p > bestP) { best = id; bestP = p; }
+    });
+    return best;
+  }
+  /** Rome was founded on 21 April 753 BC: its age this year, in figures and Roman numerals. */
+  function romeAge(date) {
+    var n = Number(parts(date).year) + 753, out = "", num = n;
+    [[1000, "M"], [900, "CM"], [500, "D"], [400, "CD"], [100, "C"], [90, "XC"], [50, "L"], [40, "XL"], [10, "X"], [9, "IX"], [5, "V"], [4, "IV"], [1, "I"]]
+      .forEach(function (r) { while (num >= r[0]) { out += r[1]; num -= r[0]; } });
+    return { age: n, roman: out };
+  }
+  function fill(text) {
+    var a = romeAge(new Date());
+    var en = document.documentElement.lang === "en";
+    return String(text).split("{age}").join(a.age.toLocaleString(en ? "en-GB" : "it-IT")).split("{roman}").join(a.roman);
   }
   window.VC_themeFor = themeFor;
+  window.VC_themeText = fill;
 
   // the staff pages only need the list and the calendar
   if (/(admin|ordini)\.html$/.test(location.pathname)) return;
@@ -196,6 +235,50 @@
           '<g fill="#b8963f"><circle cx="110" cy="120" r="2.4"/><circle cx="124" cy="128" r="2.4"/><circle cx="138" cy="120" r="2.4"/><circle cx="62" cy="80" r="2"/><circle cx="196" cy="132" r="2"/></g>' +
           '<path d="M20 156q110 -26 220 0" fill="none" stroke="#7a9472" stroke-width="1.6"/></svg>' + FRAME;
     },
+    carnevale: function () {
+      var g = gold();
+      return '<svg class="lx-mask" viewBox="0 0 250 170">' + g.defs +
+          '<path d="M30 70C30 44 70 34 120 44c50-10 90 0 90 26 0 26-24 42-54 38-18-2-28-14-36-14s-18 12-36 14c-30 4-54-12-54-38Z" fill="' + g.id + '" fill-opacity=".12" stroke="' + g.id + '" stroke-width="2"/>' +
+          '<path d="M62 70c8-12 30-12 38 0-8 10-30 10-38 0ZM140 70c8-12 30-12 38 0-8 10-30 10-38 0Z" fill="#0d0a12" stroke="' + g.id + '" stroke-width="1.6"/>' +
+          '<g fill="none" stroke="' + g.id + '" stroke-width="1.2"><path d="M48 88q12 8 26 2M192 88q-12 8-26 2M98 52q22-12 44 0M112 58q8-4 16 0"/>' +
+          '<path d="M196 46C214 20 226 6 240 2M190 42C202 14 208 4 218 0M200 52C224 34 236 28 248 28"/>' +
+          '<path d="M212 26l6-4M220 16l6-3M206 36l7-3M226 36l6 0M236 30l6 1"/></g>' +
+          '<path d="M206 96l26 64" stroke="' + g.id + '" stroke-width="3" stroke-linecap="round"/>' +
+          '<circle cx="120" cy="52" r="3" fill="' + g.id + '"/></svg>' + FRAME;
+    },
+    nataleroma: function () {
+      var g = foil("#e9c97a", "#b5852f", "#f2dca0", "#7a5a1e"), leaves = "";
+      // leaves along a circle, from the bottom up the left side; the right branch is its mirror image
+      for (var k = 0; k < 10; k++) {
+        var deg = 102 + k * 13, th = deg * Math.PI / 180;
+        var x = 120 + 80 * Math.cos(th), y = 112 + 80 * Math.sin(th), rot = deg + 90 - 25;
+        leaves += '<ellipse cx="' + x.toFixed(1) + '" cy="' + y.toFixed(1) + '" rx="13" ry="4.6" transform="rotate(' + rot + " " + x.toFixed(1) + " " + y.toFixed(1) + ')"/>' +
+          '<ellipse cx="' + (240 - x).toFixed(1) + '" cy="' + y.toFixed(1) + '" rx="13" ry="4.6" transform="rotate(' + (180 - rot) + " " + (240 - x).toFixed(1) + " " + y.toFixed(1) + ')"/>';
+      }
+      return '<svg class="lx-wreath" viewBox="0 0 240 220">' + g.defs +
+          '<g fill="none" stroke="' + g.id + '" stroke-width="1.4"><path d="M106 190C60 180 34 140 40 96M134 190C180 180 206 140 200 96"/></g>' +
+          '<g fill="' + g.id + '">' + leaves + "</g>" +
+          '<path d="M108 190q12 10 24 0M112 192l-10 20M128 192l10 20" fill="none" stroke="#7a1420" stroke-width="2.2"/>' +
+          '<text x="120" y="122" text-anchor="middle" font-family="Archivo, sans-serif" font-weight="800" font-size="30" letter-spacing="4" fill="#7a1420">SPQR</text></svg>' + FRAME;
+    },
+    repubblica: function () {
+      var g = gold();
+      return '<svg class="lx-trails" viewBox="0 0 1200 260" preserveAspectRatio="none"><g fill="none" stroke-linecap="round" stroke-width="16" opacity=".5">' +
+          '<path d="M520 250C700 120 900 40 1240 10" stroke="#2f7a4f"/><path d="M542 268C722 138 922 58 1262 28" stroke="#ffffff"/><path d="M564 286C744 156 944 76 1284 46" stroke="#c0303a"/></g>' +
+          '<path d="M542 268C722 138 922 58 1262 28" fill="none" stroke="#d6d2c6" stroke-width="1" opacity=".7"/></svg>' +
+        '<svg class="lx-stella" viewBox="0 0 100 100">' + g.defs + '<path d="M50 4l11 34h36l-29 21 11 35-29-21-29 21 11-35L3 38h36Z" fill="' + g.id + '"/></svg>' + FRAME;
+    },
+    pietropaolo: function () {
+      // solid metals: a gradient can't paint a perfectly straight line (the shaft)
+      var g = { id: "#c9a45c", defs: "" }, sv = { id: "#aeb3ba", defs: "" };
+      var key = function (fid) {
+        return '<g fill="none" stroke="' + fid + '" stroke-width="7" stroke-linejoin="round"><circle cx="100" cy="182" r="20"/><path d="M100 162V46"/></g>' +
+          '<path d="M100 44h28v10h-10v8h10v10h-28Z" fill="' + fid + '"/><circle cx="100" cy="182" r="6" fill="' + fid + '"/>';
+      };
+      return '<svg class="lx-keys" viewBox="0 0 200 230">' + g.defs + sv.defs +
+          '<g transform="rotate(-32 100 120)">' + key(g.id) + "</g><g transform=\"rotate(32 100 120) translate(200 0) scale(-1 1)\">" + key(sv.id) + "</g>" +
+          "</svg>" + FRAME;
+    },
     ferragosto: function () {
       return '<div class="lx-sun"></div>' +
         '<svg class="lx-umbrella" viewBox="0 0 240 280"><g transform="rotate(-10 120 120)">' +
@@ -227,11 +310,12 @@
     var title = null;
     function renderBanner() {
       var L = lang();
-      if (title) title.innerHTML = '<span class="lx-eyebrow">' + theme.eyebrow[L] + '</span><span class="lx-word">' + theme.title[L] + "</span>";
+      if (title) title.innerHTML = '<span class="lx-eyebrow">' + fill(theme.eyebrow[L]) + '</span><span class="lx-word' +
+        (theme.title[L].length > 14 ? " lx-word--long" : "") + '">' + theme.title[L] + "</span>";
       if (!annOn) return;
       banner.setAttribute("aria-label", L === "en" ? "News" : "Avviso");
       var custom = ann.text && (ann.text[L] || ann.text.it);
-      var msg = custom || (theme ? (settings.messages && settings.messages[id] && settings.messages[id][L]) || theme.msg[L] : "");
+      var msg = custom || (theme ? (settings.messages && settings.messages[id] && settings.messages[id][L]) || fill(theme.msg[L]) : "");
       banner.innerHTML = "";
       if (msg) { var s = document.createElement("span"); s.textContent = msg; banner.appendChild(s); }
       if (ann.code) {

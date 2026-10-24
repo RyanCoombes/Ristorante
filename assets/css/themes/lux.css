@@ -51,6 +51,35 @@ html[data-theme="ferragosto"] {
   --check-color: #dde7ee;
 }
 
+html[data-theme="carnevale"] {
+  --lx-bg: #0d0a12; --lx-bg-2: #160f1d; --lx-panel: #17111f; --lx-line: rgba(214, 178, 94, .3);
+  --lx-accent: #d6b25e; --lx-script: #f0dca4; --lx-text: #f1ebf5; --lx-muted: #bdb2c6; --lx-on-accent: #140f08;
+  --lx-glow: rgba(110, 40, 140, .5); --lx-glow-2: rgba(214, 178, 94, .16);
+  --lx-foil: linear-gradient(115deg, #8a6a2e 0%, #f6e3ad 30%, #d6b25e 48%, #fff1c2 60%, #9b7a3a 82%);
+  --check-color: #1c1424;
+}
+html[data-theme="nataleroma"] {
+  --lx-bg: #f5f0e6; --lx-bg-2: #ece4d4; --lx-panel: #fbf8f2; --lx-line: rgba(122, 20, 32, .22);
+  --lx-accent: #7a1420; --lx-script: #8a6a22; --lx-text: #2a2220; --lx-muted: #5e544a; --lx-on-accent: #f8f2e6;
+  --lx-glow: rgba(200, 160, 90, .35); --lx-glow-2: rgba(122, 20, 32, .1);
+  --lx-foil: linear-gradient(115deg, #5c0f18 0%, #9e2230 35%, #7a1420 55%, #b5852f 70%, #5c0f18 90%);
+  --check-color: #e6d9c2;
+}
+html[data-theme="repubblica"] {
+  --lx-bg: #f7f4ec; --lx-bg-2: #eef0e8; --lx-panel: #fcfbf6; --lx-line: rgba(31, 90, 60, .22);
+  --lx-accent: #1f5a3c; --lx-script: #a3242f; --lx-text: #1f2420; --lx-muted: #4f564f; --lx-on-accent: #f7f4ec;
+  --lx-glow: rgba(163, 36, 47, .14); --lx-glow-2: rgba(31, 90, 60, .14);
+  --lx-foil: linear-gradient(115deg, #1f5a3c 0%, #2f7a52 30%, #b9984a 50%, #a3242f 70%, #7e1a23 90%);
+  --check-color: #e3e8dc;
+}
+html[data-theme="pietropaolo"] {
+  --lx-bg: #f6efe4; --lx-bg-2: #efe3d1; --lx-panel: #fcf8f1; --lx-line: rgba(140, 59, 31, .24);
+  --lx-accent: #8c3b1f; --lx-script: #8a6a22; --lx-text: #2b211b; --lx-muted: #5f5145; --lx-on-accent: #faf3e8;
+  --lx-glow: rgba(205, 120, 70, .3); --lx-glow-2: rgba(180, 140, 60, .16);
+  --lx-foil: linear-gradient(115deg, #6e2c15 0%, #b0562e 32%, #8c3b1f 52%, #c9a45c 70%, #6e2c15 92%);
+  --check-color: #ead8c2;
+}
+
 /* ---------- shared treatment ---------- */
 html.lux body { background: var(--lx-bg); color: var(--lx-text); }
 html.lux .site-header,
@@ -300,3 +329,22 @@ html.lux .cart .cart-total { border-top-color: var(--lx-accent); }
 html.lux .cart .mode-info, html.lux .cart .review-details dt { color: var(--lx-muted); }
 html.lux .cart .review-details dd { color: var(--lx-text); }
 html.lux .btn--wa, html.lux .btn--wa:hover { color: #0d0d0d; }   /* WhatsApp green keeps its dark label on every theme */
+
+/* ---------- local holidays ---------- */
+/* Carnevale: a Venetian mask */
+.lx-mask { z-index: 2; right: 30%; top: 110px; width: 280px; filter: drop-shadow(0 0 16px rgba(214, 178, 94, .35)); }
+/* Natale di Roma: laurel wreath with SPQR */
+.lx-wreath { z-index: 2; right: 33%; top: 100px; width: 230px; filter: drop-shadow(0 10px 18px rgba(122, 20, 32, .18)); }
+/* Festa della Repubblica: tricolour trails across the sky, the Stella d'Italia */
+.lx-trails { z-index: 1; left: 0; top: 60px; width: 100%; height: 260px; filter: blur(1px); }
+.lx-word--long { font-size: clamp(38px, 4.4vw, 62px); }
+.lx-stella { z-index: 2; right: 8%; top: 130px; width: 90px; filter: drop-shadow(0 8px 14px rgba(120, 90, 30, .3)); }
+/* Santi Pietro e Paolo: the crossed keys, gold and silver */
+.lx-keys { z-index: 2; right: 32%; top: 90px; width: 250px; filter: drop-shadow(0 10px 18px rgba(110, 44, 21, .25)); }
+html[data-theme="repubblica"] .theme-banner { border-top: 3px solid; border-image: linear-gradient(90deg, #2f7a4f 0 33%, #fff 33% 66%, #c0303a 66%) 1; }
+
+@media (max-width: 820px) {
+  .lx-mask, .lx-wreath, .lx-keys, .lx-stella { top: auto; bottom: 200px; right: 6%; width: 120px; }
+  .lx-stella { width: 64px; }
+  .lx-trails { top: 40px; height: 160px; }
+}

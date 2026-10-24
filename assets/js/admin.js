@@ -69,7 +69,8 @@
       "theme.off": "Nessun tema", "theme.offSub": "Il sito di sempre", "theme.auto": "Automatico", "theme.autoSub": "Cambia da solo con le feste",
       "theme.today": "Oggi: {name}", "theme.todayNone": "Oggi: nessuna festa",
       "theme.halloween": "Halloween", "theme.natale": "Natale", "theme.capodanno": "Capodanno", "theme.sanvalentino": "San Valentino",
-      "theme.pasqua": "Pasqua", "theme.ferragosto": "Ferragosto", "theme.dates": "dal {from} al {to}", "theme.easter": "settimana di Pasqua",
+      "theme.pasqua": "Pasqua", "theme.ferragosto": "Ferragosto", "theme.carnevale": "Carnevale", "theme.nataleroma": "Natale di Roma",
+      "theme.repubblica": "Festa della Repubblica", "theme.pietropaolo": "Santi Pietro e Paolo", "theme.dates": "dal {from} al {to}", "theme.easter": "settimana di Pasqua",
       "theme.effects": "Decorazioni animate (scintille, petali…)", "theme.effectsHelp": "Non compaiono a chi ha disattivato le animazioni sul telefono.",
       "theme.msg": "Messaggio di auguri · {name}", "theme.msgHelp": "Lasciate vuoto per usare il testo proposto (grigio).",
       "theme.previewHint": "Per vederlo prima di pubblicarlo usate Anteprima nella barra in basso.",
@@ -167,7 +168,8 @@
       "theme.off": "No theme", "theme.offSub": "The usual site", "theme.auto": "Automatic", "theme.autoSub": "Changes by itself with the holidays",
       "theme.today": "Today: {name}", "theme.todayNone": "Today: no holiday",
       "theme.halloween": "Halloween", "theme.natale": "Christmas", "theme.capodanno": "New Year", "theme.sanvalentino": "Valentine's Day",
-      "theme.pasqua": "Easter", "theme.ferragosto": "Ferragosto", "theme.dates": "{from} to {to}", "theme.easter": "Easter week",
+      "theme.pasqua": "Easter", "theme.ferragosto": "Ferragosto", "theme.carnevale": "Carnival", "theme.nataleroma": "Rome's Birthday",
+      "theme.repubblica": "Republic Day", "theme.pietropaolo": "Saints Peter and Paul", "theme.dates": "{from} to {to}", "theme.easter": "Easter week",
       "theme.effects": "Animated decorations (sparkles, petals…)", "theme.effectsHelp": "They don't appear for people who have turned off animations on their phone.",
       "theme.msg": "Greeting · {name}", "theme.msgHelp": "Leave empty to use the suggested text (in grey).",
       "theme.previewHint": "To see it before publishing, use Preview in the bar at the bottom.",
@@ -464,7 +466,8 @@
       var today = window.VC_themeFor ? window.VC_themeFor(new Date()) : "";
       var mode = th.mode || "off";
       var shown = mode === "auto" ? today : THEMES[mode] ? mode : "";
-      var greet = shown ? THEMES[shown].msg : null;
+      var fillText = window.VC_themeText || function (x) { return x; };
+      var greet = shown ? { it: fillText(THEMES[shown].msg.it), en: fillText(THEMES[shown].msg.en) } : null;
       var dm = function (x) { var p = x.split("-"); return parseInt(p[1], 10) + "/" + parseInt(p[0], 10); };
       var opt = function (value, title, sub, sticker, color) {
         return '<label class="theme-opt"><input type="radio" name="theme-mode" value="' + value + '" data-bind="config.theme.mode" data-kind="text"' +
@@ -483,7 +486,8 @@
         opt("auto", t("theme.auto"), today ? t("theme.today", { name: t("theme." + today) }) : t("theme.todayNone"), "📅") +
         ids.map(function (id) {
           var x = THEMES[id];
-          return opt(id, t("theme." + id), x.easter ? t("theme.easter") : t("theme.dates", { from: dm(x.from), to: dm(x.to) }), x.sticker, x.swatch || x.check);
+          var r = window.VC_themeRange ? window.VC_themeRange(id, new Date()) : x;   // Easter-based ones: this year's dates
+          return opt(id, t("theme." + id), t("theme.dates", { from: dm(r.from), to: dm(r.to) }), x.sticker, x.swatch || x.check);
         }).join("") + "</div>" +
         tick("config.theme.title", th.title !== false, t("theme.showTitle")) + '<p class="help">' + esc(t("theme.showTitleHelp")) + "</p>" +
         tick("config.theme.effects", th.effects !== false, t("theme.effects")) + '<p class="help">' + esc(t("theme.effectsHelp")) + "</p>" +
