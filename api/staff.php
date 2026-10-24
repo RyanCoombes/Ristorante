@@ -112,6 +112,12 @@ switch ($action) {
         if (array_key_exists('maintenance', $in)) set_flag('maintenance', $in['maintenance'] ? '1' : '');
         if (array_key_exists('message', $in)) set_flag('message', str($in['message'], 200));
         if (array_key_exists('busy', $in)) set_flag('busy', (string) max(0, min(90, (int) $in['busy'])));
+        if (array_key_exists('soon_pin', $in)) {
+            $pin = str($in['soon_pin'], 12);
+            if (!preg_match('/^\d{4,8}$/', $pin)) fail('bad_pin', 422);
+            set_flag('soon_pin', password_hash($pin, PASSWORD_DEFAULT));
+        }
+        if (array_key_exists('soon', $in)) set_flag('soon', $in['soon'] ? '1' : '');
         json_out(['ok' => true, 'state' => site_state()]);
     }
 

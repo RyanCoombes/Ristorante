@@ -29,6 +29,8 @@ if (!$done && $_SERVER['REQUEST_METHOD'] === 'POST') {
         $pin = (string) ($_POST['pin'] ?? '');
         if (!preg_match('/^\d{6}$/', $pin) || $pin !== ($_POST['pin2'] ?? '')) {
             $msg = 'Il PIN deve avere 6 cifre e coincidere.';
+        } elseif (($p = trim((string) ($_POST['preview_pin'] ?? ''))) !== '' && !preg_match('/^\d{4,8}$/', $p)) {
+            $msg = 'Il codice di anteprima deve avere da 4 a 8 cifre.';
         } else {
             $cfg = [
                 'pin_hash' => password_hash($pin, PASSWORD_DEFAULT),
@@ -42,6 +44,10 @@ if (!$done && $_SERVER['REQUEST_METHOD'] === 'POST') {
                 'retention_days' => max(1, (int) ($_POST['retention_days'] ?? 30)),
             ];
             if (!is_dir(PRIVATE_DIR)) mkdir(PRIVATE_DIR, 0750, true);
+            // "Apriamo presto" until the site is opened from Gestione; the preview PIN lets friends in
+            set_flag('soon', isset($_POST['soon']) ? '1' : '');
+            $preview = trim((string) ($_POST['preview_pin'] ?? ''));
+            if (preg_match('/^\d{4,8}$/', $preview)) set_flag('soon_pin', password_hash($preview, PASSWORD_DEFAULT));
             file_put_contents(PRIVATE_DIR . '/config.php', "<?php\n// Created by api/setup.php. Delete this file to run setup again.\nreturn " . var_export($cfg, true) . ";\n");
             @chmod(PRIVATE_DIR . '/config.php', 0640);
             // starting point for the Gestione page: today's menu and settings, promo codes moved out of public view
@@ -81,6 +87,7 @@ if (!$done && $_SERVER['REQUEST_METHOD'] === 'POST') {
   code { background: #eadbc0; padding: 1px 6px; border-radius: 6px; }
   details { border-top: 1px dashed var(--cream-2); padding-top: 12px; } summary { cursor: pointer; font-weight: 800; }
   details > div { display: grid; gap: 12px; margin-top: 12px; }
+  .check { display: flex; align-items: center; gap: 10px; } .check input { width: 22px; height: 22px; accent-color: var(--red-ui); }
 </style>
 </head>
 <body>
@@ -90,6 +97,7 @@ if (!$done && $_SERVER['REQUEST_METHOD'] === 'POST') {
   <?php if ($done): ?>
     <div class="box">
       <p><strong>Fatto.</strong> Ora entrate nella gestione del sito con il PIN: <a href="../admin.html">admin.html</a></p>
+      <?php if (flag('soon') === '1'): ?><p class="help">Il sito mostra «Apriamo presto». Quando siete pronti: Gestione → Stato del sito → Prossimamente.</p><?php endif; ?>
       <p class="help">Il PIN si può cambiare da Gestione → Versioni e PIN.</p>
     </div>
   <?php else: ?>
@@ -97,6 +105,11 @@ if (!$done && $_SERVER['REQUEST_METHOD'] === 'POST') {
     <p class="help">Scegliete il PIN per entrare nella gestione del sito (menu, orari, temi, manutenzione). Fatelo subito dopo aver caricato il sito: finché non è impostato, chiunque apra questa pagina potrebbe sceglierlo.</p>
     <label>PIN dello staff (6 cifre)<input name="pin" type="password" inputmode="numeric" maxlength="6" required></label>
     <label>Ripeti il PIN<input name="pin2" type="password" inputmode="numeric" maxlength="6" required></label>
+
+    <h2>Prima dell'apertura</h2>
+    <label class="check"><input type="checkbox" name="soon" value="1" checked> Mostra «Apriamo presto» al posto del sito</label>
+    <p class="help">Il sito vero lo vede solo chi ha il codice di anteprima (da dare ad amici e collaboratori) e voi, entrati in Gestione. Lo aprite a tutti da Gestione → Stato del sito.</p>
+    <label>Codice di anteprima (4–8 cifre, facoltativo)<input name="preview_pin" inputmode="numeric" maxlength="8" autocomplete="off" value="<?= $v('preview_pin') ?>"></label>
 
     <details><summary>Ordini dal sito (per più avanti, facoltativo)</summary><div>
     <p class="help">Per ora gli ordini arrivano su WhatsApp e questa parte non serve. Lasciatela vuota.</p>

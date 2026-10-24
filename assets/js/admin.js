@@ -53,6 +53,13 @@
       "site.msg": "Messaggio della pagina di manutenzione (facoltativo)", "site.msgPh": "Es. Siamo in ferie fino al 25 agosto. A presto!",
       "site.msgSave": "Salva messaggio", "site.done": "Fatto: il sito è aggiornato.", "site.fail": "Non riuscito. Riprova.",
       "site.unknown": "Non riesco a leggere lo stato del sito. Ricarica la pagina.",
+      "soon.title": "Prossimamente", "soon.on": "Sito nascosto", "soon.off": "Sito aperto a tutti",
+      "soon.help": "Quando è attivo, chi apre il sito vede «Apriamo presto» con il link a Instagram. Il sito vero lo vede chi inserisce il codice di anteprima, e voi da questo dispositivo perché siete entrati in Gestione.",
+      "soon.openConfirm": "Aprire il sito a tutti? Da ora chiunque vedrà il menu e potrà ordinare.",
+      "soon.hideConfirm": "Nascondere il sito? I clienti vedranno solo «Apriamo presto».",
+      "soon.pin": "Codice di anteprima (4–8 cifre)", "soon.pinSet": "Codice impostato ✓. Scrivetene uno nuovo per cambiarlo: chi usava quello vecchio dovrà inserire il nuovo.",
+      "soon.pinNone": "Nessun codice: il sito vero lo vedete solo voi.", "soon.pinSave": "Salva codice", "soon.pinBad": "Il codice deve avere da 4 a 8 cifre.",
+      "soon.view": "Vedi «Apriamo presto» come un cliente: apri il sito in una finestra anonima.",
       "tab.hours": "Orari e tempi", "tab.promo": "Sconti", "tab.history": "Versioni e PIN",
       "tab.pay": "Pagamenti online", "pay.title": "Pagamenti online con SumUp",
       "pay.help": "Già pronti, ma spenti. Quando SumUp vi dà le chiavi API, inseritele qui: i clienti potranno pagare subito con carta, Apple Pay o Google Pay sulla pagina sicura di SumUp, e i soldi arrivano sul vostro conto SumUp.",
@@ -136,6 +143,9 @@
       "info.phone": "Telefono", "info.email": "Email", "info.instagram": "Instagram (senza @)",
       "info.street": "Via e numero", "info.city": "CAP e città", "info.maps": "Testo per la mappa",
       "info.search": "Città per la ricerca indirizzi",
+      "legal.title": "Dati dell'impresa (pagine legali)", "legal.help": "Compaiono in fondo al sito e nelle pagine Privacy e Note legali. La partita IVA va mostrata sul sito per legge. Ve li dà il commercialista.",
+      "legal.company": "Ragione sociale (es. Vizi Capitali S.r.l.)", "legal.vat": "Partita IVA (11 cifre)", "legal.seat": "Sede legale (via, CAP, città)",
+      "legal.rea": "Numero REA (es. RM-1234567)", "legal.pec": "PEC", "legal.privacyEmail": "Email per richieste privacy (se vuota: quella dei contatti)",
       "team.title": "La squadra", "team.name": "Nome", "team.role": "Ruolo", "team.bio": "Una frase",
       "team.photo": "Foto (verticale)", "team.add": "+ Aggiungi persona",
       "common.remove": "Elimina", "common.up": "Su", "common.down": "Giù", "common.it": "Italiano", "common.en": "Inglese",
@@ -174,6 +184,13 @@
       "site.msg": "Message on the maintenance page (optional)", "site.msgPh": "E.g. We're on holiday until 25 August. See you soon!",
       "site.msgSave": "Save message", "site.done": "Done: the site is updated.", "site.fail": "Didn't work. Please try again.",
       "site.unknown": "Can't read the site status. Reload the page.",
+      "soon.title": "Coming soon", "soon.on": "Site hidden", "soon.off": "Site open to everyone",
+      "soon.help": "While on, visitors see \"Opening soon\" with a link to Instagram. The real site is shown to anyone who enters the preview code, and to you on this device because you're logged in to Gestione.",
+      "soon.openConfirm": "Open the site to everyone? From now on anyone can see the menu and order.",
+      "soon.hideConfirm": "Hide the site? Customers will only see \"Opening soon\".",
+      "soon.pin": "Preview code (4–8 digits)", "soon.pinSet": "Code set ✓. Type a new one to change it: people using the old one will need the new one.",
+      "soon.pinNone": "No code: only you can see the real site.", "soon.pinSave": "Save code", "soon.pinBad": "The code must have 4 to 8 digits.",
+      "soon.view": "To see \"Opening soon\" as a customer, open the site in a private window.",
       "tab.hours": "Hours & timing", "tab.promo": "Promos", "tab.history": "Versions & PIN",
       "tab.pay": "Online payments", "pay.title": "Online payments with SumUp",
       "pay.help": "Ready, but switched off. When SumUp gives you the API keys, enter them here: customers can then pay straight away by card, Apple Pay or Google Pay on SumUp's secure page, and the money goes to your SumUp account.",
@@ -257,6 +274,9 @@
       "info.phone": "Phone", "info.email": "Email", "info.instagram": "Instagram (without @)",
       "info.street": "Street and number", "info.city": "Postcode and city", "info.maps": "Text for the map",
       "info.search": "City used for address lookups",
+      "legal.title": "Business details (legal pages)", "legal.help": "Shown at the bottom of the site and on the Privacy and Legal notice pages. Italian law requires the VAT number on the site. Your accountant has these.",
+      "legal.company": "Company name (e.g. Vizi Capitali S.r.l.)", "legal.vat": "VAT number (11 digits)", "legal.seat": "Registered office (street, postcode, city)",
+      "legal.rea": "REA number (e.g. RM-1234567)", "legal.pec": "PEC (certified email)", "legal.privacyEmail": "Email for privacy requests (if empty: the contact email)",
       "team.title": "The team", "team.name": "Name", "team.role": "Role", "team.bio": "One line",
       "team.photo": "Photo (portrait)", "team.add": "+ Add person",
       "common.remove": "Delete", "common.up": "Up", "common.down": "Down", "common.it": "Italian", "common.en": "English",
@@ -465,11 +485,17 @@
 
     info: function () {
       state.config.address = state.config.address || {};
+      state.config.legal = state.config.legal || {};
       return '<section class="card"><h2>' + esc(t("info.title")) + '</h2><div class="grid2">' +
         field(t("info.whatsapp"), "config.whatsapp", "digits") + field(t("info.phone"), "config.phone") +
         field(t("info.email"), "config.email") + field(t("info.instagram"), "config.instagram") +
         field(t("info.street"), "config.address.street") + field(t("info.city"), "config.address.city") +
         field(t("info.maps"), "config.address.mapsQuery") + field(t("info.search"), "config.address.searchArea") +
+        "</div></section>" +
+        '<section class="card"><h2>' + esc(t("legal.title")) + '</h2><p class="help">' + esc(t("legal.help")) + '</p><div class="grid2">' +
+        field(t("legal.company"), "config.legal.company") + field(t("legal.vat"), "config.legal.vat", "digits") +
+        field(t("legal.seat"), "config.legal.seat") + field(t("legal.rea"), "config.legal.rea") +
+        field(t("legal.pec"), "config.legal.pec") + field(t("legal.privacyEmail"), "config.legal.privacyEmail") +
         "</div></section>";
     },
 
@@ -489,7 +515,16 @@
     site: function () {
       if (!flags) return '<section class="card"><p class="help">' + esc(t("site.unknown")) + "</p></section>";
       var open = !flags.paused, busy = flags.busy || 0, m = flags.maintenance;
+      var soon = !!flags.soon;
       return '<section class="card"><h2>' + esc(t("site.title")) + '</h2><p class="help">' + esc(t("site.help")) + "</p></section>" +
+        '<section class="card"><h2>' + esc(t("soon.title")) + "</h2>" +
+          '<button type="button" class="big-switch big-switch--maint ' + (soon ? "is-on" : "is-off") + '" data-act="flagSoon" data-path="" aria-pressed="' + soon + '">' +
+          '<span class="knob"></span><strong>' + esc(soon ? t("soon.on") : t("soon.off")) + "</strong></button>" +
+          '<p class="help">' + esc(t("soon.help")) + "</p>" +
+          '<label class="f"><span>' + esc(t("soon.pin")) + '</span><input type="text" inputmode="numeric" maxlength="8" autocomplete="off" data-soon-pin></label>' +
+          '<p class="help">' + esc(flags.soonPin ? t("soon.pinSet") : t("soon.pinNone")) + "</p>" +
+          '<button type="button" class="btn btn--outline btn--sm" data-act="soonPin" data-path="">' + esc(t("soon.pinSave")) + "</button>" +
+          '<p class="muted">' + esc(t("soon.view")) + "</p></section>" +
         '<section class="card"><h2>' + esc(t("site.orders")) + "</h2>" +
           '<button type="button" class="big-switch ' + (open ? "is-on" : "is-off") + '" data-act="flagPaused" data-path="" aria-pressed="' + open + '">' +
           '<span class="knob"></span><strong>' + esc(open ? t("site.ordersOn") : t("site.ordersOff")) + "</strong></button>" +
@@ -822,6 +857,15 @@
     },
     flagBusy: function (p, el) { setFlags({ busy: parseInt(el.getAttribute("data-value"), 10) }); return false; },
     flagMsg: function () { setFlags({ message: $("[data-flag-msg]").value }); return false; },
+    flagSoon: function () {
+      if (!confirm(t(flags.soon ? "soon.openConfirm" : "soon.hideConfirm"))) return false;
+      setFlags({ soon: !flags.soon }); return false;
+    },
+    soonPin: function () {
+      var v = $("[data-soon-pin]").value.trim();
+      if (!/^\d{4,8}$/.test(v)) { toast(t("soon.pinBad")); return false; }
+      setFlags({ soon_pin: v }); return false;
+    },
     save: function () {
       if (saving) return false;
       saving = true;

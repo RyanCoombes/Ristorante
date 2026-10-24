@@ -174,7 +174,7 @@
     // same version as the page's own files, so an update is never mixed with an old cached copy
     var ver = (document.querySelector('script[src*="themes.js?v="]') || { src: "" }).src.split("?v=")[1] || "";
     addStylesheet("assets/css/themes/lux.css" + (ver ? "?v=" + ver : ""));
-    if (id === "nataleroma") addStylesheet("https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700&display=swap");   // Roman capitals for S·P·Q·R
+    if (id === "nataleroma") addStylesheet("assets/fonts/cinzel.css" + (ver ? "?v=" + ver : ""));   // Roman capitals for S·P·Q·R
   }
   if (!theme && !annOn) return;
 

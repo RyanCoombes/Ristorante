@@ -6,3 +6,10 @@
   </FilesMatch>
 </IfModule>
 Options -Indexes
+
+# Every visit to the public pages goes through api/gate.php, which shows "Apriamo presto"
+# while the site is hidden behind the preview PIN (Gestione → Stato del sito → Prossimamente).
+<IfModule mod_rewrite.c>
+  RewriteEngine On
+  RewriteRule ^(index\.html|ordine\.html)?$ api/gate.php?vc_page=$1 [L,QSA]
+</IfModule>

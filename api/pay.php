@@ -75,6 +75,7 @@ switch ((string) ($in['action'] ?? '')) {
         if (!empty($in['website'])) fail('spam');
         rate_limit('pay', 6, 600);
         if (site_state()['maintenance']) fail('maintenance', 503);
+        if (!preview_allowed()) fail('closed', 409);
         if (!ordering_period()) fail(site_state()['paused'] ? 'paused' : 'closed', 409);
 
         $row = build_order($in, true);

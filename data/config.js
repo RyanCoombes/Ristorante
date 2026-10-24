@@ -9,6 +9,14 @@ window.SITE_CONFIG = {
   "phone": "+39 000 000 0000",
   "email": "ciao@vizicapitali.it",
   "instagram": "vizi_capitali_",
+  "legal": {
+    "company": "",
+    "vat": "",
+    "seat": "",
+    "rea": "",
+    "pec": "",
+    "privacyEmail": ""
+  },
   "address": {
     "street": "Via del Vizio, 7",
     "city": "00100 Roma (RM)",

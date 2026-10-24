@@ -179,13 +179,35 @@
     var q = encodeURIComponent(addr.mapsQuery || [addr.street, addr.city].join(", "));
     var dir = $("[data-directions]");
     if (dir) dir.href = "https://www.google.com/maps/dir/?api=1&destination=" + q;
+    mapSrc = "https://www.google.com/maps?q=" + q + "&hl=" + lang + "&output=embed";
     var map = $("[data-map]");
-    var mapSrc = "https://www.google.com/maps?q=" + q + "&hl=" + lang + "&output=embed";
     if (map && map.getAttribute("src") !== mapSrc) map.setAttribute("src", mapSrc);
+    else if (!map && load(STORE_MAP, false)) showMap();
 
     var year = $("[data-year]");
     if (year) year.textContent = new Date().getFullYear();
   }
+
+  // Google Maps only after a tap (remembered on this device), so Google gets nothing until then
+  var STORE_MAP = "vc-map";
+  var mapSrc = "";
+  function showMap() {
+    var box = $("[data-map-box]");
+    if (!box || $("[data-map]")) return;
+    var f = document.createElement("iframe");
+    f.setAttribute("data-map", "");
+    f.title = t("map.title");
+    f.loading = "lazy";
+    f.referrerPolicy = "no-referrer-when-downgrade";
+    f.src = mapSrc;
+    box.innerHTML = "";
+    box.appendChild(f);
+  }
+  document.addEventListener("click", function (e) {
+    if (!e.target.closest("[data-map-load]")) return;
+    save(STORE_MAP, true);
+    showMap();
+  });
 
   // ---------- team ----------
   var MASCOTS = ["assets/img/mascot-welcome.png", "assets/img/mascot-peel-cream.png"];
@@ -972,8 +994,19 @@
   }
 
   // ---------- render everything for the current language ----------
+  // footer: business details (Italian law wants the VAT number on the site) and the legal pages
+  function renderLegal() {
+    var L = CONFIG.legal || {};
+    var parts = [L.company, L.seat, L.vat ? t("footer.vat") + " " + L.vat : ""].filter(Boolean);
+    var line = $("[data-legal-line]");
+    line.hidden = !parts.length;
+    line.textContent = parts.join(" · ");
+    $$("[data-legal-href]").forEach(function (a) { a.href = a.getAttribute("data-legal-href") + (lang === "en" ? "?lang=en" : ""); });
+  }
+
   function renderAll() {
     applyStaticText();
+    renderLegal();
     renderStatus();
     renderHours();
     renderContact();

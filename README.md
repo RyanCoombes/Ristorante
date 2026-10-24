@@ -37,6 +37,28 @@ Gli ordini per ora arrivano su **WhatsApp**: il cliente prepara l'ordine sul sit
 - **Nome della festa** sopra il logo (es. «31 ottobre · Halloween»): si spegne da Temi e avvisi.
 - **Etichetta speciale sui piatti** (Menu → piatto): *Speciale della festa* (es. «Speciale Halloween», visibile solo con un tema attivo), *Edizione limitata*, oppure un testo vostro (es. «Speciale Derby»). Il piatto viene messo in evidenza.
 
+### Prossimamente (sito nascosto fino all'apertura)
+
+Finché non siete pronti, chi apre il sito vede la pagina **«Apriamo presto»** (logo, link a Instagram, indirizzo). Il sito vero lo vedono:
+- chi inserisce il **codice di anteprima** (4–8 cifre, da dare ad amici e collaboratori; resta valido 30 giorni su quel dispositivo);
+- voi, su qualsiasi dispositivo con cui siete entrati in Gestione.
+
+Si accende e si spegne da **Gestione → Stato del sito → Prossimamente**, dove si cambia anche il codice (chi aveva quello vecchio dovrà inserire il nuovo). Alla prima installazione (`api/setup.php`) è già attiva e potete scegliere subito il codice.
+
+È il server a decidere (file `api/gate.php`, attivato da `.htaccess`), quindi il sito non si vede nemmeno guardando il codice della pagina. Mentre è attivo non si possono inviare ordini al server. Le pagine Privacy e Note legali restano visibili.
+
+> Dopo il caricamento su Hostinger controllate una volta da una finestra anonima che compaia «Apriamo presto». Se invece compare il sito, l'hosting non sta leggendo `.htaccess`: ditelo a chi gestisce il sito.
+
+### Privacy, note legali e dati dell'impresa
+
+In fondo al sito ci sono i link **Privacy e cookie** (`privacy.html`) e **Note legali** (`note-legali.html`), in italiano e inglese.
+- I dati dell'impresa (ragione sociale, sede, **partita IVA**, REA, PEC, email per la privacy) si inseriscono in **Gestione → Contatti → Dati dell'impresa**. Compaiono in fondo al sito e nelle due pagine; finché mancano, le pagine mostrano «da completare» in giallo. La partita IVA sul sito è obbligatoria per legge.
+- I testi sono una base scritta sul funzionamento reale del sito, **non una consulenza legale**: fateli rileggere al commercialista o a un consulente privacy prima dell'apertura, e aggiornateli se attivate ordini dal sito, pagamenti online o Telegram.
+- Il sito non usa cookie di profilazione o statistiche, quindi non serve il banner dei cookie. Per questo:
+  - i caratteri (Archivo, Yellowtail, Cinzel) sono sul vostro server in `assets/fonts/`, non su Google;
+  - la mappa di Google si carica solo se il cliente preme **Mostra la mappa**.
+  Se in futuro aggiungete statistiche (es. Google Analytics), pixel di Facebook o simili, servirà il banner con il consenso.
+
 ### Pagamenti online con SumUp (pronti, spenti)
 
 In **Gestione → Pagamenti online** c'è tutto il necessario per far pagare i clienti subito, sulla pagina sicura di SumUp (carta, Apple Pay, Google Pay). Finché non lo attivate, il sito resta com'è: «paghi alla consegna o al ritiro».
@@ -232,6 +254,10 @@ assets/js/app.js      menu, language switch, basket, checkout
 assets/js/themes.js   seasonal themes + top strip (Gestione → Temi e avvisi)
 assets/css/themes/    lux.css: the luxury look shared by all themes, one palette each
 ordine.html           customer's live order page (status, cancel)
+privacy.html          privacy & cookie policy (IT/EN), filled from Gestione → Contatti
+note-legali.html      legal notice + ordering terms (IT/EN)
+api/gate.php          "Apriamo presto" gate in front of index/ordine (via .htaccess)
+assets/fonts/         self-hosted fonts (no Google requests)
 ordini.html           staff: orders board (PIN), status menu, archive
 admin.html            staff: management (menu, hours, delivery, promos, versions, PIN)
 api/                  PHP + SQLite backend (orders, Telegram, staff, admin saves)

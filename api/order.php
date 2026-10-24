@@ -14,6 +14,7 @@ if (!empty($in['website'])) fail('spam');            // honeypot field, invisibl
 rate_limit('order', 6, 600);
 
 if (site_state()['maintenance']) fail('maintenance', 503);
+if (!preview_allowed()) fail('closed', 409);           // "Prossimamente": only people with the preview PIN
 $period = ordering_period();
 if (!$period) fail(site_state()['paused'] ? 'paused' : 'closed', 409);
 

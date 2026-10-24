@@ -162,13 +162,18 @@ function client_ip(): string { return substr($_SERVER['REMOTE_ADDR'] ?? '0', 0, 
 
 /** Allows at most $max hits of $kind per IP in $window seconds. */
 function rate_limit(string $kind, int $max, int $window): void {
+    if (!rate_ok($kind, $max, $window)) fail('rate_limited', 429);
+}
+/** Same as rate_limit(), for pages that answer in HTML instead of JSON. */
+function rate_ok(string $kind, int $max, int $window): bool {
     $db = db();
     $now = time();
     $db->prepare('DELETE FROM hits WHERE ts < ?')->execute([$now - 86400]);
     $q = $db->prepare('SELECT COUNT(*) FROM hits WHERE kind = ? AND ip = ? AND ts > ?');
     $q->execute([$kind, client_ip(), $now - $window]);
-    if ((int) $q->fetchColumn() >= $max) fail('rate_limited', 429);
+    if ((int) $q->fetchColumn() >= $max) return false;
     $db->prepare('INSERT INTO hits VALUES (?, ?, ?)')->execute([$kind, client_ip(), $now]);
+    return true;
 }
 
 // ---------- switches set from the Ordini board ----------
@@ -183,7 +188,25 @@ function set_flag(string $k, string $v): void {
 /** maintenance: the public site shows "back soon"; paused: no new online orders. */
 function site_state(): array {
     return ['maintenance' => flag('maintenance') === '1', 'paused' => flag('paused') === '1', 'message' => flag('message'),
-        'busy' => busy_minutes()];
+        'busy' => busy_minutes(), 'soon' => flag('soon') === '1', 'soonPin' => flag('soon_pin') !== ''];
+}
+
+// ---------- "Prossimamente": the site hidden behind a preview PIN until launch (api/gate.php) ----------
+const PREVIEW_COOKIE = 'vc_preview';
+/** Before setup the site stays hidden too: nobody has chosen a PIN yet. */
+function soon_on(): bool { return !configured() || flag('soon') === '1'; }
+/** The cookie value for people who typed the preview PIN; a new PIN makes old cookies worthless. */
+function preview_token(): string {
+    $key = flag('soon_key');
+    if ($key === '') { $key = bin2hex(random_bytes(16)); set_flag('soon_key', $key); }
+    return hash_hmac('sha256', 'preview', $key . flag('soon_pin'));
+}
+function preview_allowed(): bool {
+    if (!soon_on()) return true;
+    if (!configured()) return false;
+    if (staff_session()) return true;
+    $c = $_COOKIE[PREVIEW_COOKIE] ?? '';
+    return flag('soon_pin') !== '' && is_string($c) && hash_equals(preview_token(), $c);
 }
 /** Extra waiting time set on the board when the kitchen is busy (0, 15, 30…). */
 function busy_minutes(): int {
