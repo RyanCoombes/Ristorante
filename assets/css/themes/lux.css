@@ -69,7 +69,7 @@ html.lux .theme-banner {
   font-size: 12.5px; font-weight: 700; letter-spacing: .18em; text-transform: uppercase;
   border-bottom: 1px solid var(--lx-line); padding-block: 10px;
 }
-html.lux .banner-code { border: 1px solid currentColor; border-radius: 2px; letter-spacing: .14em; font-size: 12px; }
+html.lux .banner-code { border: 1px solid currentColor; letter-spacing: .14em; font-size: 12px; }
 html.lux .banner-code:hover { background: var(--lx-accent); color: var(--lx-on-accent); }
 html.lux .site-header { background: color-mix(in srgb, var(--lx-bg) 90%, transparent); border-bottom: 1px solid var(--lx-line); }
 html.lux .nav a { color: var(--lx-text); font-weight: 600; letter-spacing: .14em; font-size: 12.5px; }
@@ -100,14 +100,14 @@ html.lux .menu-cat-head h3, html.lux .dish-name, html.lux .member h3, html.lux .
 html.lux .member .role { color: var(--lx-script); }
 html.lux .dish-desc, html.lux .member p, html.lux .dish-allergens { color: var(--lx-muted); }
 
-/* buttons: solid metal or a fine outline, squarer corners (page only: the basket keeps its own) */
-html.lux main .btn, html.lux .site-footer .btn { border-radius: 3px; letter-spacing: .14em; font-weight: 700; }
+/* buttons: solid metal or a fine outline, brand pill shape kept (page only: the basket keeps its own) */
+html.lux main .btn, html.lux .site-footer .btn { letter-spacing: .14em; font-weight: 700; }
 html.lux main .btn--red, html.lux main .add, html.lux main .qty button, html.lux main .step-n { background: var(--lx-accent); color: var(--lx-on-accent); }
 html.lux main .btn--red:hover, html.lux main .add:hover, html.lux main .qty button:hover { background: var(--lx-text); color: var(--lx-bg); }
 html.lux main .btn--outline { border-width: 1px; border-color: var(--lx-accent); color: var(--lx-accent); }
 html.lux main .btn--outline:hover { background: var(--lx-accent); color: var(--lx-on-accent); }
-html.lux main .add { border-radius: 3px; letter-spacing: .1em; }
-html.lux main .qty { border-radius: 3px; border-width: 1px; }
+html.lux main .add { letter-spacing: .1em; }
+html.lux main .qty { border-width: 1px; }
 html.lux main .qty output { color: var(--lx-text); }
 html.lux .status { background: var(--lx-panel); color: var(--lx-text); border: 1px solid var(--lx-line); }
 
@@ -136,18 +136,17 @@ html.lux .about, html.lux .contact {
   color: var(--lx-text); border-block: 1px solid var(--lx-line);
 }
 html.lux .member, html.lux .dish, html.lux .card, html.lux .steps li {
-  background: var(--lx-panel); border: 1px solid var(--lx-line); border-radius: 6px; color: var(--lx-text);
+  background: var(--lx-panel); border: 1px solid var(--lx-line); color: var(--lx-text);
 }
 html.lux .dish:hover { border-color: var(--lx-accent); }
-html.lux .member-pic { border-radius: 3px; }
 html.lux .tag { background: transparent; border: 1px solid var(--lx-line); color: var(--lx-muted); }
 html.lux .tag--top, html.lux .tag--piccante { background: var(--lx-accent); border-color: var(--lx-accent); color: var(--lx-on-accent); }
-html.lux .menu-tabs a { border-width: 1px; border-color: var(--lx-line); color: var(--lx-text); border-radius: 3px; letter-spacing: .1em; }
+html.lux .menu-tabs a { border-width: 1px; border-color: var(--lx-line); color: var(--lx-text); letter-spacing: .1em; }
 html.lux .menu-tabs a.is-active, html.lux .menu-tabs a:hover { background: var(--lx-accent); border-color: var(--lx-accent); color: var(--lx-on-accent); }
 html.lux .how { background: var(--lx-bg-2); color: var(--lx-text); border-block: 1px solid var(--lx-line); }
 html.lux .steps h3 { color: var(--lx-text); }
-html.lux .map { border: 1px solid var(--lx-line); border-radius: 6px; }
-html.lux .contact-list a { background: var(--lx-panel); border: 1px solid var(--lx-line); color: var(--lx-text); border-radius: 6px; }
+html.lux .map { border: 1px solid var(--lx-line); }
+html.lux .contact-list a { background: var(--lx-panel); border: 1px solid var(--lx-line); color: var(--lx-text); }
 html.lux .contact-list a:hover { background: var(--lx-accent); border-color: var(--lx-accent); color: var(--lx-on-accent); }
 html.lux .site-footer .script { color: var(--lx-script); }
 html.lux .cart-bar { background: var(--lx-panel); color: var(--lx-text); border: 1px solid var(--lx-accent); }
@@ -201,3 +200,8 @@ html[data-theme="capodanno"] .map iframe, html[data-theme="sanvalentino"] .map i
 @media (prefers-reduced-motion: reduce) {
   html.lux img.theme-logo, .lx-smoke span, .lx-star, .lx-heart { animation: none; }
 }
+
+/* the default finish uses warm red shadows: themes light their own way */
+html.lux .dish, html.lux .member, html.lux .card, html.lux .map, html.lux .contact-list a,
+html.lux main .btn--red, html.lux main .add, html.lux .site-header { box-shadow: none; }
+html.lux .section-head::before { color: var(--lx-accent); }
