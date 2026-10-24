@@ -353,3 +353,6 @@ html[data-theme="repubblica"] .theme-banner { border-top: 3px solid; border-imag
   .lx-spqr { display: none; }
   .lx-trails { top: 40px; height: 160px; }
 }
+/* "orders closed" must read as closed on every theme: a red status dot and edge, not the theme's gold */
+html.lux .orders-closed { border-color: rgba(229, 72, 77, .55); }
+html.lux .orders-closed::before { background: #e5484d; box-shadow: 0 0 0 3px rgba(229, 72, 77, .25); }
