@@ -322,7 +322,7 @@ html.lux .cart .slot input:checked + span { background: var(--lx-accent); border
 html.lux .cart .zone-result.is-ok, html.lux .cart .promo-result.is-ok { background: color-mix(in srgb, #3fa463 22%, var(--lx-panel)); color: var(--lx-text); }
 html.lux .cart .zone-result.is-bad, html.lux .cart .promo-result.is-bad { background: color-mix(in srgb, #e5484d 22%, var(--lx-panel)); color: var(--lx-text); }
 html.lux .cart .is-invalid { background: color-mix(in srgb, #e5484d 18%, var(--lx-panel)) !important; border-color: #e5484d !important; }
-html.lux .cart .cart-warn, html.lux .cart .orders-closed { background: var(--lx-panel); color: var(--lx-text); border: 1px solid var(--lx-accent); }
+html.lux .cart .cart-warn, html.lux .orders-closed { background: var(--lx-panel); color: var(--lx-text); border: 1px solid var(--lx-accent); }
 html.lux .cart .cart-lines .line-name, html.lux .cart .cart-total, html.lux .cart .more > summary,
 html.lux .cart .review-head h3 { color: var(--lx-accent); }
 html.lux .cart .cart-total { border-top-color: var(--lx-accent); }
