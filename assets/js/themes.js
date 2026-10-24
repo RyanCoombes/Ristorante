@@ -253,26 +253,8 @@
           '<circle cx="120" cy="52" r="3" fill="' + g.id + '"/></svg>' + FRAME;
     },
     nataleroma: function () {
-      // the Capitoline She-wolf with Romulus and Remus, as a gold medallion, with S·P·Q·R in Roman capitals (Cinzel)
-      var g = foil("#e9c97a", "#b5852f", "#f2dca0", "#7a5a1e");
-      return '<svg class="lx-wolf" viewBox="0 0 300 300" role="presentation">' + g.defs +
-          '<circle cx="150" cy="150" r="140" fill="none" stroke="' + g.id + '" stroke-width="3"/><circle cx="150" cy="150" r="130" fill="none" stroke="' + g.id + '" stroke-width="1"/>' +
-          '<g transform="translate(0 20)"><g fill="' + g.id + '">' +
-            '<path d="M44 100L36 98L40 92L50 86L56 72L60 62L62 48L70 60L76 50L80 66C92 70 102 78 108 88C136 82 174 80 206 84C222 86 232 92 238 102' +
-            'C246 106 250 114 250 124C250 140 246 156 240 172L236 170C240 156 242 140 240 128C238 122 236 120 234 120L236 150L240 186L248 192L230 192L228 186L224 152' +
-            'C220 142 214 136 206 136L204 186L212 192L194 192L194 186L192 140C176 146 160 146 140 142C132 140 124 138 118 134L116 186L124 192L106 192L106 186L104 130' +
-            'C100 128 98 126 96 124L94 186L102 192L84 192L84 186L84 122C80 114 78 108 76 104C70 106 60 106 52 102Z"/>' +
-            '<path d="M52 102L38 108L36 104L48 100Z"/>' +
-            '<circle cx="134" cy="142" r="2.6"/><circle cx="148" cy="145" r="2.6"/><circle cx="162" cy="146" r="2.6"/><circle cx="176" cy="145" r="2.6"/><circle cx="188" cy="142" r="2.6"/>' +
-            '<rect x="70" y="194" width="196" height="3" rx="1"/></g>' +
-          '<g fill="#8a6326"><circle cx="150" cy="153" r="8.5"/><ellipse cx="140" cy="172" rx="9.5" ry="14" transform="rotate(-25 140 172)"/><path d="M134 180L124 193L152 193L148 182Z"/>' +
-            '<circle cx="177" cy="156" r="8.5"/><ellipse cx="189" cy="175" rx="10.5" ry="13" transform="rotate(28 189 175)"/><path d="M182 185L166 190L168 194L206 194L201 184Z"/>' +
-            '<path d="M146 162L153 146M182 166L175 148" stroke="#8a6326" stroke-width="5" stroke-linecap="round"/></g>' +
-          '<g fill="none" stroke="#6b4a14" stroke-width="1.3" stroke-linecap="round" opacity=".75">' +
-            '<path d="M80 70q4 6 2 12M86 74q4 6 2 12M92 78q4 6 2 12M98 82q4 6 2 12M74 78q4 6 2 12M80 86q4 6 2 12M88 90q3 5 1 10"/>' +
-            '<path d="M150 98q4 14 0 28M164 96q4 15 0 30M178 96q4 15 0 30"/><path d="M40 101L50 100"/></g>' +
-          '<circle cx="56" cy="80" r="1.8" fill="#3a2a10"/></g>' +
-          '<text x="150" y="268" text-anchor="middle" font-family="Cinzel, serif" font-weight="700" font-size="26" letter-spacing="6" fill="#7a1420">S·P·Q·R</text></svg>' + FRAME;
+      // no illustration: just S·P·Q·R in Roman inscription capitals (Cinzel), between two fine rules
+      return '<div class="lx-spqr"><span>S·P·Q·R</span></div>' + FRAME;
     },
     repubblica: function () {
       var g = gold();
