@@ -1,0 +1,203 @@
+/* =====================================================================
+   Vizi Capitali · seasonal themes, luxury edition
+   One stylesheet for every theme: each theme only sets its palette and
+   artwork; the treatment (gold-foil logo, hairline frames, quiet glow,
+   generous spacing) is shared so they all feel like the same house.
+   Loaded by assets/js/themes.js only while a theme is on.
+   The basket keeps the normal colours so ordering stays familiar.
+   ===================================================================== */
+
+/* ---------- palettes ---------- */
+html[data-theme="halloween"] {
+  --lx-bg: #0b0908; --lx-bg-2: #160e0c; --lx-panel: #14100e; --lx-line: rgba(201, 164, 92, .28);
+  --lx-accent: #c9a45c; --lx-script: #e9d6a6; --lx-text: #efe7da; --lx-muted: #b9ad9b; --lx-on-accent: #17110a;
+  --lx-glow: rgba(120, 18, 30, .55); --lx-glow-2: rgba(201, 164, 92, .18);
+  --lx-foil: linear-gradient(115deg, #8a6a2e 0%, #f3dfa6 30%, #c9a45c 48%, #fff1c2 60%, #9b7a3a 82%);
+  --check-color: #1d1714;
+}
+html[data-theme="natale"] {
+  --lx-bg: #08130f; --lx-bg-2: #0e1f18; --lx-panel: #0f1c16; --lx-line: rgba(212, 175, 98, .3);
+  --lx-accent: #d4af62; --lx-script: #efdcae; --lx-text: #f1ece0; --lx-muted: #b8c1b4; --lx-on-accent: #10140c;
+  --lx-glow: rgba(150, 20, 30, .45); --lx-glow-2: rgba(212, 175, 98, .16);
+  --lx-foil: linear-gradient(115deg, #8a6a2e 0%, #f6e3ad 30%, #d4af62 48%, #fff3c9 60%, #9b7a3a 82%);
+  --check-color: #12261d;
+}
+html[data-theme="capodanno"] {
+  --lx-bg: #09090a; --lx-bg-2: #141312; --lx-panel: #131211; --lx-line: rgba(226, 200, 140, .3);
+  --lx-accent: #e2c88c; --lx-script: #f4e6c4; --lx-text: #f3efe6; --lx-muted: #bdb6a8; --lx-on-accent: #14110a;
+  --lx-glow: rgba(226, 200, 140, .14); --lx-glow-2: rgba(255, 255, 255, .06);
+  --lx-foil: linear-gradient(115deg, #9d8452 0%, #fbf0d0 30%, #e2c88c 48%, #fffaf0 60%, #a48a55 82%);
+  --check-color: #1b1916;
+}
+html[data-theme="sanvalentino"] {
+  --lx-bg: #14060a; --lx-bg-2: #220a11; --lx-panel: #1c090e; --lx-line: rgba(230, 168, 150, .3);
+  --lx-accent: #e6a896; --lx-script: #f6d3c7; --lx-text: #f8ece8; --lx-muted: #cfb0aa; --lx-on-accent: #1d080d;
+  --lx-glow: rgba(160, 20, 50, .5); --lx-glow-2: rgba(230, 168, 150, .16);
+  --lx-foil: linear-gradient(115deg, #a2645a 0%, #fbd9cc 30%, #e6a896 48%, #fff0ea 60%, #a8675b 82%);
+  --check-color: #2a0e15;
+}
+html[data-theme="pasqua"] {
+  --lx-bg: #f6f1e7; --lx-bg-2: #efe8d8; --lx-panel: #fbf8f1; --lx-line: rgba(122, 140, 104, .35);
+  --lx-accent: #3d5a40; --lx-script: #8a6d34; --lx-text: #2c2a24; --lx-muted: #5f5a4d; --lx-on-accent: #f8f4ea;
+  --lx-glow: rgba(190, 210, 170, .55); --lx-glow-2: rgba(200, 170, 110, .18);
+  --lx-foil: linear-gradient(115deg, #2c4530 0%, #5f7f5f 35%, #3d5a40 55%, #6f8f68 70%, #2c4530 90%);
+  --check-color: #dfe7d4;
+}
+html[data-theme="ferragosto"] {
+  --lx-bg: #f7f2e8; --lx-bg-2: #eef1ee; --lx-panel: #fcfaf5; --lx-line: rgba(18, 59, 99, .22);
+  --lx-accent: #123b63; --lx-script: #8a6a22; --lx-text: #1c2430; --lx-muted: #4d5866; --lx-on-accent: #f7f2e8;
+  --lx-glow: rgba(230, 190, 100, .45); --lx-glow-2: rgba(18, 59, 99, .1);
+  --lx-foil: linear-gradient(115deg, #0c2c4c 0%, #2d5f8f 35%, #123b63 55%, #3a6d9c 70%, #0c2c4c 90%);
+  --check-color: #dde7ee;
+}
+
+/* ---------- shared treatment ---------- */
+html.lux body { background: var(--lx-bg); color: var(--lx-text); }
+html.lux .site-header,
+html.lux main,
+html.lux .site-footer {
+  --red: var(--lx-accent);
+  --red-ui: var(--lx-accent);
+  --red-deep: var(--lx-text);
+  --cream: var(--lx-bg);
+  --cream-2: var(--lx-line);
+}
+
+/* strip + header */
+html.lux .theme-banner {
+  background: var(--lx-bg-2); color: var(--lx-accent);
+  font-size: 12.5px; font-weight: 700; letter-spacing: .18em; text-transform: uppercase;
+  border-bottom: 1px solid var(--lx-line); padding-block: 10px;
+}
+html.lux .banner-code { border: 1px solid currentColor; border-radius: 2px; letter-spacing: .14em; font-size: 12px; }
+html.lux .banner-code:hover { background: var(--lx-accent); color: var(--lx-on-accent); }
+html.lux .site-header { background: color-mix(in srgb, var(--lx-bg) 90%, transparent); border-bottom: 1px solid var(--lx-line); }
+html.lux .nav a { color: var(--lx-text); font-weight: 600; letter-spacing: .14em; font-size: 12.5px; }
+html.lux .nav a:hover { color: var(--lx-accent); border-color: var(--lx-accent); }
+html.lux .lang { border-width: 1px; }
+html.lux .lang button { color: var(--lx-text); }
+html.lux .lang button[aria-pressed="true"] { background: var(--lx-accent); color: var(--lx-on-accent); }
+html.lux .nav-toggle { background: var(--lx-accent); }
+html.lux .nav-toggle span { background: var(--lx-on-accent); }
+@media (max-width: 900px) { html.lux .nav { background: var(--lx-bg-2); border-bottom: 1px solid var(--lx-line); } }
+
+/* the logo in foil: the picture is used as a stencil for the metallic gradient */
+html.lux img.theme-logo {
+  object-position: -99999px 0;
+  background: var(--lx-foil); background-size: 220% 100%;
+  -webkit-mask: url("../../img/logo.png") center / contain no-repeat; mask: url("../../img/logo.png") center / contain no-repeat;
+  animation: lx-foil 9s ease-in-out infinite;
+}
+@keyframes lx-foil { 0%, 100% { background-position: 0% 0; } 50% { background-position: 100% 0; } }
+
+/* type */
+html.lux .heading { color: var(--lx-accent); letter-spacing: 0; }
+html.lux .heading .script,
+html.lux .how .heading .script { color: var(--lx-script); }
+html.lux .heading--cream { color: var(--lx-text); }
+html.lux .section-head p, html.lux .lead { color: var(--lx-muted); }
+html.lux .menu-cat-head h3, html.lux .dish-name, html.lux .member h3, html.lux .card h3, html.lux .dish-price { color: var(--lx-accent); }
+html.lux .member .role { color: var(--lx-script); }
+html.lux .dish-desc, html.lux .member p, html.lux .dish-allergens { color: var(--lx-muted); }
+
+/* buttons: solid metal or a fine outline, squarer corners (page only: the basket keeps its own) */
+html.lux main .btn, html.lux .site-footer .btn { border-radius: 3px; letter-spacing: .14em; font-weight: 700; }
+html.lux main .btn--red, html.lux main .add, html.lux main .qty button, html.lux main .step-n { background: var(--lx-accent); color: var(--lx-on-accent); }
+html.lux main .btn--red:hover, html.lux main .add:hover, html.lux main .qty button:hover { background: var(--lx-text); color: var(--lx-bg); }
+html.lux main .btn--outline { border-width: 1px; border-color: var(--lx-accent); color: var(--lx-accent); }
+html.lux main .btn--outline:hover { background: var(--lx-accent); color: var(--lx-on-accent); }
+html.lux main .add { border-radius: 3px; letter-spacing: .1em; }
+html.lux main .qty { border-radius: 3px; border-width: 1px; }
+html.lux main .qty output { color: var(--lx-text); }
+html.lux .status { background: var(--lx-panel); color: var(--lx-text); border: 1px solid var(--lx-line); }
+
+/* hero: a lit stage */
+html.lux .hero {
+  background:
+    radial-gradient(900px 560px at 82% 30%, var(--lx-glow), transparent 65%),
+    radial-gradient(700px 420px at 8% 0%, var(--lx-glow-2), transparent 70%),
+    linear-gradient(var(--lx-bg-2), var(--lx-bg));
+}
+html.lux .hero .checker { opacity: .9; }
+html.lux .hero-copy { z-index: 4; }
+html.lux .hero-title { color: var(--lx-script); }
+html.lux .hero-body { color: var(--lx-muted); }
+html.lux .hero-pizza { filter: drop-shadow(-24px -12px 50px rgba(0, 0, 0, .55)) saturate(1.05) contrast(1.04); }
+html.lux .theme-art { position: absolute; inset: 0; pointer-events: none; }
+.lx-frame { position: absolute; z-index: 3; inset: 76px 18px 18px; border: 1px solid var(--lx-line); }
+.lx-frame::before, .lx-frame::after { content: ""; position: absolute; width: 22px; height: 22px; border: 1px solid var(--lx-accent); }
+.lx-frame::before { top: -6px; left: -6px; border-right: 0; border-bottom: 0; }
+.lx-frame::after { bottom: -6px; right: -6px; border-left: 0; border-top: 0; }
+@media (max-width: 820px) { .lx-frame { inset: 64px 5px 5px; } }
+
+/* sections */
+html.lux .about, html.lux .contact {
+  background: radial-gradient(900px 500px at 15% 20%, var(--lx-glow-2), transparent 70%), var(--lx-bg-2);
+  color: var(--lx-text); border-block: 1px solid var(--lx-line);
+}
+html.lux .member, html.lux .dish, html.lux .card, html.lux .steps li {
+  background: var(--lx-panel); border: 1px solid var(--lx-line); border-radius: 6px; color: var(--lx-text);
+}
+html.lux .dish:hover { border-color: var(--lx-accent); }
+html.lux .member-pic { border-radius: 3px; }
+html.lux .tag { background: transparent; border: 1px solid var(--lx-line); color: var(--lx-muted); }
+html.lux .tag--top, html.lux .tag--piccante { background: var(--lx-accent); border-color: var(--lx-accent); color: var(--lx-on-accent); }
+html.lux .menu-tabs a { border-width: 1px; border-color: var(--lx-line); color: var(--lx-text); border-radius: 3px; letter-spacing: .1em; }
+html.lux .menu-tabs a.is-active, html.lux .menu-tabs a:hover { background: var(--lx-accent); border-color: var(--lx-accent); color: var(--lx-on-accent); }
+html.lux .how { background: var(--lx-bg-2); color: var(--lx-text); border-block: 1px solid var(--lx-line); }
+html.lux .steps h3 { color: var(--lx-text); }
+html.lux .map { border: 1px solid var(--lx-line); border-radius: 6px; }
+html.lux .contact-list a { background: var(--lx-panel); border: 1px solid var(--lx-line); color: var(--lx-text); border-radius: 6px; }
+html.lux .contact-list a:hover { background: var(--lx-accent); border-color: var(--lx-accent); color: var(--lx-on-accent); }
+html.lux .site-footer .script { color: var(--lx-script); }
+html.lux .cart-bar { background: var(--lx-panel); color: var(--lx-text); border: 1px solid var(--lx-accent); }
+html.lux .cart-bar-count { background: var(--lx-accent); color: var(--lx-on-accent); }
+html.lux .cart-head { background: var(--lx-bg-2); color: var(--lx-text); }
+html.lux .cart-close { background: var(--lx-accent); color: var(--lx-on-accent); }
+
+/* dark themes: the map follows the night */
+html[data-theme="halloween"] .map iframe, html[data-theme="natale"] .map iframe,
+html[data-theme="capodanno"] .map iframe, html[data-theme="sanvalentino"] .map iframe { filter: invert(.9) hue-rotate(180deg) saturate(.5) brightness(.95); }
+
+/* ---------- artwork per theme ---------- */
+/* Halloween: candle smoke + a thin gold crescent */
+.lx-smoke { position: absolute; z-index: 1; inset: 0; overflow: hidden; }
+.lx-smoke span { position: absolute; bottom: -20%; width: 46%; height: 70%; border-radius: 50%; background: radial-gradient(closest-side, rgba(220, 205, 190, .09), transparent); filter: blur(20px); animation: lx-smoke 26s ease-in-out infinite; }
+.lx-smoke span:nth-child(1) { left: 2%; }
+.lx-smoke span:nth-child(2) { left: 34%; animation-delay: -9s; animation-duration: 32s; }
+.lx-smoke span:nth-child(3) { left: 64%; animation-delay: -17s; }
+@keyframes lx-smoke { 0%, 100% { transform: translate(0, 0) scale(1); opacity: .7; } 50% { transform: translate(6%, -18%) scale(1.15); opacity: 1; } }
+.lx-moon { position: absolute; z-index: 1; top: 110px; right: 40%; width: clamp(54px, 6vw, 84px); filter: drop-shadow(0 0 18px rgba(201, 164, 92, .45)); }
+
+/* Natale: an eight-point star and a gold garland */
+.lx-star { position: absolute; z-index: 1; top: 104px; right: 40%; width: clamp(50px, 6vw, 80px); filter: drop-shadow(0 0 16px rgba(212, 175, 98, .55)); animation: lx-twinkle 5s ease-in-out infinite; }
+@keyframes lx-twinkle { 50% { opacity: .7; transform: scale(.94) rotate(6deg); } }
+.lx-garland { position: absolute; z-index: 1; top: 56px; left: 0; width: 100%; height: 90px; }
+
+/* Capodanno: art-deco sunburst behind the pizza */
+.lx-burst {
+  position: absolute; z-index: 0; right: -10%; bottom: -30%; width: min(110vw, 1300px); aspect-ratio: 1;
+  background: repeating-conic-gradient(from 0deg, rgba(226, 200, 140, .16) 0 .6deg, transparent .6deg 7.5deg);
+  -webkit-mask: radial-gradient(closest-side, #000 25%, transparent 75%); mask: radial-gradient(closest-side, #000 25%, transparent 75%);
+}
+.lx-deco { position: absolute; z-index: 1; top: 96px; right: 40%; width: clamp(70px, 8vw, 110px); }
+
+/* San Valentino: one fine-line heart */
+.lx-heart { position: absolute; z-index: 1; top: 92px; right: 39%; width: clamp(60px, 7vw, 96px); filter: drop-shadow(0 0 14px rgba(230, 168, 150, .45)); animation: lx-beat 4.5s ease-in-out infinite; }
+@keyframes lx-beat { 0%, 100% { transform: scale(1); } 8% { transform: scale(1.06); } 16% { transform: scale(1); } 24% { transform: scale(1.04); } }
+
+/* Pasqua: an olive branch */
+.lx-olive { position: absolute; z-index: 1; top: 90px; right: 36%; width: clamp(110px, 13vw, 180px); transform: rotate(-12deg); }
+
+/* Ferragosto: the sun and the sea */
+.lx-sun { position: absolute; z-index: 0; top: 70px; right: 30%; width: clamp(110px, 14vw, 200px); aspect-ratio: 1; border-radius: 50%;
+  background: radial-gradient(circle, #f6d27a 0 46%, rgba(246, 210, 122, .35) 47% 49%, transparent 50% 58%, rgba(246, 210, 122, .25) 59% 60%, transparent 61%); }
+.lx-waves { position: absolute; z-index: 2; left: 0; bottom: 0; width: 100%; height: 70px; color: rgba(18, 59, 99, .35); }
+
+@media (max-width: 820px) {
+  .lx-moon, .lx-star, .lx-heart, .lx-deco, .lx-olive { top: 84px; right: 8%; }
+  .lx-sun { top: 70px; right: 4%; width: 110px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  html.lux img.theme-logo, .lx-smoke span, .lx-star, .lx-heart { animation: none; }
+}

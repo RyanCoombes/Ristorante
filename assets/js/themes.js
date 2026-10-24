@@ -13,28 +13,28 @@
   // dates are "MM-DD"; Easter moves every year, so it's worked out below
   var THEMES = {
     halloween: {
-      from: "10-20", to: "11-01", sticker: "🎃", check: "#3a1d5e", particles: "bats", css: true,
-      msg: { it: "🎃 Dolcetto o pizzetta? Buon Halloween da Vizi Capitali!", en: "🎃 Trick or treat? Happy Halloween from Vizi Capitali!" }
+      swatch: "#0b0908", from: "10-20", to: "11-01", sticker: "🎃", check: "#1d1714", particles: "embers",
+      msg: { it: "Halloween · Una notte di vizi, fino al 1° novembre", en: "Halloween · A night of vices, until 1 November" }
     },
     natale: {
-      from: "12-01", to: "12-27", sticker: "🎄", check: "#1d6b3c", particles: "snow",
-      msg: { it: "🎄 Buon Natale! Il vizio più buono è stare insieme.", en: "🎄 Merry Christmas! The best vice is being together." }
+      swatch: "#0e1f18", from: "12-01", to: "12-27", sticker: "🎄", check: "#12261d", particles: "glints",
+      msg: { it: "Natale · Il vizio più prezioso è stare insieme", en: "Christmas · The most precious vice is being together" }
     },
     capodanno: {
-      from: "12-28", to: "01-06", sticker: "🥂", check: "#b8901c", particles: "confetti",
-      msg: { it: "🥂 Buon anno! Inizia il nuovo anno con un vizio.", en: "🥂 Happy New Year! Start the year with a vice." }
+      swatch: "#1b1916", from: "12-28", to: "01-06", sticker: "🥂", check: "#1b1916", particles: "glitter",
+      msg: { it: "Capodanno · Brindiamo a un nuovo anno di vizi", en: "New Year · A toast to a new year of vices" }
     },
     sanvalentino: {
-      from: "02-07", to: "02-14", sticker: "💘", check: "#d6336c", particles: "hearts",
-      msg: { it: "💘 San Valentino: una pizza per due, il vizio è condiviso.", en: "💘 Valentine's Day: one pizza for two, a vice to share." }
+      swatch: "#3a0f1b", from: "02-07", to: "02-14", sticker: "💘", check: "#2a0e15", particles: "petals",
+      msg: { it: "San Valentino · Un vizio da condividere", en: "Valentine's Day · A vice to share" }
     },
     pasqua: {
-      easter: true, sticker: "🐣", check: "#5f9e6e", particles: "eggs",
-      msg: { it: "🐣 Buona Pasqua da Vizi Capitali!", en: "🐣 Happy Easter from Vizi Capitali!" }
+      swatch: "#3d5a40", easter: true, sticker: "🐣", check: "#dfe7d4", particles: "blossom",
+      msg: { it: "Pasqua · Buone feste da Vizi Capitali", en: "Easter · Happy holidays from Vizi Capitali" }
     },
     ferragosto: {
-      from: "08-08", to: "08-16", sticker: "🏖️", check: "#1484b8", particles: "sun",
-      msg: { it: "☀️ Buon Ferragosto da Vizi Capitali!", en: "☀️ Happy Ferragosto from Vizi Capitali!" }
+      swatch: "#123b63", from: "08-08", to: "08-16", sticker: "🏖️", check: "#dde7ee", particles: "",
+      msg: { it: "Ferragosto · L'estate romana ha un nuovo vizio", en: "Ferragosto · Roman summer has a new vice" }
     }
   };
   window.VC_THEMES = THEMES;   // the Gestione page lists these
@@ -100,45 +100,52 @@
 
   if (theme) {
     root.setAttribute("data-theme", id);
-    root.style.setProperty("--check-color", theme.check);
-    if (theme.css) {
-      var link = document.createElement("link");
-      link.rel = "stylesheet";
-      link.href = "assets/css/themes/" + id + ".css";
-      document.head.appendChild(link);
-    }
+    root.classList.add("lux");
+    var link = document.createElement("link");
+    link.rel = "stylesheet";
+    link.href = "assets/css/themes/lux.css";
+    document.head.appendChild(link);
   }
   if (!theme && !annOn) return;
 
   // ---------- hand-drawn graphics per theme ----------
   var ART = {
     halloween:
-      // moon behind the pizza
-      '<div class="hw-moon"><span></span><span></span><span></span></div>' +
-      // cobweb in the top-left corner, with a spider on a thread
-      '<svg class="hw-web" viewBox="0 0 200 200"><g fill="none" stroke="currentColor" stroke-width="1.4">' +
-        '<path d="M0 0L200 120M0 0L150 200M0 0L60 200M0 0L200 40"/>' +
-        '<path d="M0 34Q22 30 30 18Q30 8 34 0M0 70Q44 62 58 40Q62 20 68 0M0 110Q66 98 88 64Q96 32 104 0M0 150Q90 136 118 90Q130 46 140 0M0 190Q112 172 150 116Q164 60 178 0"/></g></svg>' +
-      '<div class="hw-spider"><i></i><svg viewBox="0 0 40 40"><g stroke="currentColor" stroke-width="2" fill="none">' +
-        '<path d="M14 18L4 10M14 21L2 21M14 24L4 32M26 18L36 10M26 21L38 21M26 24L36 32"/></g>' +
-        '<ellipse cx="20" cy="21" rx="7" ry="9" fill="currentColor"/><circle cx="20" cy="11" r="5" fill="currentColor"/>' +
-        '<circle cx="18" cy="10" r="1.2" fill="#ff7a1a"/><circle cx="22" cy="10" r="1.2" fill="#ff7a1a"/></svg></div>' +
-      // haunted skyline along the bottom: graves, a crooked tree, the house on the hill, a fence
-      '<svg class="hw-skyline" viewBox="0 0 1200 160" preserveAspectRatio="none"><g fill="#000">' +
-        '<path d="M0 160V118Q150 96 300 112T620 104T900 110T1200 100V160Z"/>' +
-        '<path d="M900 110V60l28-26 28 26V48h10v18l18 14V110Z"/>' +
-        '<path d="M160 116V78q0-14 14-14t14 14v38ZM230 112V86q0-10 10-10t10 10v26ZM700 108V80q0-12 12-12t12 12v28Z"/>' +
-        '<path d="M430 108c4-40-6-52-26-66l4-4c12 8 18 12 22 20 2-14-2-26-12-38l5-3c12 14 14 30 12 44 6-10 16-16 28-18v6c-14 4-22 12-24 26-2 12 0 22 2 33Z"/>' +
-        '<path d="M1040 104v-24h4v24M1056 104v-28h4v28M1072 104v-24h4v24M1088 104v-28h4v28M1104 104v-24h4v24M1036 86h76v4h-76Z"/></g>' +
-        '<rect x="934" y="70" width="10" height="12" fill="#ffb347"/><rect x="954" y="70" width="10" height="12" fill="#ff8a2a"/></svg>' +
-      '<div class="hw-fog"><span></span><span></span></div>' +
-      // the jack-o'-lantern
-      '<svg class="hw-pumpkin" viewBox="0 0 120 110"><defs><radialGradient id="hwp" cx="50%" cy="45%" r="60%">' +
-        '<stop offset="0" stop-color="#ffb04a"/><stop offset=".7" stop-color="#ef6a0c"/><stop offset="1" stop-color="#b8430a"/></radialGradient></defs>' +
-        '<path d="M58 18c0-8 4-14 10-16l3 4c-5 2-7 6-7 12Z" fill="#3c5a1e"/>' +
-        '<ellipse cx="38" cy="62" rx="30" ry="40" fill="url(#hwp)"/><ellipse cx="82" cy="62" rx="30" ry="40" fill="url(#hwp)"/><ellipse cx="60" cy="62" rx="26" ry="44" fill="url(#hwp)"/>' +
-        '<g fill="#fff36a"><path d="M36 48l12 4-12 10ZM84 48l-12 4 12 10Z"/><path d="M56 62l4-8 4 8Z"/>' +
-        '<path d="M30 76q30 22 60 0l-6 4-4-5-6 7-6-6-6 6-6-7-4 5Z"/></g></svg>'
+      // candle-lit smoke, a thin gold crescent and a gold hairline frame
+      '<div class="lx-smoke"><span></span><span></span><span></span></div>' +
+      '<svg class="lx-moon" viewBox="0 0 100 100"><defs><linearGradient id="lxg" x1="0" y1="0" x2="1" y2="1">' +
+        '<stop offset="0" stop-color="#f3dfa6"/><stop offset=".5" stop-color="#c9a45c"/><stop offset="1" stop-color="#8a6a2e"/></linearGradient></defs>' +
+        '<path d="M62 6a46 46 0 1 0 32 66A38 38 0 1 1 62 6Z" fill="url(#lxg)"/></svg>' +
+      '<div class="lx-frame"></div>',
+    natale:
+      '<svg class="lx-garland" viewBox="0 0 1200 90" preserveAspectRatio="none"><g fill="none" stroke="#d4af62" stroke-width="1" opacity=".55">' +
+        '<path d="M0 10Q150 80 300 10T600 10T900 10T1200 10"/><path d="M0 22Q150 86 300 22T600 22T900 22T1200 22" opacity=".5"/></g>' +
+        '<g fill="#d4af62"><circle cx="150" cy="45" r="3"/><circle cx="450" cy="45" r="3"/><circle cx="750" cy="45" r="3"/><circle cx="1050" cy="45" r="3"/></g></svg>' +
+      '<svg class="lx-star" viewBox="0 0 100 100"><defs><linearGradient id="lxs" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#fff3c9"/><stop offset=".5" stop-color="#d4af62"/><stop offset="1" stop-color="#9b7a3a"/></linearGradient></defs>' +
+        '<path d="M50 2L57 39L94 26L66 50L94 74L57 61L50 98L43 61L6 74L34 50L6 26L43 39Z" fill="url(#lxs)"/></svg>' +
+      '<div class="lx-frame"></div>',
+    capodanno:
+      '<div class="lx-burst"></div>' +
+      '<svg class="lx-deco" viewBox="0 0 120 120"><g fill="none" stroke="#e2c88c" stroke-width="1.2">' +
+        '<path d="M60 8L112 60L60 112L8 60Z"/><path d="M60 22L98 60L60 98L22 60Z" opacity=".6"/><path d="M60 8V112M8 60H112" opacity=".35"/></g>' +
+        '<circle cx="60" cy="60" r="6" fill="#e2c88c"/></svg>' +
+      '<div class="lx-frame"></div>',
+    sanvalentino:
+      '<svg class="lx-heart" viewBox="0 0 100 90"><path d="M50 84C20 62 4 46 4 27 4 13 15 4 28 4c9 0 17 5 22 13C55 9 63 4 72 4c13 0 24 9 24 23 0 19-16 35-46 57Z" fill="none" stroke="#e6a896" stroke-width="2.2"/></svg>' +
+      '<div class="lx-frame"></div>',
+    pasqua:
+      '<svg class="lx-olive" viewBox="0 0 200 80"><g fill="none" stroke="#3d5a40" stroke-width="1.6" stroke-linecap="round"><path d="M6 60C60 46 120 40 194 18"/></g>' +
+        '<g fill="#7a9472"><ellipse cx="40" cy="44" rx="14" ry="4.5" transform="rotate(-30 40 44)"/><ellipse cx="62" cy="58" rx="14" ry="4.5" transform="rotate(22 62 58)"/>' +
+        '<ellipse cx="92" cy="32" rx="14" ry="4.5" transform="rotate(-34 92 32)"/><ellipse cx="114" cy="46" rx="14" ry="4.5" transform="rotate(18 114 46)"/>' +
+        '<ellipse cx="146" cy="18" rx="14" ry="4.5" transform="rotate(-38 146 18)"/><ellipse cx="166" cy="32" rx="14" ry="4.5" transform="rotate(14 166 32)"/></g>' +
+        '<g fill="#b8963f"><ellipse cx="80" cy="50" rx="5" ry="6.5"/><ellipse cx="132" cy="36" rx="5" ry="6.5"/></g></svg>' +
+      '<div class="lx-frame"></div>',
+    ferragosto:
+      '<div class="lx-sun"></div>' +
+      '<svg class="lx-waves" viewBox="0 0 1200 70" preserveAspectRatio="none"><g fill="none" stroke="currentColor" stroke-width="1.2">' +
+        '<path d="M0 30Q50 18 100 30T200 30T300 30T400 30T500 30T600 30T700 30T800 30T900 30T1000 30T1100 30T1200 30"/>' +
+        '<path d="M0 48Q50 36 100 48T200 48T300 48T400 48T500 48T600 48T700 48T800 48T900 48T1000 48T1100 48T1200 48" opacity=".6"/></g></svg>' +
+      '<div class="lx-frame"></div>'
   };
 
   function ready(fn) { if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", fn); else fn(); }
@@ -189,11 +196,11 @@
       hero.appendChild(st);
     }
     // the red logo gets the theme's treatment (e.g. glowing neon on black)
-    if (theme.css) document.querySelectorAll('img[src$="assets/img/logo.png"]').forEach(function (img) { img.classList.add("theme-logo"); });
+    document.querySelectorAll('img[src$="assets/img/logo.png"]').forEach(function (img) { img.classList.add("theme-logo"); });
 
     // ---------- light falling decorations, in the hero only ----------
     var still = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-    if (settings.effects === false || still) return;
+    if (settings.effects === false || still || !theme.particles) return;
     falling(hero, theme.particles);
   });
 
@@ -204,9 +211,12 @@
     hero.appendChild(canvas);
     var ctx = canvas.getContext("2d");
     var W = 0, H = 0, dpr = Math.min(window.devicePixelRatio || 1, 2), list = [];
-    var bat = kind === "bats";
+    var bat = kind === "bats", ember = kind === "embers", rise = bat || ember;
+    var SIZE = { embers: [1, 1.8], glints: [2, 2.5], glitter: [1.4, 1.8], petals: [5, 4], blossom: [4, 3], bats: [14, 10] };
+    var SLOW = { glints: 1, glitter: 1, petals: 1, blossom: 1 };
     var PALETTE = {
-      bats: ["#1a0f26", "#2b1840", "#000000"], snow: ["#9fb7cc", "#b9cddd", "#ffffff"], confetti: ["#b8901c", "#ee1a37", "#0d0d0d", "#e9c46a"],
+      embers: ["#f3dfa6", "#c9a45c", "#e0a24a", "#ff9a3c"], glints: ["#f6e3ad", "#ffffff", "#d4af62"], glitter: ["#fbf0d0", "#e2c88c", "#ffffff"],
+      petals: ["#e6a896", "#f6d3c7", "#b8505f"], blossom: ["#f3d6dc", "#ffffff", "#e9e2c4"], bats: ["#1a0f26", "#2b1840", "#000000"], snow: ["#9fb7cc", "#b9cddd", "#ffffff"], confetti: ["#b8901c", "#ee1a37", "#0d0d0d", "#e9c46a"],
       hearts: ["#ee1a37", "#d6336c", "#f28cab"], eggs: ["#9fd3b0", "#f6c1d0", "#f7dc8a", "#a9c8f0"], sun: ["#f5b700", "#1484b8", "#ee1a37"]
     }[kind];
     function size() {
@@ -217,8 +227,9 @@
     }
     // bats fly up and across; everything else falls
     function spawn(fresh) {
-      return { x: Math.random() * W, y: fresh ? (bat ? H + 20 : -20) : Math.random() * H, s: (bat ? 14 : 6) + Math.random() * 10,
-        v: bat ? -(0.5 + Math.random() * 0.7) : 0.3 + Math.random() * 0.8, dx: (Math.random() - 0.5) * (bat ? 1.8 : 0.6),
+      return { x: Math.random() * W, y: fresh ? (rise ? H + 20 : -20) : Math.random() * H,
+        s: (SIZE[kind] || [6, 10])[0] + Math.random() * (SIZE[kind] || [6, 10])[1],
+        v: rise ? -(0.25 + Math.random() * (bat ? 0.9 : 0.45)) : (SLOW[kind] ? 0.15 + Math.random() * 0.35 : 0.3 + Math.random() * 0.8), dx: (Math.random() - 0.5) * (bat ? 1.8 : ember ? 0.3 : 0.6),
         r: bat ? 0 : Math.random() * 6.28, vr: bat ? 0 : (Math.random() - 0.5) * 0.04,
         c: PALETTE[Math.floor(Math.random() * PALETTE.length)], f: Math.random() * 6.28 };
     }
@@ -236,6 +247,20 @@
           ctx.bezierCurveTo(-s, -s / 3, -s / 3, -s, 0, -s / 3); ctx.bezierCurveTo(s / 3, -s, s, -s / 3, 0, s / 3); ctx.fill(); break;
         case "eggs": ctx.beginPath(); ctx.ellipse(0, 0, s / 2.6, s / 2, 0, 0, 6.29); ctx.fill(); break;
         case "sun": ctx.beginPath(); ctx.arc(0, 0, s / 3, 0, 6.29); ctx.fill(); break;
+        case "glints":   // four-point sparkles that twinkle
+          ctx.globalAlpha = 0.35 + 0.65 * Math.abs(Math.sin(p.f));
+          ctx.beginPath(); ctx.moveTo(0, -s * 2); ctx.lineTo(s * 0.4, -s * 0.4); ctx.lineTo(s * 2, 0); ctx.lineTo(s * 0.4, s * 0.4);
+          ctx.lineTo(0, s * 2); ctx.lineTo(-s * 0.4, s * 0.4); ctx.lineTo(-s * 2, 0); ctx.lineTo(-s * 0.4, -s * 0.4); ctx.fill(); break;
+        case "glitter":
+          ctx.globalAlpha = 0.3 + 0.7 * Math.abs(Math.sin(p.f));
+          ctx.fillRect(-s, -s / 2, s * 2, s); break;
+        case "petals": case "blossom":
+          ctx.globalAlpha = 0.85;
+          ctx.beginPath(); ctx.ellipse(0, 0, s, s * 0.55, 0, 0, 6.29); ctx.fill(); break;
+        case "embers":   // tiny glowing sparks that fade out as they rise
+          ctx.globalAlpha = Math.max(0, Math.min(1, p.y / H)) * (0.55 + 0.45 * Math.sin(p.f));
+          ctx.shadowColor = p.c; ctx.shadowBlur = 8;
+          ctx.beginPath(); ctx.arc(0, 0, s, 0, 6.29); ctx.fill(); break;
         case "bats": {
           var flap = Math.sin(p.f) * s * 0.5;   // wings beat up and down
           ctx.beginPath(); ctx.moveTo(0, 0);
@@ -254,14 +279,14 @@
       if (!running) return;
       ctx.clearRect(0, 0, W, H);
       list.forEach(function (p, i) {
-        p.y += p.v; p.x += p.dx + Math.sin((p.y + i * 40) / 60) * 0.3; p.r += p.vr; p.f += 0.28;
+        p.y += p.v; p.x += p.dx + Math.sin((p.y + i * 40) / 60) * 0.3; p.r += p.vr; p.f += ember || SLOW[kind] ? 0.05 : 0.28;
         if (p.y > H + 30 || p.y < -30 || p.x < -40 || p.x > W + 40) list[i] = spawn(true);
         draw(p);
       });
       requestAnimationFrame(frame);
     }
     size();
-    var count = Math.round(Math.min(bat ? 12 : 36, W / (bat ? 90 : 30)));
+    var count = Math.round(Math.min(bat ? 12 : ember ? 40 : SLOW[kind] ? 26 : 36, W / (bat ? 90 : SLOW[kind] ? 45 : 30)));
     for (var n = 0; n < count; n++) list.push(spawn(false));
     window.addEventListener("resize", size);
     var visible = true;

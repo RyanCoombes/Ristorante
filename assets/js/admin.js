@@ -51,12 +51,12 @@
       "ann.codeHelp": "Il cliente tocca \"Usa il codice\" e lo trova già nel carrello. Il codice diventa pubblico: usatelo per promozioni aperte a tutti.",
       "ann.from": "Dal (facoltativo)", "ann.to": "Al (facoltativo)", "ann.datesHelp": "Con le date, la striscia compare e sparisce da sola.",
       "ann.noPromos": "Nessun codice sconto: createne uno in Sconti.",
-      "theme.help": "Un tocco di festa: striscia di auguri in alto, scacchiera colorata, adesivo sulla pizza e decorazioni animate nella prima schermata. Menu e ordini non cambiano.",
+      "theme.help": "Ogni tema veste tutto il sito per la festa: colori, logo in foglia metallica, cornici sottili e decorazioni discrete. Carrello e ordini restano identici.",
       "theme.off": "Nessun tema", "theme.offSub": "Il sito di sempre", "theme.auto": "Automatico", "theme.autoSub": "Cambia da solo con le feste",
       "theme.today": "Oggi: {name}", "theme.todayNone": "Oggi: nessuna festa",
       "theme.halloween": "Halloween", "theme.natale": "Natale", "theme.capodanno": "Capodanno", "theme.sanvalentino": "San Valentino",
       "theme.pasqua": "Pasqua", "theme.ferragosto": "Ferragosto", "theme.dates": "dal {from} al {to}", "theme.easter": "settimana di Pasqua",
-      "theme.effects": "Decorazioni animate (neve, coriandoli…)", "theme.effectsHelp": "Non compaiono a chi ha disattivato le animazioni sul telefono.",
+      "theme.effects": "Decorazioni animate (scintille, petali…)", "theme.effectsHelp": "Non compaiono a chi ha disattivato le animazioni sul telefono.",
       "theme.msg": "Messaggio di auguri · {name}", "theme.msgHelp": "Lasciate vuoto per usare il testo proposto (grigio).",
       "theme.previewHint": "Per vederlo prima di pubblicarlo usate Anteprima nella barra in basso.",
       "orders.boardNote": "Pausa degli ordini online, attesa extra e manutenzione si cambiano dalla pagina Ordini, in alto: valgono subito.",
@@ -132,12 +132,12 @@
       "ann.codeHelp": "Customers tap \"Use code\" and find it already in their basket. The code becomes public: use it for promotions open to everyone.",
       "ann.from": "From (optional)", "ann.to": "Until (optional)", "ann.datesHelp": "With dates, the strip appears and disappears by itself.",
       "ann.noPromos": "No promo codes yet: create one under Promos.",
-      "theme.help": "A festive touch: a greeting strip at the top, a coloured checkerboard, a sticker on the pizza and animated decorations on the first screen. Menu and ordering don't change.",
+      "theme.help": "Each theme dresses the whole site for the holiday: colours, a metallic-foil logo, fine frames and discreet decorations. The basket and ordering stay exactly the same.",
       "theme.off": "No theme", "theme.offSub": "The usual site", "theme.auto": "Automatic", "theme.autoSub": "Changes by itself with the holidays",
       "theme.today": "Today: {name}", "theme.todayNone": "Today: no holiday",
       "theme.halloween": "Halloween", "theme.natale": "Christmas", "theme.capodanno": "New Year", "theme.sanvalentino": "Valentine's Day",
       "theme.pasqua": "Easter", "theme.ferragosto": "Ferragosto", "theme.dates": "{from} to {to}", "theme.easter": "Easter week",
-      "theme.effects": "Animated decorations (snow, confetti…)", "theme.effectsHelp": "They don't appear for people who have turned off animations on their phone.",
+      "theme.effects": "Animated decorations (sparkles, petals…)", "theme.effectsHelp": "They don't appear for people who have turned off animations on their phone.",
       "theme.msg": "Greeting · {name}", "theme.msgHelp": "Leave empty to use the suggested text (in grey).",
       "theme.previewHint": "To see it before publishing, use Preview in the bar at the bottom.",
       "orders.boardNote": "Pausing online orders, extra waiting time and maintenance mode are on the Orders page, at the top: they apply straight away.",
@@ -436,7 +436,7 @@
         opt("auto", t("theme.auto"), today ? t("theme.today", { name: t("theme." + today) }) : t("theme.todayNone"), "📅") +
         ids.map(function (id) {
           var x = THEMES[id];
-          return opt(id, t("theme." + id), x.easter ? t("theme.easter") : t("theme.dates", { from: dm(x.from), to: dm(x.to) }), x.sticker, x.check);
+          return opt(id, t("theme." + id), x.easter ? t("theme.easter") : t("theme.dates", { from: dm(x.from), to: dm(x.to) }), x.sticker, x.swatch || x.check);
         }).join("") + "</div>" +
         '<label class="chk"><input type="checkbox" data-bind="config.theme.effects" data-kind="bool"' + (th.effects !== false ? " checked" : "") +
           "><span>" + esc(t("theme.effects")) + "</span></label>" + '<p class="help">' + esc(t("theme.effectsHelp")) + "</p>" +
