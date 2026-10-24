@@ -45,6 +45,15 @@
       "tab.hours": "Orari e tempi", "tab.promo": "Sconti", "tab.history": "Versioni e PIN",
       "tab.menu": "Menu", "tab.delivery": "Consegna", "tab.info": "Contatti", "tab.team": "Squadra",
       "orders.timing": "Tempi degli ordini",
+      "tab.theme": "Temi", "theme.title": "Tema del sito",
+      "theme.help": "Un tocco di festa: striscia di auguri in alto, scacchiera colorata, adesivo sulla pizza e decorazioni animate nella prima schermata. Menu e ordini non cambiano.",
+      "theme.off": "Nessun tema", "theme.offSub": "Il sito di sempre", "theme.auto": "Automatico", "theme.autoSub": "Cambia da solo con le feste",
+      "theme.today": "Oggi: {name}", "theme.todayNone": "Oggi: nessuna festa",
+      "theme.halloween": "Halloween", "theme.natale": "Natale", "theme.capodanno": "Capodanno", "theme.sanvalentino": "San Valentino",
+      "theme.pasqua": "Pasqua", "theme.ferragosto": "Ferragosto", "theme.dates": "dal {from} al {to}", "theme.easter": "settimana di Pasqua",
+      "theme.effects": "Decorazioni animate (neve, coriandoli…)", "theme.effectsHelp": "Non compaiono a chi ha disattivato le animazioni sul telefono.",
+      "theme.msg": "Messaggio di auguri · {name}", "theme.msgHelp": "Lasciate vuoto per usare il testo proposto (grigio).",
+      "theme.previewHint": "Per vederlo prima di pubblicarlo usate Anteprima nella barra in basso.",
       "orders.boardNote": "Pausa degli ordini online, attesa extra e manutenzione si cambiano dalla pagina Ordini, in alto: valgono subito.",
       "promo.help": "I codici non sono visibili sul sito: il cliente li scrive nel carrello e il server li controlla.",
       "hist.title": "Versioni precedenti", "hist.help": "A ogni salvataggio viene conservata la versione precedente (le ultime 15). Se qualcosa non va, ripristinala: il sito cambia subito.",
@@ -112,6 +121,15 @@
       "tab.hours": "Hours & timing", "tab.promo": "Promos", "tab.history": "Versions & PIN",
       "tab.menu": "Menu", "tab.delivery": "Delivery", "tab.info": "Contact", "tab.team": "Team",
       "orders.timing": "Order timing",
+      "tab.theme": "Themes", "theme.title": "Site theme",
+      "theme.help": "A festive touch: a greeting strip at the top, a coloured checkerboard, a sticker on the pizza and animated decorations on the first screen. Menu and ordering don't change.",
+      "theme.off": "No theme", "theme.offSub": "The usual site", "theme.auto": "Automatic", "theme.autoSub": "Changes by itself with the holidays",
+      "theme.today": "Today: {name}", "theme.todayNone": "Today: no holiday",
+      "theme.halloween": "Halloween", "theme.natale": "Christmas", "theme.capodanno": "New Year", "theme.sanvalentino": "Valentine's Day",
+      "theme.pasqua": "Easter", "theme.ferragosto": "Ferragosto", "theme.dates": "{from} to {to}", "theme.easter": "Easter week",
+      "theme.effects": "Animated decorations (snow, confetti…)", "theme.effectsHelp": "They don't appear for people who have turned off animations on their phone.",
+      "theme.msg": "Greeting · {name}", "theme.msgHelp": "Leave empty to use the suggested text (in grey).",
+      "theme.previewHint": "To see it before publishing, use Preview in the bar at the bottom.",
       "orders.boardNote": "Pausing online orders, extra waiting time and maintenance mode are on the Orders page, at the top: they apply straight away.",
       "promo.help": "Codes aren't visible on the site: customers type them in the basket and the server checks them.",
       "hist.title": "Previous versions", "hist.help": "Every save keeps the version before it (the last 15). If something goes wrong, restore it: the site changes straight away.",
@@ -375,6 +393,37 @@
         }).join("") + btn(t("team.add"), "addPerson", "config.team", "btn btn--outline btn--sm") + "</section>";
     },
 
+    theme: function () {
+      var th = state.config.theme || {};   // read only: opening the tab must not count as a change
+      var THEMES = window.VC_THEMES || {}, ids = Object.keys(THEMES);
+      var today = window.VC_themeFor ? window.VC_themeFor(new Date()) : "";
+      var mode = th.mode || "off";
+      var dm = function (x) { var p = x.split("-"); return parseInt(p[1], 10) + "/" + parseInt(p[0], 10); };
+      var opt = function (value, title, sub, sticker, color) {
+        return '<label class="theme-opt"><input type="radio" name="theme-mode" value="' + value + '" data-bind="config.theme.mode" data-kind="text"' +
+          (mode === value ? " checked" : "") + '><span class="theme-card">' +
+          '<span class="theme-sticker-mini" style="background:' + (color || "var(--cream-2)") + '">' + sticker + "</span>" +
+          "<strong>" + esc(title) + "</strong><small>" + esc(sub) + "</small></span></label>";
+      };
+      var shown = mode === "auto" ? today : THEMES[mode] ? mode : "";
+      var def = shown ? THEMES[shown].msg : null;
+      return '<section class="card"><h2>' + esc(t("theme.title")) + '</h2><p class="help">' + esc(t("theme.help")) + "</p>" +
+        '<div class="theme-grid" role="radiogroup" aria-label="' + esc(t("theme.title")) + '">' +
+        opt("off", t("theme.off"), t("theme.offSub"), "🍕") +
+        opt("auto", t("theme.auto"), today ? t("theme.today", { name: t("theme." + today) }) : t("theme.todayNone"), "📅") +
+        ids.map(function (id) {
+          var x = THEMES[id];
+          return opt(id, t("theme." + id), x.easter ? t("theme.easter") : t("theme.dates", { from: dm(x.from), to: dm(x.to) }), x.sticker, x.check);
+        }).join("") + "</div>" +
+        '<label class="chk"><input type="checkbox" data-bind="config.theme.effects" data-kind="bool"' + (th.effects !== false ? " checked" : "") +
+          "><span>" + esc(t("theme.effects")) + "</span></label>" + '<p class="help">' + esc(t("theme.effectsHelp")) + "</p>" +
+        '<p class="help">' + esc(t("theme.previewHint")) + "</p></section>" +
+        (shown ? '<section class="card"><h2>' + esc(t("theme.msg", { name: t("theme." + shown) })) + '</h2><p class="help">' + esc(t("theme.msgHelp")) + "</p>" +
+          '<div class="f-pair">' +
+          field(t("common.it"), "config.theme.messages." + shown + ".it", "text", ' placeholder="' + esc(def.it) + '"') +
+          field(t("common.en"), "config.theme.messages." + shown + ".en", "text", ' placeholder="' + esc(def.en) + '"') + "</div></section>" : "");
+    },
+
     history: function () {
       var fmt = function (ts) {
         return new Date(ts * 1000).toLocaleString(lang === "it" ? "it-IT" : "en-GB",
@@ -413,7 +462,7 @@
   }
 
   // ---------- rendering ----------
-  var TABS = ["menu", "hours", "delivery", "promo", "info", "team", "history"];
+  var TABS = ["menu", "hours", "delivery", "promo", "info", "team", "theme", "history"];
 
   var rendering = false;
   function render() {
@@ -488,7 +537,7 @@
       setPath(path, coerce(el.getAttribute("data-kind"), el));
       persist();
       // things shown elsewhere (summaries, promo type) need a refresh
-      if (/\.(name|price|available|type|title\.(it|en))$/.test(path) || el.tagName === "SELECT") render();
+      if (/\.(name|price|available|type|mode|title\.(it|en))$/.test(path) || el.tagName === "SELECT") render();
       return;
     }
     if (el.hasAttribute("data-toggle")) {
