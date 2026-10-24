@@ -676,7 +676,6 @@
     $("[data-pay-later]").textContent = t(REMOTE.payOnline ? "cart.payLaterOrOnline" : "cart.payLater");
     $("[data-online-note]").hidden = !online;
     $("[data-online-note]").textContent = t("cart.onlineNote");
-    renderCashOptions();
     if (step === "review") renderReview();
   }
 
@@ -698,7 +697,6 @@
       name: form.elements.name.value.trim(),
       phone: form.elements.phone.value.trim(),
       email: form.elements.email.value.trim(),
-      cashWith: cashWith(),
       time: tm.value,
       timeLabel: tm.label,
       payment: payment(),
@@ -730,38 +728,6 @@
 
   function validPhone(p) { return /^\+?\d{8,15}$/.test(String(p).replace(/[\s().\/-]/g, "")); }
 
-  // ---------- cash on delivery: "do you need change?" so the rider brings it ----------
-  // (not asked at collection: the till has change)
-  function askChange() { return payment() === "cash" && deliveryOn() && mode() === "delivery"; }
-  function wholeEuro(n) {
-    return new Intl.NumberFormat(lang === "it" ? "it-IT" : "en-GB", { style: "currency", currency: "EUR", minimumFractionDigits: 0 }).format(n);
-  }
-  function cashText(data) {
-    if (!data.cashWith) return t("cart.cash");
-    var tot = totals();
-    return t("cart.cash") + " · " + (tot.feeKnown ? t("cart.cashChange", { amount: wholeEuro(data.cashWith), change: money(data.cashWith - tot.total) })
-      : t("cart.cashNote", { amount: wholeEuro(data.cashWith) }));
-  }
-  function cashWith() {
-    if (!askChange()) return null;
-    var r = form.querySelector('input[name="cashwith"]:checked');
-    return r && r.value !== "exact" ? parseInt(r.value, 10) : null;
-  }
-  function renderCashOptions() {
-    var box = $("[data-cash-with]");
-    var show = askChange();
-    box.hidden = !show;
-    if (!show) return;
-    var total = totals().total;
-    var prev = (form.querySelector('input[name="cashwith"]:checked') || {}).value || "exact";
-    var opts = [["exact", t("cart.cashExact")]].concat((ORD.cashOptions || [20, 50])
-      .filter(function (n) { return n > total; }).map(function (n) { return [String(n), t("cart.cashNote", { amount: wholeEuro(n) })]; }));
-    $("[data-cash-options]").innerHTML = opts.map(function (o) {
-      return '<label class="slot"><input type="radio" name="cashwith" value="' + o[0] + '"' + (o[0] === prev ? " checked" : "") + "><span>" + esc(o[1]) + "</span></label>";
-    }).join("");
-    if (!form.querySelector('input[name="cashwith"]:checked')) form.querySelector('input[name="cashwith"]').checked = true;
-  }
-
   function renderReview() {
     var data = collectData();
     var tot = totals();
@@ -774,7 +740,7 @@
     rows.push([t("cart.reviewContact"), data.name + " · " + data.phone]);
     if (data.mode === "delivery") rows.push([t("cart.detailAddress"), data.address + " " + data.civico + ", " + data.cap + (area ? " " + area : "") + (data.buzzer ? " · " + data.buzzer : "")]);
     rows.push([t("cart.detailTime"), data.time === "asap" ? t("cart.asap", { time: data.timeLabel }) : data.time]);
-    rows.push([t("cart.detailPayment"), data.payment === "cash" ? cashText(data) : t(data.payment === "online" ? "cart.online" : "cart.card")]);
+    rows.push([t("cart.detailPayment"), t(data.payment === "cash" ? "cart.cash" : data.payment === "online" ? "cart.online" : "cart.card")]);
     if (data.notes) rows.push([t("cart.detailNotes"), data.notes]);
     $("[data-review-details]").innerHTML = rows.map(function (r) {
       return "<div><dt>" + esc(r[0]) + "</dt><dd>" + esc(r[1]) + "</dd></div>";
@@ -812,7 +778,7 @@
     }
     lines.push(t("wa.time") + ": " + (data.time === "asap" ? t("wa.asap", { time: data.timeLabel }) : data.time));
     lines.push(t("wa.payment") + ": " + (paid ? t("wa.paidOnline", { amount: money(paid.amount), ref: paid.ref }) :
-      (data.payment === "cash" ? cashText(data) : t("cart.card"))));
+      t(data.payment === "cash" ? "cart.cash" : "cart.card")));
     if (data.notes) lines.push(t("wa.notes") + ": " + data.notes);
     lines.push("");
     lines.push(t("wa.thanks"));
@@ -849,7 +815,7 @@
       items: cart, mode: data.mode, name: data.name, phone: data.phone, email: data.email,
       street: data.address, civico: data.civico, cap: data.cap, buzzer: data.buzzer,
       lat: geo.status === "ok" ? geo.lat : null, lng: geo.status === "ok" ? geo.lng : null,
-      slot: data.time, payment: data.payment, cashWith: data.cashWith, notes: data.notes,
+      slot: data.time, payment: data.payment, notes: data.notes,
       promo: promoCode || "", lang: lang, website: form.elements.website.value
     };
   }
@@ -1086,7 +1052,6 @@
   });
   form.addEventListener("change", function (e) {
     if (e.target.name === "mode" || e.target.name === "payment") renderCart();
-    if (e.target.name === "cashwith") renderReview();
   });
   form.addEventListener("input", function (e) {
     e.target.classList.remove("is-invalid");

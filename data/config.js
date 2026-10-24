@@ -75,11 +75,7 @@ window.SITE_CONFIG = {
     "busyExtraMinutes": 0,
     "slotMinutes": 15,
     "channel": "whatsapp",
-    "alertAfterMin": 5,
-    "cashOptions": [
-      20,
-      50
-    ]
+    "alertAfterMin": 5
   },
   "delivery": {
     "enabled": true,

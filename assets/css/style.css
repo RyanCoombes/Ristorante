@@ -570,8 +570,6 @@ h1, h2, h3, h4, p { margin: 0; }
 .contact-box { display: grid; gap: 10px; }
 .contact-box > label { display: grid; gap: 6px; font-size: 14px; font-weight: 700; }
 .contact-box > label[hidden] { display: none; }
-.cash-with { display: grid; gap: 6px; margin-top: 10px; }
-.cash-with[hidden] { display: none; }
 .hp { position: absolute; left: -9999px; width: 1px; height: 1px; opacity: 0; }
 
 /* link back to a recent order's live status */
